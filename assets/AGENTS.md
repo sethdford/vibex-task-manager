@@ -1,4 +1,4 @@
-# Task Manager AI - Claude Code Integration Guide
+# Vibex Task Manager - Claude Code Integration Guide
 
 ## Essential Commands
 
@@ -6,8 +6,8 @@
 
 ```bash
 # Project Setup
-vibex-task-manager init                                    # Initialize Task Manager in current project
-vibex-task-manager parse-prd .taskmaster/docs/prd.txt      # Generate tasks from PRD document
+vibex-task-manager init                                    # Initialize Vibex Task Manager in current project
+vibex-task-manager parse-prd .taskmanager/docs/prd.txt      # Generate tasks from PRD document
 vibex-task-manager models --setup                        # Configure AI models interactively
 
 # Daily Development Workflow
@@ -39,10 +39,10 @@ vibex-task-manager generate                                         # Update tas
 
 ### Core Files
 
-- `.taskmaster/tasks/tasks.json` - Main task data file (auto-managed)
-- `.taskmaster/config.json` - AI model configuration (use `vibex-task-manager models` to modify)
-- `.taskmaster/docs/prd.txt` - Product Requirements Document for parsing
-- `.taskmaster/tasks/*.txt` - Individual task files (auto-generated from tasks.json)
+- `.taskmanager/tasks/tasks.json` - Main task data file (auto-managed)
+- `.taskmanager/config.json` - AI model configuration (use `vibex-task-manager models` to modify)
+- `.taskmanager/docs/prd.txt` - Product Requirements Document for parsing
+- `.taskmanager/tasks/*.txt` - Individual task files (auto-generated from tasks.json)
 - `.env` - API keys for CLI usage
 
 ### Claude Code Integration Files
@@ -56,7 +56,7 @@ vibex-task-manager generate                                         # Update tas
 
 ```
 project/
-├── .taskmaster/
+├── .taskmanager/
 │   ├── tasks/              # Task files directory
 │   │   ├── tasks.json      # Main task database
 │   │   ├── task-1.md      # Individual task files
@@ -78,24 +78,17 @@ project/
 
 ## MCP Integration
 
-Task Manager provides an MCP server that Claude Code can connect to. Configure in `.mcp.json`:
+Vibex Task Manager provides an MCP server that Claude Code can connect to. Configure in `.mcp.json`:
 
 ```json
 {
   "mcpServers": {
-    "vibex-task-manager-ai": {
+    "vibex-task-manager": {
       "command": "npx",
-      "args": ["-y", "--package=vibex-task-manager-ai", "vibex-task-manager-ai"],
+      "args": ["-y", "--package=vibex-task-manager", "vibex-task-manager"],
       "env": {
-        "ANTHROPIC_API_KEY": "your_key_here",
-        "PERPLEXITY_API_KEY": "your_key_here",
-        "OPENAI_API_KEY": "OPENAI_API_KEY_HERE",
-        "GOOGLE_API_KEY": "GOOGLE_API_KEY_HERE",
-        "XAI_API_KEY": "XAI_API_KEY_HERE",
-        "OPENROUTER_API_KEY": "OPENROUTER_API_KEY_HERE",
-        "MISTRAL_API_KEY": "MISTRAL_API_KEY_HERE",
-        "AZURE_OPENAI_API_KEY": "AZURE_OPENAI_API_KEY_HERE",
-        "OLLAMA_API_KEY": "OLLAMA_API_KEY_HERE"
+        "AWS_PROFILE": "your-profile",
+        "AWS_DEFAULT_REGION": "us-east-1"
       }
     }
   }
@@ -105,7 +98,7 @@ Task Manager provides an MCP server that Claude Code can connect to. Configure i
 ### Essential MCP Tools
 
 ```javascript
-help; // = shows available taskmaster commands
+help; // = shows available vibex-task-manager commands
 // Project setup
 initialize_project; // = vibex-task-manager init
 parse_prd; // = vibex-task-manager parse-prd
@@ -139,7 +132,7 @@ complexity_report; // = vibex-task-manager complexity-report
 vibex-task-manager init
 
 # Create or obtain PRD, then parse it
-vibex-task-manager parse-prd .taskmaster/docs/prd.txt
+vibex-task-manager parse-prd .taskmanager/docs/prd.txt
 
 # Analyze complexity and expand tasks
 vibex-task-manager analyze-complexity --research
@@ -218,26 +211,23 @@ Add to `.claude/settings.json`:
     "Bash(git commit:*)",
     "Bash(git add:*)",
     "Bash(npm run *)",
-    "mcp__task_master_ai__*"
+    "mcp__vibex_task_manager__*"
   ]
 }
 ```
 
 ## Configuration & Setup
 
-### API Keys Required
+### AWS Configuration Required
 
-At least **one** of these API keys must be configured:
+AWS Bedrock configuration is required:
 
-- `ANTHROPIC_API_KEY` (Claude models) - **Recommended**
-- `PERPLEXITY_API_KEY` (Research features) - **Highly recommended**
-- `OPENAI_API_KEY` (GPT models)
-- `GOOGLE_API_KEY` (Gemini models)
-- `MISTRAL_API_KEY` (Mistral models)
-- `OPENROUTER_API_KEY` (Multiple models)
-- `XAI_API_KEY` (Grok models)
+- `AWS_PROFILE` (AWS profile name) - **Recommended**
+- `AWS_DEFAULT_REGION` (AWS region) - **Required**
+- AWS credentials configured via AWS CLI, environment variables, or IAM roles
+- Bedrock model access enabled in AWS Console for Claude and Titan models
 
-An API key is required for any provider used across any of the 3 roles defined in the `models` command.
+AWS Bedrock is the only supported provider for all AI operations.
 
 ### Model Configuration
 
@@ -245,10 +235,10 @@ An API key is required for any provider used across any of the 3 roles defined i
 # Interactive setup (recommended)
 vibex-task-manager models --setup
 
-# Set specific models
-vibex-task-manager models --set-main claude-3-5-sonnet-20241022
-vibex-task-manager models --set-research perplexity-llama-3.1-sonar-large-128k-online
-vibex-task-manager models --set-fallback gpt-4o-mini
+# Set specific models  
+vibex-task-manager models --set-main anthropic.claude-3-5-sonnet-20241022-v2:0
+vibex-task-manager models --set-research anthropic.claude-3-haiku-20240307-v1:0
+vibex-task-manager models --set-fallback anthropic.claude-3-sonnet-20240229-v1:0
 ```
 
 ## Task Structure & IDs

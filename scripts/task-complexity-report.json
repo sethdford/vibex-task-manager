@@ -155,7 +155,7 @@
 		},
 		{
 			"taskId": 57,
-			"taskTitle": "Enhance Task-Master CLI User Experience and Interface",
+			"taskTitle": "Enhance Vibex Task Manager CLI User Experience and Interface",
 			"complexityScore": 7,
 			"recommendedSubtasks": 6,
 			"expansionPrompt": "The current 6 subtasks for enhancing the CLI user experience appear comprehensive. Consider if any additional subtasks are needed for accessibility testing, internationalization, or performance optimization.",

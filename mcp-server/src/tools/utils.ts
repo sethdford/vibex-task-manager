@@ -109,20 +109,20 @@ function getVersionInfo(): VersionInfo {
  */
 function getProjectRoot(projectRootRaw: string | undefined, log: Logger): string {
 	// PRECEDENCE ORDER:
-	// 1. Environment variable override (TASK_MASTER_PROJECT_ROOT)
+	// 1. Environment variable override (VIBEX_TASK_MANAGER_PROJECT_ROOT)
 	// 2. Explicitly provided projectRoot in args
 	// 3. Previously found/cached project root
 	// 4. Current directory if it has project markers
 	// 5. Current directory with warning
 
 	// 1. Check for environment variable override
-	if (process.env.TASK_MASTER_PROJECT_ROOT) {
-		const envRoot = process.env.TASK_MASTER_PROJECT_ROOT;
+	if (process.env.VIBEX_TASK_MANAGER_PROJECT_ROOT) {
+		const envRoot = process.env.VIBEX_TASK_MANAGER_PROJECT_ROOT;
 		const absolutePath = path.isAbsolute(envRoot)
 			? envRoot
 			: path.resolve(process.cwd(), envRoot);
 		log.info(
-			`Using project root from TASK_MASTER_PROJECT_ROOT environment variable: ${absolutePath}`
+			`Using project root from VIBEX_TASK_MANAGER_PROJECT_ROOT environment variable: ${absolutePath}`
 		);
 		return absolutePath;
 	}
@@ -161,7 +161,7 @@ function getProjectRoot(projectRootRaw: string | undefined, log: Logger): string
 		`No project root specified and no project markers found in current directory: ${cwd}`
 	);
 	log.warn(
-		`Using current directory as project root. Consider using --project-root or setting TASK_MASTER_PROJECT_ROOT`
+		`Using current directory as project root. Consider using --project-root or setting VIBEX_TASK_MANAGER_PROJECT_ROOT`
 	);
 	return cwd;
 }
