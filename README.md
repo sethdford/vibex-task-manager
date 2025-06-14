@@ -1,6 +1,6 @@
-# Vibex Task Manager [![GitHub stars](https://img.shields.io/github/stars/vibex/vibex-task-manager?style=social)](https://github.com/vibex/vibex-task-manager/stargazers)
+# Vibex Task Manager [![GitHub stars](https://img.shields.io/github/stars/sethdford/vibex-task-manager?style=social)](https://github.com/sethdford/vibex-task-manager/stargazers)
 
-[![CI](https://github.com/vibex/vibex-task-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/vibex/vibex-task-manager/actions/workflows/ci.yml) [![npm version](https://badge.fury.io/js/vibex-task-manager.svg)](https://badge.fury.io/js/vibex-task-manager) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/sethdford/vibex-task-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/sethdford/vibex-task-manager/actions/workflows/ci.yml) [![npm version](https://badge.fury.io/js/vibex-task-manager.svg)](https://badge.fury.io/js/vibex-task-manager) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 [![NPM Downloads](https://img.shields.io/npm/d18m/vibex-task-manager?style=flat)](https://www.npmjs.com/package/vibex-task-manager) [![NPM Downloads](https://img.shields.io/npm/dm/vibex-task-manager?style=flat)](https://www.npmjs.com/package/vibex-task-manager) [![NPM Downloads](https://img.shields.io/npm/dw/vibex-task-manager?style=flat)](https://www.npmjs.com/package/vibex-task-manager)
 
@@ -276,7 +276,7 @@ node node_modules/vibex-task-manager/scripts/init.js
 Or clone the repository and run:
 
 ```bash
-git clone https://github.com/vibex/vibex-task-manager.git
+git clone https://github.com/sethdford/vibex-task-manager.git
 cd vibex-task-manager
 node scripts/init.js
 ```
@@ -294,13 +294,13 @@ Choose the region closest to you for best performance.
 
 ## Contributors
 
-<a href="https://github.com/vibex/vibex-task-manager/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=vibex/vibex-task-manager" alt="Vibex Task Manager project contributors" />
+<a href="https://github.com/sethdford/vibex-task-manager/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=sethdford/vibex-task-manager" alt="Vibex Task Manager project contributors" />
 </a>
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=vibex/vibex-task-manager&type=Timeline)](https://www.star-history.com/#vibex/vibex-task-manager&Timeline)
+[![Star History Chart](https://api.star-history.com/svg?repos=sethdford/vibex-task-manager&type=Timeline)](https://www.star-history.com/#sethdford/vibex-task-manager&Timeline)
 
 ## Licensing
 
