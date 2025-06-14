@@ -3,7 +3,8 @@
  * Direct function implementation for adding a dependency to a task
  */
 
-import { Logger } from '../../../../src/types/index.js'; '../../../../scripts/modules/dependency-manager.js';
+import { Logger } from '../../../../src/types/index.js';
+import { addDependency } from '../../../../scripts/modules/dependency-manager.js';
 import {
 	enableSilentMode,
 	disableSilentMode

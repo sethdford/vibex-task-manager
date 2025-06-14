@@ -11,6 +11,7 @@ import * as fs from 'fs/promises';
 import { TaskService } from '../services/task-service.js';
 import { ConfigService } from '../services/config-service.js';
 import BedrockClient from '../core/bedrock-client.js';
+import BedrockAutoDetect from '../core/bedrock-auto-detect.js';
 import {
   Task,
   TaskStatus,
@@ -418,8 +419,45 @@ class VibexCLI {
 
     // Setup configuration
     if (!options.skipSetup) {
-      console.log(chalk.blue('\nSetting up AWS Bedrock configuration...'));
-      await this.handleConfigSetup({});
+      console.log(chalk.blue('\nDetecting AWS Bedrock models...'));
+      
+      // Auto-detect available models
+      const autoDetect = await BedrockAutoDetect.quickSetup({
+        region: options.region || process.env.AWS_REGION || 'us-east-1',
+        profile: options.profile || process.env.AWS_PROFILE,
+      });
+
+      if (autoDetect.hasCredentials) {
+        if (autoDetect.availableModels.length > 0) {
+          console.log(chalk.green(`✓ Found ${autoDetect.availableModels.length} available Claude models in AWS Bedrock`));
+          console.log(chalk.dim(`Region: ${autoDetect.region}`));
+          
+          // Use auto-detected models
+          const setupOptions = {
+            mainModel: autoDetect.mainModel || options.mainModel,
+            researchModel: autoDetect.researchModel || options.researchModel,
+            fallbackModel: autoDetect.fallbackModel || options.fallbackModel,
+            region: autoDetect.region,
+            profile: options.profile,
+          };
+          
+          console.log(chalk.blue('\nConfiguring with auto-detected models:'));
+          console.log(`Main Model: ${chalk.green(setupOptions.mainModel || 'Not available')}`);
+          console.log(`Research Model: ${chalk.green(setupOptions.researchModel || 'Not available')}`);
+          console.log(`Fallback Model: ${chalk.green(setupOptions.fallbackModel || 'Not available')}`);
+          
+          await this.configService!.setupConfiguration(setupOptions);
+        } else {
+          console.log(chalk.yellow('⚠ No Claude models found in your AWS Bedrock region.'));
+          console.log(chalk.yellow('Please request access to Claude models in the AWS Bedrock console.'));
+          await this.handleConfigSetup({});
+        }
+      } else {
+        console.log(chalk.yellow('⚠ AWS credentials not found or invalid.'));
+        console.log(chalk.dim('Configure AWS credentials to enable automatic model detection.'));
+        console.log(chalk.dim('Using default model configuration...'));
+        await this.handleConfigSetup({});
+      }
     }
 
     console.log(chalk.green('✓ Project initialized successfully!'));

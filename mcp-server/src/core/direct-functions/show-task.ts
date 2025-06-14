@@ -16,6 +16,7 @@ interface Logger {
 	warn(message: string, ...args: any[]): void;
 	error(message: string, ...args: any[]): void;
 	debug?(message: string, ...args: any[]): void;
+	success?(message: string, ...args: any[]): void;
 }
 
 interface ApiError {

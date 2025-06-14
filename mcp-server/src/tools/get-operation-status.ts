@@ -38,10 +38,7 @@ export function registerGetOperationStatusTool(server, asyncManager) {
 			} catch (error) {
 				log.error(`Error in get_operation_status tool: ${(error as Error).message}`, {
 					stack: error.stack
-				};
-
-	server.addTool(tool);
-}
+				});
 				return createErrorResponse(
 					`Failed to get operation status: ${(error as Error).message}`,
 					'GET_STATUS_ERROR'
@@ -51,5 +48,4 @@ export function registerGetOperationStatusTool(server, asyncManager) {
 	};
 
 	server.addTool(tool);
-}
 }

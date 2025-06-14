@@ -3,7 +3,8 @@
  * Direct function implementation for generating task files from tasks.json
  */
 
-import { Logger } from '../../../../src/types/index.js'; '../../../../scripts/modules/task-manager.js';
+import { Logger } from '../../../../src/types/index.js';
+import { generateTaskFiles } from '../../../../scripts/modules/task-manager.js';
 import {
 	enableSilentMode,
 	disableSilentMode

@@ -244,11 +244,11 @@ export function executeCLICommand(
 	options: { cwd?: string; env?: NodeJS.ProcessEnv } = {}
 ): CommandResult {
 	try {
-		const result: SpawnSyncReturns<Buffer> = spawnSync(command, args, {
+		const result = spawnSync(command, args, {
 			...options,
 			shell: true,
-			encoding: 'utf8' as any // Type workaround
-		});
+			encoding: 'utf8'
+		}) as SpawnSyncReturns<string>;
 
 		if (result.error) {
 			return {
@@ -260,13 +260,13 @@ export function executeCLICommand(
 		if (result.status !== 0) {
 			return {
 				success: false,
-				stderr: result.stderr?.toString() || `Process exited with code ${result.status}`
+				stderr: result.stderr || `Process exited with code ${result.status}`
 			};
 		}
 
 		return {
 			success: true,
-			stdout: result.stdout?.toString() || ''
+			stdout: result.stdout || ''
 		};
 	} catch (error) {
 		return {
@@ -284,6 +284,44 @@ export function safeParseJSON<T = any>(json: string): T | null {
 		return JSON.parse(json);
 	} catch {
 		return null;
+	}
+}
+
+/**
+ * Create a wrapper for logger that preserves the logger interface
+ */
+export function createLogWrapper(logger: Logger): Logger {
+	return {
+		info: (message: string, ...args: any[]) => logger.info(message, ...args),
+		warn: (message: string, ...args: any[]) => logger.warn(message, ...args),
+		error: (message: string, ...args: any[]) => logger.error(message, ...args),
+		debug: (message: string, ...args: any[]) => logger.debug ? logger.debug(message, ...args) : logger.info(`[DEBUG] ${message}`, ...args)
+	};
+}
+
+/**
+ * Convert ApiResult to CommandResult format
+ */
+export function apiResultToCommandResult<T = any>(apiResult: {
+	success: boolean;
+	data?: T;
+	error?: { code: string; message: string } | string;
+}): CommandResult {
+	if (apiResult.success) {
+		return {
+			success: true,
+			data: apiResult.data
+		};
+	} else {
+		// Handle both string and object error types
+		const errorMessage = typeof apiResult.error === 'string' 
+			? apiResult.error 
+			: apiResult.error?.message || 'Unknown error occurred';
+		
+		return {
+			success: false,
+			error: errorMessage
+		};
 	}
 }
 

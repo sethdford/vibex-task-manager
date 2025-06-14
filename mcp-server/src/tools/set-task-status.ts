@@ -8,7 +8,8 @@ import { z } from 'zod';
 import {
 	handleApiResult,
 	createErrorResponse,
-	withNormalizedProjectRoot
+	withNormalizedProjectRoot,
+	apiResultToCommandResult
 } from './utils.js';
 import {
 	setTaskStatusDirect,
@@ -36,7 +37,7 @@ export function registerSetTaskStatusTool(server: any): void {
 					"Task ID or subtask ID (e.g., '15', '15.2'). Can be comma-separated to update multiple tasks/subtasks at once."
 				),
 			status: z
-				.enum(TASK_STATUS_OPTIONS)
+				.enum(['pending', 'done', 'in-progress', 'review', 'deferred', 'cancelled'] as const)
 				.describe(
 					"New status to set (e.g., 'pending', 'done', 'in-progress', 'review', 'deferred', 'cancelled'."
 				),
@@ -102,7 +103,7 @@ export function registerSetTaskStatusTool(server: any): void {
 					);
 				}
 
-				return handleApiResult(result, log, 'Error setting task status');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error setting task status');
 			} catch (error) {
 				log.error(`Error in setTaskStatus tool: ${(error as Error).message}`);
 				return createErrorResponse(
@@ -113,5 +114,4 @@ export function registerSetTaskStatusTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

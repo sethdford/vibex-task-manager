@@ -133,4 +133,3 @@ export function registerMoveTaskTool(server: any): void {
 
 	server.addTool(tool);
 }
-}

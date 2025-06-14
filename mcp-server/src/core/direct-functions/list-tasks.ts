@@ -87,13 +87,14 @@ export async function listTasksDirect(
 				'json'
 			);
 
-			if (!resultData || !resultData.tasks) {
+			// Check if resultData is a string (error case) or object (success case)
+			if (typeof resultData === 'string' || !resultData || !resultData.tasks) {
 				log.error('Invalid or empty response from listTasks core function');
 				return {
 					success: false,
 					error: {
 						code: 'INVALID_CORE_RESPONSE',
-						message: 'Invalid or empty response from listTasks core function'
+						message: typeof resultData === 'string' ? resultData : 'Invalid or empty response from listTasks core function'
 					}
 				};
 			}
@@ -105,7 +106,7 @@ export async function listTasksDirect(
 			// Restore normal logging
 			disableSilentMode();
 
-			return { success: true, data: resultData };
+			return { success: true, data: resultData as TaskData };
 		} catch (error) {
 			// Make sure to restore normal logging even if there's an error
 			disableSilentMode();

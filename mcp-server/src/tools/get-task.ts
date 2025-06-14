@@ -139,4 +139,3 @@ export function registerShowTaskTool(server: any): void {
 
 	server.addTool(tool);
 }
-}

@@ -7,6 +7,8 @@ import {
 	enableSilentMode,
 	disableSilentMode
 } from '../../../../scripts/modules/utils.js';
+import { moveTask } from '../../../../scripts/modules/task-manager.js';
+import { findTasksPath } from '../utils/path-utils.js';
 
 /**
  * Move a task or subtask to a new position
@@ -19,7 +21,7 @@ import {
  * @param {Object} log - Logger object
  * @returns {Promise<{success: boolean, data?: Object, error?: Object}>}
  */
-export async function moveTaskDirect(args, log, context = {}) {
+export async function moveTaskDirect(args: any, log: Logger, context: any = {}) {
 	const { session } = context;
 
 	// Validate required parameters
@@ -57,7 +59,7 @@ export async function moveTaskDirect(args, log, context = {}) {
 					}
 				};
 			}
-			tasksPath = findTasksPath(args: any, log: Logger);
+			tasksPath = findTasksPath(args, log);
 		}
 
 		// Enable silent mode to prevent console output during MCP operation

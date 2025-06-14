@@ -2,15 +2,19 @@
  * models.js
  * MCP tool for managing AI model configurations
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { modelsDirect } from '../core/vibex-task-manager-core.js';
+import {
+	modelsDirect } from '../core/vibex-task-manager-core.js';
 
 /**
  * Register the models tool with the MCP server
@@ -70,7 +74,7 @@ export function registerModelsTool(server: any): void {
 					{ session }
 				);
 
-				return handleApiResult(result, log);
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error in models operation');
 			} catch (error) {
 				log.error(`Error in models tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
@@ -79,5 +83,4 @@ export function registerModelsTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

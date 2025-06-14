@@ -2,16 +2,21 @@
  * tools/generate.js
  * Tool to generate individual task files from tasks.json
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { generateTaskFilesDirect } from '../core/vibex-task-manager-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
+import {
+	generateTaskFilesDirect } from '../core/vibex-task-manager-core.js';
+import {
+	findTasksPath } from '../core/utils/path-utils.js';
 import path from 'path';
 
 /**
@@ -72,7 +77,7 @@ export function registerGenerateTool(server: any): void {
 					);
 				}
 
-				return handleApiResult(result, log, 'Error generating task files');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error generating task files');
 			} catch (error) {
 				log.error(`Error in generate tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
@@ -81,5 +86,4 @@ export function registerGenerateTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

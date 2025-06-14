@@ -3,7 +3,8 @@
  * Direct function implementation for retrieving cache statistics
  */
 
-import { Logger } from '../../../../src/types/index.js'; '../context-manager.js';
+import { Logger } from '../../../../src/types/index.js';
+import { contextManager } from '../context-manager.js';
 
 /**
  * Get cache statistics for monitoring

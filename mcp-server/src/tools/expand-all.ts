@@ -2,16 +2,21 @@
  * tools/expand-all.js
  * Tool for expanding all pending tasks with subtasks
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { expandAllTasksDirect } from '../core/vibex-task-manager-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
+import {
+	expandAllTasksDirect } from '../core/vibex-task-manager-core.js';
+import {
+	findTasksPath } from '../core/utils/path-utils.js';
 
 /**
  * Register the expandAll tool with the MCP server
@@ -94,7 +99,7 @@ export function registerExpandAllTool(server: any): void {
 					{ session }
 				);
 
-				return handleApiResult(result, log, 'Error expanding all tasks');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error expanding all tasks');
 			} catch (error) {
 				log.error(
 					`Unexpected error in expand_all tool execute: ${(error as Error).message}`
@@ -110,5 +115,4 @@ export function registerExpandAllTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

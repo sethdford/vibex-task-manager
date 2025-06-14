@@ -8,7 +8,8 @@ import { z } from 'zod';
 import {
 	handleApiResult,
 	createErrorResponse,
-	withNormalizedProjectRoot
+	withNormalizedProjectRoot,
+	apiResultToCommandResult
 } from './utils.js';
 import { updateTasksDirect } from '../core/vibex-task-manager-core.js';
 import { findTasksPath } from '../core/utils/path-utils.js';
@@ -82,7 +83,7 @@ export function registerUpdateTool(server: any): void {
 				log.info(
 					`${toolName}: Direct function result: success=${result.success}`
 				);
-				return handleApiResult(result, log, 'Error updating tasks');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error updating tasks');
 			} catch (error) {
 				log.error(
 					`Critical error in ${toolName} tool execute: ${(error as Error).message}`
@@ -95,5 +96,4 @@ export function registerUpdateTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

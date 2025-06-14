@@ -2,16 +2,21 @@
  * tools/fix-dependencies.js
  * Tool for automatically fixing invalid task dependencies
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { fixDependenciesDirect } from '../core/vibex-task-manager-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
+import {
+	fixDependenciesDirect } from '../core/vibex-task-manager-core.js';
+import {
+	findTasksPath } from '../core/utils/path-utils.js';
 
 /**
  * Register the fixDependencies tool with the MCP server
@@ -59,7 +64,7 @@ export function registerFixDependenciesTool(server: any): void {
 					log.error(`Failed to fix dependencies: ${result.error}`);
 				}
 
-				return handleApiResult(result, log, 'Error fixing dependencies');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error fixing dependencies');
 			} catch (error) {
 				log.error(`Error in fixDependencies tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
@@ -68,5 +73,4 @@ export function registerFixDependenciesTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

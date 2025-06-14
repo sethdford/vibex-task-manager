@@ -3,7 +3,8 @@
  * Direct function implementation for appending information to a specific subtask
  */
 
-import { Logger } from '../../../../src/types/index.js'; '../../../../scripts/modules/task-manager.js';
+import { Logger } from '../../../../src/types/index.js';
+import { updateSubtaskById } from '../../../../scripts/modules/task-manager.js';
 import {
 	enableSilentMode,
 	disableSilentMode,
@@ -24,7 +25,7 @@ import { createLogWrapper } from '../../tools/utils.js';
  * @param {Object} context - Context object containing session data.
  * @returns {Promise<Object>} - Result object with success status and data/error information.
  */
-export async function updateSubtaskByIdDirect(args, log, context = {}) {
+export async function updateSubtaskByIdDirect(args: any, log: Logger, context: any = {}) {
 	const { session } = context;
 	// Destructure expected args, including projectRoot
 	const { tasksJsonPath, id, prompt, research, projectRoot } = args;

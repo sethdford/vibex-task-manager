@@ -2,12 +2,15 @@
  * tools/analyze.js
  * Tool for analyzing task complexity and generating recommendations
  */
-import { MCPTool } from './utils.js';
+import {
+	MCPTool } from './utils.js';
 
-import { z } from 'zod';
+import {
+	z } from 'zod';
 import path from 'path';
 import fs from 'fs'; // Import fs for directory check/creation
 import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
@@ -105,10 +108,7 @@ export function registerAnalyzeProjectComplexityTool(server: any): void {
 				const outputDir = path.dirname(outputPath);
 				try {
 					if (!fs.existsSync(outputDir)) {
-						fs.mkdirSync(outputDir, { recursive: true };
-
-	server.addTool(tool);
-}
+						fs.mkdirSync(outputDir, { recursive: true });
 						log.info(`${toolName}: Created output directory: ${outputDir}`);
 					}
 				} catch (dirError) {
@@ -140,7 +140,7 @@ export function registerAnalyzeProjectComplexityTool(server: any): void {
 				log.info(
 					`${toolName}: Direct function result: success=${result.success}`
 				);
-				return handleApiResult(result, log, 'Error analyzing task complexity');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error analyzing task complexity');
 			} catch (error) {
 				log.error(
 					`Critical error in ${toolName} tool execute: ${(error as Error).message}`
@@ -153,5 +153,4 @@ export function registerAnalyzeProjectComplexityTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

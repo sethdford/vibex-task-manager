@@ -8,7 +8,8 @@ import { z } from 'zod';
 import {
 	handleApiResult,
 	createErrorResponse,
-	withNormalizedProjectRoot
+	withNormalizedProjectRoot,
+	apiResultToCommandResult
 } from './utils.js';
 import { removeTaskDirect } from '../core/vibex-task-manager-core.js';
 import { findTasksPath } from '../core/utils/path-utils.js';
@@ -71,7 +72,7 @@ export function registerRemoveTaskTool(server: any): void {
 					log.error(`Failed to remove task: ${result.error}`);
 				}
 
-				return handleApiResult(result, log, 'Error removing task');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error removing task');
 			} catch (error) {
 				log.error(`Error in remove-task tool: ${(error as Error).message}`);
 				return createErrorResponse(`Failed to remove task: ${(error as Error).message}`);
@@ -80,5 +81,4 @@ export function registerRemoveTaskTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

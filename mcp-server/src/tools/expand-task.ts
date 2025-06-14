@@ -2,16 +2,21 @@
  * tools/expand-task.js
  * Tool to expand a task into subtasks
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { expandTaskDirect } from '../core/vibex-task-manager-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
+import {
+	expandTaskDirect } from '../core/vibex-task-manager-core.js';
+import {
+	findTasksPath } from '../core/utils/path-utils.js';
 
 /**
  * Register the expand-task tool with the MCP server
@@ -81,7 +86,7 @@ export function registerExpandTaskTool(server: any): void {
 					{ session }
 				);
 
-				return handleApiResult(result, log, 'Error expanding task');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error expanding task');
 			} catch (error) {
 				log.error(`Error in expand-task tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
@@ -90,5 +95,4 @@ export function registerExpandTaskTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

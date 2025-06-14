@@ -2,10 +2,13 @@
  * tools/next-task.js
  * Tool to find the next task to work on based on dependencies and status
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	createErrorResponse,
 	handleApiResult,
 	withNormalizedProjectRoot
@@ -72,7 +75,7 @@ export function registerNextTaskTool(server: any): void {
 				);
 
 				log.info(`Next task result: ${result.success ? 'found' : 'none'}`);
-				return handleApiResult(result, log, 'Error finding next task');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error finding next task');
 			} catch (error) {
 				log.error(`Error finding next task: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
@@ -81,5 +84,4 @@ export function registerNextTaskTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

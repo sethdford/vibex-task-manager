@@ -2,16 +2,21 @@
  * tools/remove-subtask.js
  * Tool for removing subtasks from parent tasks
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { removeSubtaskDirect } from '../core/vibex-task-manager-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
+import {
+	removeSubtaskDirect } from '../core/vibex-task-manager-core.js';
+import {
+	findTasksPath } from '../core/utils/path-utils.js';
 
 /**
  * Register the removeSubtask tool with the MCP server
@@ -82,7 +87,7 @@ export function registerRemoveSubtaskTool(server: any): void {
 					log.error(`Failed to remove subtask: ${result.error}`);
 				}
 
-				return handleApiResult(result, log, 'Error removing subtask');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error removing subtask');
 			} catch (error) {
 				log.error(`Error in removeSubtask tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
@@ -91,5 +96,4 @@ export function registerRemoveSubtaskTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

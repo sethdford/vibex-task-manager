@@ -2,16 +2,21 @@
  * tools/validate-dependencies.js
  * Tool for validating task dependencies
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { validateDependenciesDirect } from '../core/vibex-task-manager-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
+import {
+	validateDependenciesDirect } from '../core/vibex-task-manager-core.js';
+import {
+	findTasksPath } from '../core/utils/path-utils.js';
 
 /**
  * Register the validateDependencies tool with the MCP server
@@ -62,7 +67,7 @@ export function registerValidateDependenciesTool(server: any): void {
 					log.error(`Failed to validate dependencies: ${result.error}`);
 				}
 
-				return handleApiResult(result, log, 'Error validating dependencies');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error validating dependencies');
 			} catch (error) {
 				log.error(`Error in validateDependencies tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
@@ -71,5 +76,4 @@ export function registerValidateDependenciesTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

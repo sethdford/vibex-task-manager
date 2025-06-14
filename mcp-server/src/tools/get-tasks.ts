@@ -3,8 +3,10 @@
  * Tool to get all tasks from Task Manager
  */
 
-import { z } from 'zod';
 import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	createErrorResponse,
 	handleApiResult,
 	withNormalizedProjectRoot,
@@ -95,7 +97,7 @@ export function registerListTasksTool(server: any): void {
 				log.info(
 					`Retrieved ${result.success ? result.data?.tasks?.length || 0 : 0} tasks`
 				);
-				return handleApiResult(result, log, 'Error getting tasks');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error getting tasks');
 			} catch (error) {
 				log.error(`Error getting tasks: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);

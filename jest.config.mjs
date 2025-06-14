@@ -25,9 +25,9 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   
   // Setup files
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  globalSetup: '<rootDir>/tests/global-setup.js',
-  globalTeardown: '<rootDir>/tests/global-teardown.js',
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  globalSetup: '<rootDir>/tests/global-setup.ts',
+  globalTeardown: '<rootDir>/tests/global-teardown.ts',
   
   // Coverage
   collectCoverageFrom: [

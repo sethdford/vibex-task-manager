@@ -2,10 +2,13 @@
  * tools/parsePRD.js
  * Tool to parse PRD document and generate tasks
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	handleApiResult,
 	withNormalizedProjectRoot,
 	createErrorResponse
@@ -65,11 +68,8 @@ export function registerParsePRDTool(server: any): void {
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
 			try {
-				const result = await parsePRDDirect(args, log, { session };
-
-	server.addTool(tool);
-}
-				return handleApiResult(result, log);
+				const result = await parsePRDDirect(args, log, { session });
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error parsing PRD');
 			} catch (error) {
 				log.error(`Error in parse_prd: ${(error as Error).message}`);
 				return createErrorResponse(`Failed to parse PRD: ${(error as Error).message}`);
@@ -78,5 +78,4 @@ export function registerParsePRDTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

@@ -2,16 +2,21 @@
  * tools/update-subtask.js
  * Tool to append additional information to a specific subtask
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { updateSubtaskByIdDirect } from '../core/vibex-task-manager-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
+import {
+	updateSubtaskByIdDirect } from '../core/vibex-task-manager-core.js';
+import {
+	findTasksPath } from '../core/utils/path-utils.js';
 
 /**
  * Register the update-subtask tool with the MCP server
@@ -77,7 +82,7 @@ export function registerUpdateSubtaskTool(server: any): void {
 					);
 				}
 
-				return handleApiResult(result, log, 'Error updating subtask');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error updating subtask');
 			} catch (error) {
 				log.error(
 					`Critical error in ${toolName} tool execute: ${(error as Error).message}`
@@ -90,5 +95,4 @@ export function registerUpdateSubtaskTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

@@ -1,11 +1,14 @@
-import { z } from 'zod';
 import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	createErrorResponse,
 	handleApiResult,
-import { MCPTool } from './utils.js';
+	MCPTool,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { initializeProjectDirect } from '../core/vibex-task-manager-core.js';
+import {
+	initializeProjectDirect } from '../core/vibex-task-manager-core.js';
 
 export function registerInitializeProjectTool(server: any): void {
 		const tool: MCPTool = {
@@ -48,23 +51,16 @@ export function registerInitializeProjectTool(server: any): void {
 					`Executing initialize_project tool with args: ${JSON.stringify(args)}`
 				);
 
-				const result = await initializeProjectDirect(args, log, { session };
+				const result = await initializeProjectDirect(args, log, { session });
 
-	server.addTool(tool);
-}
-
-				return handleApiResult(result, log, 'Initialization failed');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Initialization failed');
 			} catch (error) {
 				const errorMessage = `Project initialization tool failed: ${(error as Error).message || 'Unknown error'}`;
 				log.error(errorMessage, error);
-				return createErrorResponse(errorMessage, { details: error.stack };
-
-	server.addTool(tool);
-}
+				return createErrorResponse(errorMessage, { details: error.stack });
 			}
 		})
 	};
 
 	server.addTool(tool);
-}
 }

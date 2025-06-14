@@ -18,7 +18,7 @@ import {
  * @param {Object} log - Logger object
  * @returns {Promise<Object>} - Result object with success status and data/error information
  */
-export async function complexityReportDirect(args: any, log: Logger) {
+export async function complexityReportDirect(args: any, log: Logger): Promise<any> {
 	// Destructure expected args
 	const { reportPath } = args;
 	try {

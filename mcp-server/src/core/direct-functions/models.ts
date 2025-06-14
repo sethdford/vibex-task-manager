@@ -22,7 +22,7 @@ import { createLogWrapper } from '../../tools/utils.js';
  * @param {Object} context - MCP context (contains session)
  * @returns {Object} Result object with success, data/error fields
  */
-export async function modelsDirect(args, log, context = {}) {
+export async function modelsDirect(args: any, log: any, context: any = {}): Promise<any> {
 	const { session } = context;
 	const { projectRoot } = args; // Extract projectRoot from args
 

@@ -2,16 +2,21 @@
  * tools/add-subtask.js
  * Tool for adding subtasks to existing tasks
  */
-import { MCPTool } from './utils.js';
-
-import { z } from 'zod';
 import {
+	MCPTool } from './utils.js';
+
+import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import { addSubtaskDirect } from '../core/vibex-task-manager-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
+import {
+	addSubtaskDirect } from '../core/vibex-task-manager-core.js';
+import {
+	findTasksPath } from '../core/utils/path-utils.js';
 
 /**
  * Register the addSubtask tool with the MCP server
@@ -101,7 +106,7 @@ export function registerAddSubtaskTool(server: any): void {
 					log.error(`Failed to add subtask: ${result.error}`);
 				}
 
-				return handleApiResult(result, log, 'Error adding subtask');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error adding subtask');
 			} catch (error) {
 				log.error(`Error in addSubtask tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
@@ -110,5 +115,4 @@ export function registerAddSubtaskTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

@@ -2,10 +2,10 @@
 	"name": "vibex-task-manager",
 	"version": "0.16.2",
 	"description": "A task management system for ambitious AI-driven development using AWS Bedrock exclusively.",
-	"main": "dist/index.js",
+	"main": "index.ts",
 	"type": "module",
 	"bin": {
-		"vibex-task-manager": "dist/bin/vibex-task-manager.js",
+		"vibex-task-manager": "scripts/vibex-task-manager.js",
 		"vibex-task-manager-mcp": "mcp-server/server.js",
 		"vibex": "mcp-server/server.js"
 	},
@@ -23,7 +23,7 @@
 		"typecheck": "tsc --noEmit",
 		"lint": "eslint . --ext .ts,.js",
 		"lint:fix": "eslint . --ext .ts,.js --fix",
-		"prepare": "npm run build && chmod +x dist/bin/vibex-task-manager.js mcp-server/server.js",
+		"prepare": "chmod +x scripts/vibex-task-manager.js mcp-server/server.js",
 		"changeset": "changeset",
 		"release": "changeset publish",
 		"inspector": "npx @modelcontextprotocol/inspector node mcp-server/server.js",
@@ -74,13 +74,14 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/vibex/vibex-task-manager.git"
+		"url": "git+https://github.com/sethdford/vibex-task-manager.git"
 	},
-	"homepage": "https://github.com/vibex/vibex-task-manager#readme",
+	"homepage": "https://github.com/sethdford/vibex-task-manager#readme",
 	"bugs": {
-		"url": "https://github.com/vibex/vibex-task-manager/issues"
+		"url": "https://github.com/sethdford/vibex-task-manager/issues"
 	},
 	"files": [
+		"dist/**",
 		"scripts/**",
 		"assets/**",
 		".cursor/**",
@@ -88,7 +89,9 @@
 		"index.js",
 		"bin/**",
 		"mcp-server/**",
-		"src/**"
+		"src/**",
+		"!**/*.ts",
+		"!**/tsconfig*.json"
 	],
 	"overrides": {
 		"node-fetch": "^2.6.12",

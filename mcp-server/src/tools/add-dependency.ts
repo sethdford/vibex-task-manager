@@ -6,6 +6,7 @@ import { MCPTool } from './utils.js';
 
 import { z } from 'zod';
 import {
+	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
@@ -77,7 +78,7 @@ export function registerAddDependencyTool(server: any): void {
 				}
 
 				// Use handleApiResult to format the response
-				return handleApiResult(result, log, 'Error adding dependency');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error adding dependency');
 			} catch (error) {
 				log.error(`Error in addDependency tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
@@ -86,5 +87,4 @@ export function registerAddDependencyTool(server: any): void {
 	};
 
 	server.addTool(tool);
-}
 }

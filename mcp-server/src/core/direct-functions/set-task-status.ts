@@ -108,7 +108,7 @@ export async function setTaskStatusDirect(
 		enableSilentMode(); // Enable silent mode before calling core function
 		try {
 			// Call the core function
-			await setTaskStatus(tasksPath, taskId, newStatus, { mcpLog: log });
+			await setTaskStatus(tasksPath, taskId.toString(), newStatus, { mcpLog: log });
 
 			log.info(`Successfully set task ${taskId} status to ${newStatus}`);
 

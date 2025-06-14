@@ -84,4 +84,3 @@ export function registerComplexityReportTool(server: any): void {
 
 	server.addTool(tool);
 }
-}

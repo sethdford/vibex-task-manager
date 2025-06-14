@@ -42,6 +42,7 @@ export class ContextManager {
 		misses: number;
 		invalidations: number;
 	};
+	private projectRoot: string | null = null;
 
 	/**
 	 * Create a new ContextManager instance
@@ -181,6 +182,22 @@ export class ContextManager {
 			maxSize: this.config.maxCacheSize,
 			ttl: this.config.ttl
 		};
+	}
+
+	/**
+	 * Update the project root directory
+	 * @param projectRoot - The new project root directory
+	 */
+	updateProjectRoot(projectRoot: string): void {
+		this.projectRoot = projectRoot;
+	}
+
+	/**
+	 * Get the current project root directory
+	 * @returns The current project root or null if not set
+	 */
+	getProjectRoot(): string | null {
+		return this.projectRoot;
 	}
 
 	/**

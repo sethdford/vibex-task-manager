@@ -3,15 +3,19 @@
  * Tool to add a new task using AI
  */
 
-import { z } from 'zod';
 import {
+	z } from 'zod';
+import {
+	apiResultToCommandResult,
 	createErrorResponse,
 	handleApiResult,
 	withNormalizedProjectRoot,
 	MCPTool
 } from './utils.js';
-import { addTaskDirect } from '../core/vibex-task-manager-core.js';
-import { findTasksPath } from '../core/utils/path-utils.js';
+import {
+	addTaskDirect } from '../core/vibex-task-manager-core.js';
+import {
+	findTasksPath } from '../core/utils/path-utils.js';
 
 // Define the input schema
 const addTaskSchema = z.object({
@@ -112,7 +116,7 @@ export function registerAddTaskTool(server: any): void {
 						result.success ? result.data?.id : result.error
 					}`
 				);
-				return handleApiResult(result, log, 'Error adding task');
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error adding task');
 			} catch (error) {
 				log.error(`Error adding task: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
