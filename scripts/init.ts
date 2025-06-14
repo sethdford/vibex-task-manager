@@ -51,6 +51,7 @@ interface InitOptions {
 	dryRun?: boolean;
 	aliases?: boolean;
 	yes?: boolean;
+	skipSetup?: boolean;
 }
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'success';
@@ -576,32 +577,47 @@ function createProjectStructure(addAliases: boolean, dryRun: boolean, options: I
 		);
 	}
 
-	// === Add Model Configuration Step ===
-	if (!isSilentMode() && !dryRun && !options?.yes) {
+	// === Add Model Configuration Step with AWS Bedrock Auto-Detection ===
+	if (!isSilentMode() && !dryRun && !options?.skipSetup) {
 		console.log(
-			boxen(chalk.cyan('Configuring AI Models...'), {
+			boxen(chalk.cyan('🔍 Detecting AWS Bedrock Models...'), {
 				padding: 0.5,
 				margin: { top: 1, bottom: 0.5 },
 				borderStyle: 'round',
 				borderColor: 'blue'
 			})
 		);
-		log(
-			'info',
-			'Running interactive model setup. Please select your preferred AI models.'
-		);
+		
+		// Try auto-detection first
 		try {
-			execSync('npx vibex-task-manager models --setup', {
+			execSync('vibex-task-manager config-detect --apply', {
 				stdio: 'inherit',
 				cwd: targetDir
 			});
-			log('success', 'AI Models configured.');
+			log('success', 'AWS Bedrock models detected and configured automatically!');
 		} catch (error) {
-			log('error', 'Failed to configure AI models:', error.message);
-			log(
-				'warn',
-				'You may need to run "vibex-task-manager models --setup" manually.'
-			);
+			log('warn', 'AWS Bedrock auto-detection failed. Falling back to manual setup...');
+			
+			// Fall back to manual setup if auto-detection fails
+			if (!options?.yes) {
+				log(
+					'info',
+					'Running interactive model setup. Please select your preferred AI models.'
+				);
+				try {
+					execSync('vibex-task-manager models --setup', {
+						stdio: 'inherit',
+						cwd: targetDir
+					});
+					log('success', 'AI Models configured.');
+				} catch (setupError) {
+					log('error', 'Failed to configure AI models:', setupError.message);
+					log(
+						'warn',
+						'You may need to run "vibex-task-manager models --setup" manually.'
+					);
+				}
+			}
 		}
 	} else if (isSilentMode() && !dryRun) {
 		log('info', 'Skipping interactive model setup in silent (MCP) mode.');
@@ -610,12 +626,12 @@ function createProjectStructure(addAliases: boolean, dryRun: boolean, options: I
 			'Please configure AI models using "vibex-task-manager models --set-..." or the "models" MCP tool.'
 		);
 	} else if (dryRun) {
-		log('info', 'DRY RUN: Skipping interactive model setup.');
-	} else if (options?.yes) {
-		log('info', 'Skipping interactive model setup due to --yes flag.');
+		log('info', 'DRY RUN: Skipping model configuration.');
+	} else if (options?.skipSetup) {
+		log('info', 'Skipping model setup due to --skip-setup flag.');
 		log(
 			'info',
-			'Default AI models will be used. You can configure different models later using "vibex-task-manager models --setup" or "vibex-task-manager models --set-..." commands.'
+			'You can configure models later using "vibex-task-manager config-detect" or "vibex-task-manager models --setup".'
 		);
 	}
 	// ====================================
@@ -689,19 +705,12 @@ function setupMCPConfiguration(targetDir: string): void {
 
 	// New MCP config to be added - references the installed package
 	const newMCPServer = {
-		'vibex-task-manager-ai': {
+		'vibex-task-manager': {
 			command: 'npx',
-			args: ['-y', '--package=vibex-task-manager-ai', 'vibex-task-manager-ai'],
+			args: ['-y', '--package=vibex-task-manager', 'vibex-task-manager'],
 			env: {
-				ANTHROPIC_API_KEY: 'ANTHROPIC_API_KEY_HERE',
-				PERPLEXITY_API_KEY: 'PERPLEXITY_API_KEY_HERE',
-				OPENAI_API_KEY: 'OPENAI_API_KEY_HERE',
-				GOOGLE_API_KEY: 'GOOGLE_API_KEY_HERE',
-				XAI_API_KEY: 'XAI_API_KEY_HERE',
-				OPENROUTER_API_KEY: 'OPENROUTER_API_KEY_HERE',
-				MISTRAL_API_KEY: 'MISTRAL_API_KEY_HERE',
-				AZURE_OPENAI_API_KEY: 'AZURE_OPENAI_API_KEY_HERE',
-				OLLAMA_API_KEY: 'OLLAMA_API_KEY_HERE'
+				AWS_PROFILE: process.env.AWS_PROFILE || 'default',
+				AWS_DEFAULT_REGION: process.env.AWS_DEFAULT_REGION || 'us-east-1'
 			}
 		}
 	};
@@ -721,36 +730,36 @@ function setupMCPConfiguration(targetDir: string): void {
 				mcpConfig.mcpServers = {};
 			}
 
-			// Check if any existing server configuration already has vibex-task-manager-mcp in its args
+			// Check if any existing server configuration already has vibex-task-manager in its args
 			const hasMCPString = Object.values(mcpConfig.mcpServers).some(
 				(server: any) =>
 					server.args &&
 					server.args.some(
 						(arg: any) =>
-							typeof arg === 'string' && arg.includes('vibex-task-manager-ai')
+							typeof arg === 'string' && arg.includes('vibex-task-manager')
 					)
 			);
 
 			if (hasMCPString) {
 				log(
 					'info',
-					'Found existing vibex-task-manager-ai MCP configuration in mcp.json, leaving untouched'
+					'Found existing vibex-task-manager MCP configuration in mcp.json, leaving untouched'
 				);
 				return; // Exit early, don't modify the existing configuration
 			}
 
-			// Add the vibex-task-manager-ai server if it doesn't exist
-			if (!mcpConfig.mcpServers['vibex-task-manager-ai']) {
-				mcpConfig.mcpServers['vibex-task-manager-ai'] =
-					newMCPServer['vibex-task-manager-ai'];
+			// Add the vibex-task-manager server if it doesn't exist
+			if (!mcpConfig.mcpServers['vibex-task-manager']) {
+				mcpConfig.mcpServers['vibex-task-manager'] =
+					newMCPServer['vibex-task-manager'];
 				log(
 					'info',
-					'Added vibex-task-manager-ai server to existing MCP configuration'
+					'Added vibex-task-manager server to existing MCP configuration'
 				);
 			} else {
 				log(
 					'info',
-					'vibex-task-manager-ai server already configured in mcp.json'
+					'vibex-task-manager server already configured in mcp.json'
 				);
 			}
 
@@ -790,7 +799,7 @@ function setupMCPConfiguration(targetDir: string): void {
 	// Add note to console about MCP integration
 	log(
 		'info',
-		'MCP server will use the installed vibex-task-manager-ai package'
+		'MCP server will use AWS Bedrock for AI operations'
 	);
 }
 

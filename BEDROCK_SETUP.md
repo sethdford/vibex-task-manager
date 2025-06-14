@@ -1,9 +1,32 @@
 # AWS Bedrock Setup Guide for Vibex Task Manager
 
+## 🎯 Auto-Detection Feature
+
+Vibex Task Manager now includes **automatic model detection**! When you initialize a project, it will:
+
+1. **Detect your AWS credentials** automatically
+2. **Scan for available Claude models** in your region
+3. **Configure optimal models** based on what's available
+4. **Fall back gracefully** if Bedrock isn't accessible
+
+### Quick Test
+
+```bash
+# Test auto-detection in your current region
+vibex-task-manager config detect
+
+# Test in a specific region
+vibex-task-manager config detect --region us-west-2
+
+# Initialize with auto-detection (default)
+vibex-task-manager init
+```
+
 ## Current Status
 ✅ **AWS CLI configured and working**  
 ✅ **AWS Bedrock service accessible**  
 ✅ **Vibex Task Manager Bedrock provider code working**  
+✅ **Auto-detection of available models**  
 ❌ **Claude model access not enabled** (needs manual setup)
 
 ## Required Setup Steps

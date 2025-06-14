@@ -2564,6 +2564,181 @@ Examples:
 			return; // Stop execution here
 		});
 
+	// config detect command
+	programInstance
+		.command('config-detect')
+		.description('Detect available AWS Bedrock models')
+		.option('-r, --region <region>', 'AWS region to check', process.env.AWS_DEFAULT_REGION || 'us-east-1')
+		.option('-p, --profile <profile>', 'AWS profile to use', process.env.AWS_PROFILE)
+		.option('-a, --apply', 'Apply detected models to configuration')
+		.addHelpText(
+			'after',
+			`
+Examples:
+  $ vibex-task-manager config-detect                    # Detect models in default region
+  $ vibex-task-manager config-detect --region us-west-2 # Detect in specific region
+  $ vibex-task-manager config-detect --profile prod     # Use specific AWS profile
+  $ vibex-task-manager config-detect --apply            # Detect and apply to config`
+		)
+		.action(async (options) => {
+			try {
+				const projectRoot = findProjectRoot();
+				if (!projectRoot) {
+					console.error(chalk.red('Error: Could not find project root.'));
+					process.exit(1);
+				}
+
+				// Dynamically import the auto-detect module
+				const BedrockAutoDetect = (await import('../../src/core/bedrock-auto-detect.js')).default;
+				
+				// Create detector instance
+				const detector = new BedrockAutoDetect({
+					region: options.region,
+					profile: options.profile
+				});
+
+				// Detect models
+				const result = await detector.detectModels();
+
+				// Display results
+				if (result.error) {
+					console.log(chalk.red(`❌ ${result.error}`));
+				}
+				
+				if (result.available.length > 0) {
+					console.log(chalk.blue('\n✓ Available Claude models:\n'));
+					for (const model of result.available) {
+						console.log(chalk.green(`  ✓ ${model.modelId}`));
+						console.log(`     ${model.modelInfo.name}`);
+						console.log(`     Context: ${model.modelInfo.contextWindow.toLocaleString()} tokens`);
+						console.log(`     Cost: $${model.modelInfo.inputCostPer1K}/1K input, $${model.modelInfo.outputCostPer1K}/1K output`);
+						console.log('');
+					}
+				}
+
+				if (result.recommendations.main || result.recommendations.research || result.recommendations.fallback) {
+					console.log(chalk.blue('\nRecommended configuration:'));
+					if (result.recommendations.main) {
+						console.log(`  Main Model: ${result.recommendations.main}`);
+					}
+					if (result.recommendations.research) {
+						console.log(`  Research Model: ${result.recommendations.research}`);
+					}
+					if (result.recommendations.fallback) {
+						console.log(`  Fallback Model: ${result.recommendations.fallback}`);
+					}
+				}
+
+				// Apply to configuration if requested
+				if (options.apply && result.available.length > 0) {
+					console.log(chalk.blue('\nApplying detected models to configuration...'));
+					
+					const configPath = path.join(projectRoot, '.vibextaskmanager/config.json');
+					
+					// Read existing config
+					const configData = await fs.promises.readFile(configPath, 'utf-8');
+					const config = JSON.parse(configData);
+					
+					// Update with recommendations
+					if (result.recommendations.main) {
+						config.mainModel = result.recommendations.main;
+					}
+					if (result.recommendations.research) {
+						config.researchModel = result.recommendations.research;
+					}
+					if (result.recommendations.fallback) {
+						config.fallbackModel = result.recommendations.fallback;
+					}
+					
+					// Add metadata
+					config.lastAutoDetect = new Date().toISOString();
+					config.detectedRegion = result.available[0]?.region || options.region;
+					config.availableModels = result.available.map(m => m.modelId);
+					
+					// Write updated config
+					await fs.promises.writeFile(configPath, JSON.stringify(config, null, 2));
+					
+					console.log(chalk.green('✅ Configuration updated successfully!'));
+				} else if (options.apply && result.available.length === 0) {
+					console.log(chalk.yellow('\nNo models available to apply to configuration.'));
+				}
+
+			} catch (error: any) {
+				console.error(chalk.red(`Error: ${error.message}`));
+				if (getDebugFlag()) {
+					console.error(error);
+				}
+				process.exit(1);
+			}
+		});
+
+	// config setup command
+	programInstance
+		.command('config-setup')
+		.description('Interactive configuration setup with auto-detection')
+		.action(async () => {
+			try {
+				const projectRoot = findProjectRoot();
+				if (!projectRoot) {
+					console.error(chalk.red('Error: Could not find project root.'));
+					process.exit(1);
+				}
+
+				// Try auto-detection first
+				console.log(chalk.blue('🔍 Attempting AWS Bedrock auto-detection...'));
+				
+				const BedrockAutoDetect = (await import('../../src/core/bedrock-auto-detect.js')).default;
+				const detector = new BedrockAutoDetect({});
+
+				const result = await detector.detectModels();
+				
+				if (result.available.length > 0) {
+					// Display results
+					console.log(chalk.blue('\n✓ Available Claude models:\n'));
+					for (const model of result.available) {
+						console.log(chalk.green(`  ✓ ${model.modelId}`));
+						console.log(`     ${model.modelInfo.name}`);
+						console.log('');
+					}
+					
+					console.log(chalk.blue('\nApplying detected models to configuration...'));
+					
+					const configPath = path.join(projectRoot, '.vibextaskmanager/config.json');
+					
+					// Read existing config
+					const configData = await fs.promises.readFile(configPath, 'utf-8');
+					const config = JSON.parse(configData);
+					
+					// Update with recommendations
+					if (result.recommendations.main) {
+						config.mainModel = result.recommendations.main;
+					}
+					if (result.recommendations.research) {
+						config.researchModel = result.recommendations.research;
+					}
+					if (result.recommendations.fallback) {
+						config.fallbackModel = result.recommendations.fallback;
+					}
+					
+					// Write updated config
+					await fs.promises.writeFile(configPath, JSON.stringify(config, null, 2));
+					
+					console.log(chalk.green('✅ Configuration updated with detected models!'));
+				} else {
+					console.log(chalk.yellow('No AWS Bedrock models detected. Falling back to manual setup...'));
+					await runInteractiveSetup(projectRoot);
+				}
+
+			} catch (error: any) {
+				console.error(chalk.red(`Error: ${error.message}`));
+				console.log(chalk.yellow('Falling back to manual setup...'));
+				const projectRoot = findProjectRoot();
+				if (projectRoot) {
+					await runInteractiveSetup(projectRoot);
+				}
+			}
+		});
+
 	// move-task command
 	programInstance
 		.command('move')

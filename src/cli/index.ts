@@ -162,6 +162,19 @@ class VibexCLI {
           this.handleError(error);
         }
       });
+
+    configCmd
+      .command('detect')
+      .description('Auto-detect available AWS Bedrock models')
+      .option('--region <region>', 'AWS region to check', 'us-east-1')
+      .option('--profile <profile>', 'AWS profile to use')
+      .action(async (options) => {
+        try {
+          await this.handleConfigDetect(options);
+        } catch (error) {
+          this.handleError(error);
+        }
+      });
   }
 
   private setupTaskCommands(): void {
@@ -491,7 +504,34 @@ class VibexCLI {
   private async handleConfigSetup(options: any): Promise<void> {
     await this.initializeServices();
 
-    console.log(chalk.blue('Available Claude Models:'));
+    // Check if we should auto-detect
+    if (!options.mainModel && !options.researchModel && !options.fallbackModel) {
+      console.log(chalk.blue('Detecting available AWS Bedrock models...'));
+      
+      const autoDetect = await BedrockAutoDetect.quickSetup({
+        region: options.region || process.env.AWS_REGION || 'us-east-1',
+        profile: options.profile || process.env.AWS_PROFILE,
+      });
+
+      if (autoDetect.hasCredentials && autoDetect.availableModels.length > 0) {
+        console.log(chalk.green(`✓ Found ${autoDetect.availableModels.length} available Claude models`));
+        console.log(chalk.dim(`Available models: ${autoDetect.availableModels.join(', ')}`));
+        
+        // Use auto-detected models if user didn't specify
+        options.mainModel = options.mainModel || autoDetect.mainModel;
+        options.researchModel = options.researchModel || autoDetect.researchModel;
+        options.fallbackModel = options.fallbackModel || autoDetect.fallbackModel;
+        options.region = options.region || autoDetect.region;
+      } else if (!autoDetect.hasCredentials) {
+        console.log(chalk.yellow('⚠ AWS credentials not configured'));
+        console.log(chalk.dim('Using default model configuration...'));
+      } else {
+        console.log(chalk.yellow('⚠ No Claude models found in your region'));
+        console.log(chalk.dim('Using default model configuration...'));
+      }
+    }
+
+    console.log(chalk.blue('\nAvailable Claude Models:'));
     const models = BedrockClient.getAvailableModels();
     models.forEach((model, index) => {
       console.log(`${index + 1}. ${chalk.green(model.id)} - ${model.name}`);
@@ -553,6 +593,77 @@ class VibexCLI {
       console.log(`  Output Cost: $${model.outputCostPer1K}/1K tokens`);
       console.log();
     });
+  }
+
+  private async handleConfigDetect(options: any): Promise<void> {
+    console.log(chalk.blue('Detecting available AWS Bedrock models...'));
+    console.log(chalk.dim(`Region: ${options.region}`));
+    if (options.profile) {
+      console.log(chalk.dim(`Profile: ${options.profile}`));
+    }
+    console.log();
+
+    const detector = new BedrockAutoDetect({
+      region: options.region,
+      profile: options.profile,
+    });
+
+    const result = await detector.detectModels();
+
+    if (!result.hasCredentials) {
+      console.log(chalk.red('✗ AWS credentials not found or invalid'));
+      console.log(chalk.yellow('Please configure AWS credentials to access Bedrock.'));
+      console.log();
+      console.log('You can configure credentials using:');
+      console.log('  - AWS CLI: aws configure');
+      console.log('  - Environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY');
+      console.log('  - IAM role (when running on AWS)');
+      return;
+    }
+
+    if (result.error) {
+      console.log(chalk.red(`✗ Error: ${result.error}`));
+    }
+
+    if (result.available.length > 0) {
+      console.log(chalk.green(`✓ Found ${result.available.length} available Claude models:`));
+      console.log();
+      
+      result.available.forEach(model => {
+        console.log(`  ${chalk.green('✓')} ${chalk.bold(model.modelId)}`);
+        console.log(`     ${model.modelInfo.name}`);
+        console.log(`     Context: ${model.modelInfo.contextWindow.toLocaleString()} tokens`);
+        console.log(`     Cost: $${model.modelInfo.inputCostPer1K}/1K input, $${model.modelInfo.outputCostPer1K}/1K output`);
+        console.log();
+      });
+    } else {
+      console.log(chalk.yellow('⚠ No Claude models found in this region'));
+      console.log('Please ensure you have requested access to Claude models in the AWS Bedrock console.');
+    }
+
+    if (result.unavailable.length > 0) {
+      console.log(chalk.dim(`\nUnavailable models (${result.unavailable.length}):`));
+      result.unavailable.forEach(model => {
+        console.log(`  ${chalk.red('✗')} ${model.modelId} - ${model.modelInfo.name}`);
+      });
+    }
+
+    if (result.recommendations.main || result.recommendations.research || result.recommendations.fallback) {
+      console.log(chalk.blue('\nRecommended configuration:'));
+      if (result.recommendations.main) {
+        console.log(`  Main Model: ${chalk.green(result.recommendations.main)}`);
+      }
+      if (result.recommendations.research) {
+        console.log(`  Research Model: ${chalk.green(result.recommendations.research)}`);
+      }
+      if (result.recommendations.fallback) {
+        console.log(`  Fallback Model: ${chalk.green(result.recommendations.fallback)}`);
+      }
+      
+      console.log();
+      console.log(chalk.dim('To apply these recommendations, run:'));
+      console.log(chalk.dim('  vibex-task-manager config setup'));
+    }
   }
 
   private async handleList(options: any): Promise<void> {
