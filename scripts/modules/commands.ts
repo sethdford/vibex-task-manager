@@ -86,7 +86,7 @@ import {
 	isValidTaskStatus,
 	TASK_STATUS_OPTIONS
 } from '../../src/constants/task-status.js';
-import { getTaskMasterVersion } from '../../src/utils/getVersion.js';
+import { getVibexTaskManagerVersion } from '../../src/utils/getVersion.js';
 import { syncTasksToReadme } from './sync-readme.js';
 
 /**
@@ -2303,7 +2303,7 @@ function registerCommands(programInstance) {
 		.option('-a, --author <author>', 'Author name')
 		.option('--skip-install', 'Skip installing dependencies')
 		.option('--dry-run', 'Show what would be done without making changes')
-		.option('--aliases', 'Add shell aliases (tm, taskmaster)')
+		.option('--aliases', 'Add shell aliases (tm, vibex-task-manager)')
 		.action(async (cmdOptions) => {
 			// cmdOptions contains parsed arguments
 			try {
@@ -2877,11 +2877,11 @@ Examples:
 	programInstance
 		.command('migrate')
 		.description(
-			'Migrate existing project to use the new .taskmaster directory structure'
+			'Migrate existing project to use the new .taskmanager directory structure'
 		)
 		.option(
 			'-f, --force',
-			'Force migration even if .taskmaster directory already exists'
+			'Force migration even if .taskmanager directory already exists'
 		)
 		.option(
 			'--backup',
@@ -2989,7 +2989,7 @@ function setupCLI() {
  */
 async function checkForUpdate() {
 	// Get current version from package.json ONLY
-	const currentVersion = getTaskMasterVersion();
+	const currentVersion = getVibexTaskManagerVersion();
 
 	return new Promise((resolve) => {
 		// Get the latest version from npm registry
@@ -3140,7 +3140,7 @@ async function runCLI(argv = process.argv) {
 				boxen(
 					chalk.red.bold('Configuration Update Required!') +
 						'\n\n' +
-						chalk.white('Taskmaster now uses a ') +
+						chalk.white('Vibex Task Manager now uses a ') +
 						chalk.yellow.bold('configuration file') +
 						chalk.white(
 							' in your project for AI model choices and settings.\n\n' +
@@ -3168,7 +3168,7 @@ async function runCLI(argv = process.argv) {
 							'`vibex-task-manager models` to check your config & available models\n'
 						) +
 						chalk.cyan(
-							'`vibex-task-manager models --setup` to adjust the AI models used by Taskmaster'
+							'`vibex-task-manager models --setup` to adjust the AI models used by Vibex Task Manager'
 						),
 					{
 						padding: 1,

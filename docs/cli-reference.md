@@ -64,7 +64,7 @@ vibex-task-manager init [options]
 -y, --yes                        Skip prompts, use defaults
 --skip-install                   Skip dependency installation
 --dry-run                        Preview changes without executing
---aliases                        Add shell aliases (tm, taskmaster)
+--aliases                        Add shell aliases (tm, vibex-task-manager)
 ```
 
 **Examples:**
@@ -80,7 +80,7 @@ vibex-task-manager init --dry-run
 ```
 
 ### migrate
-Migrate existing project to new .taskmaster directory structure.
+Migrate existing project to new .taskmanager directory structure.
 
 ```bash
 vibex-task-manager migrate [options]
@@ -774,7 +774,7 @@ vibex-task-manager dev --test --verbose
 ## Configuration Files
 
 ### Project Configuration
-- **`.taskmasterconfig`** - AI models and project settings
+- **`.taskmanager/config.json`** - AI models and project settings
 - **`tasks.json`** - Task data storage
 - **`task-complexity-report.json`** - Complexity analysis results
 - **`prd.txt`** - Product Requirements Document

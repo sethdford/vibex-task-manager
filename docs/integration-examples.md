@@ -745,7 +745,7 @@ setup-tasks:
   artifacts:
     paths:
       - tasks.json
-      - .taskmasterconfig
+      - .taskmanager/config.json
     expire_in: 1 hour
 
 analyze-complexity:

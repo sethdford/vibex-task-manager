@@ -59,7 +59,7 @@ export function registerParsePRDTool(server: any): void {
 				.boolean()
 				.optional()
 				.describe(
-					'Enable Taskmaster to use the research role for potentially more informed task generation. Requires appropriate API key.'
+					'Enable Vibex Task Manager to use the research role for potentially more informed task generation. Requires appropriate API key.'
 				),
 			append: z
 				.boolean()

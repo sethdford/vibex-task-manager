@@ -91,7 +91,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 		.option('-a, --author <author>', 'Author name')
 		.option('--skip-install', 'Skip installing dependencies')
 		.option('--dry-run', 'Show what would be done without making changes')
-		.option('--aliases', 'Add shell aliases (tm, taskmaster)')
+		.option('--aliases', 'Add shell aliases (tm, vibex-task-manager)')
 		.action(async (cmdOptions: InitOptions) => {
 			try {
 				await runInitCLI(cmdOptions);

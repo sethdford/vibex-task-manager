@@ -28,7 +28,7 @@ export function registerInitializeProjectTool(server: any): void {
 				.boolean()
 				.optional()
 				.default(false)
-				.describe('Add shell aliases (tm, taskmaster) to shell config file.'),
+				.describe('Add shell aliases (tm, vibex-task-manager) to shell config file.'),
 			yes: z
 				.boolean()
 				.optional()
