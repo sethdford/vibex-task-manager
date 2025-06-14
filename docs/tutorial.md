@@ -73,13 +73,13 @@ If you prefer to use the command line interface directly:
 
 ```bash
 # Install globally
-npm install -g vibex-task-manager-ai
+npm install -g vibex-task-manager
 
 # OR install locally within your project
-npm install vibex-task-manager-ai
+npm install vibex-task-manager
 ```
 
-Initialize a new project:
+Initialize a new project with **Automatic Model Detection** (New in v0.17.3!):
 
 ```bash
 # If installed globally
@@ -89,7 +89,21 @@ vibex-task-manager init
 npx vibex-task-manager init
 ```
 
-This will prompt you for project details and set up a new project with the necessary files and structure.
+**During initialization, Vibex Task Manager will automatically:**
+1. 🔍 Detect your AWS credentials
+2. 🎯 Scan for available Claude models in your region
+3. 💡 Configure optimal model selection
+4. ✅ Set up your project with zero manual configuration
+
+If AWS credentials aren't found, you'll receive helpful instructions on how to set them up. You can also run model detection manually:
+
+```bash
+# Manually detect available models
+vibex-task-manager config-detect
+
+# Detect in a specific region
+vibex-task-manager config-detect --region us-west-2
+```
 
 ## Common Commands
 

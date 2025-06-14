@@ -232,33 +232,47 @@ vibex-task-manager add-task --prompt="Description" --priority=high
 ## Initialize a Project
 
 ```bash
-# Initialize a new project with Vibex Task Manager structure
+# Initialize a new project with automatic AWS Bedrock model detection (v0.17.3+)
 vibex-task-manager init
+
+# Skip auto-detection during init
+vibex-task-manager init --skip-setup
 ```
+
+**Note:** Starting with v0.17.3, `init` automatically detects and configures AWS Bedrock models!
 
 ## Configure AI Models
 
 ```bash
-# View current AI model configuration and API key status
+# Auto-detect available AWS Bedrock models (v0.17.3+)
+vibex-task-manager config-detect
+
+# Auto-detect with specific region
+vibex-task-manager config-detect --region us-west-2
+
+# Auto-detect with specific AWS profile
+vibex-task-manager config-detect --profile production
+
+# Auto-detect and apply configuration
+vibex-task-manager config-detect --apply
+
+# View current AI model configuration
 vibex-task-manager models
 
-# Set the primary model for generation/updates (provider inferred if known)
-vibex-task-manager models --set-main=claude-3-opus-20240229
+# Set the primary model
+vibex-task-manager models --set-main=anthropic.claude-3-5-sonnet-20241022-v2:0
 
 # Set the research model
-vibex-task-manager models --set-research=sonar-pro
+vibex-task-manager models --set-research=anthropic.claude-3-opus-20240229-v1:0
 
 # Set the fallback model
-vibex-task-manager models --set-fallback=claude-3-haiku-20240307
+vibex-task-manager models --set-fallback=anthropic.claude-3-haiku-20240307-v1:0
 
-# Set a custom Ollama model for the main role
-vibex-task-manager models --set-main=my-local-llama --ollama
-
-# Set a custom OpenRouter model for the research role
-vibex-task-manager models --set-research=google/gemini-pro --openrouter
-
-# Run interactive setup to configure models, including custom ones
+# Run interactive setup to configure models
 vibex-task-manager models --setup
+
+# Test model configuration
+vibex-task-manager models --test
 ```
 
-Configuration is stored in `.vibex-task-managerconfig` in your project root. API keys are still managed via `.env` or MCP configuration. Use `vibex-task-manager models` without flags to see available built-in models. Use `--setup` for a guided experience.
+**Auto-Detection Feature (v0.17.3+):** The `config-detect` command automatically discovers available Claude models in your AWS Bedrock region and suggests optimal configuration. Configuration is stored in `.taskmanager/config.json` in your project root.

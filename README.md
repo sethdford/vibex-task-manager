@@ -9,15 +9,16 @@
 
 A task management system for AI-driven development using AWS Bedrock, designed to work seamlessly with Cursor AI and other MCP-compatible editors.
 
-## ⚡ What's New
+## ⚡ What's New in v0.17.3
 
-**Vibex Task Manager** is the next evolution of task management for AI development, now powered exclusively by **AWS Bedrock**. This provides:
+**Vibex Task Manager** now features **Zero-Configuration Setup** with intelligent AWS Bedrock auto-detection! This provides:
 
+- 🎯 **Auto-Detection**: Automatically discovers available Claude models in your AWS region
+- 🚀 **Zero-Config**: Works out of the box with existing AWS credentials
 - 🔒 **Enterprise Security**: AWS-grade security and compliance
 - 🌍 **Global Scale**: AWS infrastructure worldwide
-- 💰 **Cost Optimization**: Pay-per-use pricing with AWS Bedrock
-- 🚀 **Latest Models**: Access to Claude 3.5 Sonnet, Claude 3 Opus, and Amazon Titan models
-- 🔧 **Simplified Setup**: One cloud provider, consistent configuration
+- 💰 **Smart Recommendations**: Suggests optimal models based on performance and cost
+- 🔧 **Graceful Fallback**: Helpful guidance when AWS access isn't available
 
 ## Documentation
 
@@ -45,6 +46,55 @@ Vibex Task Manager uses AWS Bedrock for all AI operations. You'll need:
 - **Claude 3 Sonnet** (`anthropic.claude-3-sonnet-20240229-v1:0`) - Balanced performance
 - **Claude 3 Haiku** (`anthropic.claude-3-haiku-20240307-v1:0`) - Fast and efficient
 - **Amazon Titan Text** (`amazon.titan-text-premier-v1:0`) - AWS native model
+
+## 🎯 Zero-Configuration Setup with Auto-Detection
+
+Starting with version 0.17.3, Vibex Task Manager automatically detects and configures AWS Bedrock models for you! This revolutionary feature means:
+
+### Automatic Setup During Init
+
+When you run `vibex-task-manager init`, the system will:
+
+1. **Check AWS Credentials** - Automatically validates your AWS access
+2. **Scan Available Models** - Discovers all Claude models in your current AWS region
+3. **Smart Configuration** - Intelligently configures your project with:
+   - **Main Model**: Claude 4 (3.7) Sonnet or Claude 3.5 Sonnet for primary tasks
+   - **Research Model**: Claude 3 Opus for complex reasoning and analysis
+   - **Fallback Model**: Claude 3 Haiku for cost-effective operations
+4. **Zero Manual Config** - No need to manually select models or edit configuration files!
+
+### Graceful Fallback Behavior
+
+If AWS credentials aren't available, Vibex Task Manager provides:
+- Clear instructions on setting up AWS access
+- Helpful links to AWS Bedrock documentation
+- Option to configure manually later
+- Default configuration that can be updated when AWS access is available
+
+### Auto-Detection Commands
+
+```bash
+# Initialize with auto-detection (default behavior)
+vibex-task-manager init
+
+# Manually detect models in your current region
+vibex-task-manager config-detect
+
+# Detect models in a specific region
+vibex-task-manager config-detect --region us-west-2
+
+# Detect models using a specific AWS profile
+vibex-task-manager config-detect --profile production
+
+# Detect and automatically apply to configuration
+vibex-task-manager config-detect --apply
+
+# Setup configuration with auto-detection
+vibex-task-manager config-setup
+
+# Skip auto-detection during init
+vibex-task-manager init --skip-setup
+```
 
 ## Quick Start
 
@@ -117,13 +167,19 @@ In your AWS Console:
    - Anthropic Claude models
    - Amazon Titan models
 
-#### 4. Initialize Your Project
+#### 4. Initialize Your Project (with Auto-Detection!)
 
 In your editor's AI chat pane, say:
 
 ```txt
 Initialize vibex-task-manager in my project
 ```
+
+**The system will automatically:**
+- ✅ Detect your AWS credentials
+- ✅ Find available Claude models in your region
+- ✅ Configure optimal model selection
+- ✅ Create your project with zero manual setup!
 
 #### 5. Start Building
 
@@ -163,7 +219,7 @@ export AWS_SECRET_ACCESS_KEY=your-secret-access-key
 export AWS_DEFAULT_REGION=us-east-1
 ```
 
-#### Initialize a new project
+#### Initialize a new project (with Auto-Detection!)
 
 ```bash
 # If installed globally
@@ -173,7 +229,13 @@ vibex-task-manager init
 npx vibex-task-manager init
 ```
 
-This will prompt you for project details and set up a new project with the necessary files and structure.
+**What happens during init:**
+1. 🔍 Automatically detects your AWS credentials
+2. 🎯 Scans for available Claude models in your region
+3. 💡 Recommends optimal model configuration
+4. ✅ Sets up your project with zero manual configuration
+
+If AWS credentials aren't found, you'll receive helpful instructions on how to set them up.
 
 #### Common Commands
 

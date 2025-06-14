@@ -2,7 +2,24 @@
 
 Here are some common interactions with Cursor AI when using Vibex Task Manager:
 
-## Starting a new project
+## Starting a new project (with Auto-Detection!)
+
+```
+Initialize vibex-task-manager in my project
+```
+
+**What happens automatically (v0.17.3+):**
+- ✅ Detects your AWS credentials
+- ✅ Scans for available Claude models in your region
+- ✅ Configures optimal model selection
+- ✅ Sets up your project with zero manual configuration
+
+If you need to manually check available models:
+```
+Can you detect what AWS Bedrock models I have access to?
+```
+
+## Parsing a PRD
 
 ```
 I've just initialized a new project with Claude Vibex Task Manager. I have a PRD at .vibex-task-manager/docs/prd.txt.

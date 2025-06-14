@@ -1,15 +1,38 @@
 # Configuration
 
-Vibex Task Manager uses AWS Bedrock for all AI operations and provides flexible configuration options.
+Vibex Task Manager uses AWS Bedrock for all AI operations and provides flexible configuration options. **Starting with v0.17.3, the system features automatic model detection and zero-configuration setup!**
+
+## Zero-Configuration Setup (New in v0.17.3!)
+
+The easiest way to get started is to let Vibex Task Manager automatically detect and configure your AWS Bedrock models:
+
+```bash
+# Auto-detection happens automatically during init
+vibex-task-manager init
+
+# Or manually trigger detection
+vibex-task-manager config-detect
+
+# Detection with specific region/profile
+vibex-task-manager config-detect --region us-west-2 --profile production
+```
+
+**Benefits of Auto-Detection:**
+- 🎯 Automatically finds all available Claude models
+- 💡 Intelligently selects optimal model configuration
+- 🚀 Zero manual configuration required
+- 📍 Region-aware model discovery
+- 💰 Cost-optimized recommendations
 
 ## Configuration Methods
 
-### 1. **`.taskmanager/config.json` File (Recommended)**
+### 1. **`.taskmanager/config.json` File (Auto-Generated)**
 
-This JSON file stores all configuration settings, including AWS Bedrock model selections, parameters, logging levels, and project defaults.
+This JSON file is automatically created during init with optimal settings based on auto-detection. It stores all configuration settings, including AWS Bedrock model selections, parameters, logging levels, and project defaults.
 
-- **Location:** Created in the `.taskmanager/` directory when you run `vibex-task-manager models --setup` or `vibex-task-manager init`
-- **Management:** Use the `vibex-task-manager models --setup` command to interactively create and manage this file
+- **Location:** Created in the `.taskmanager/` directory when you run `vibex-task-manager init`
+- **Auto-Configuration:** Automatically populated with detected models during init
+- **Management:** Use the `vibex-task-manager models --setup` command to modify settings
 - **Manual editing:** Possible but not recommended unless you understand the structure
 
 **Example Structure:**
