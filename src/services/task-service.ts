@@ -125,9 +125,11 @@ export class TaskService implements ITaskService {
     const now = new Date().toISOString();
 
     const newTask: Task = {
-      ...input,
       id: maxId + 1,
-      status: input.status || 'pending',
+      subtasks: [],
+      dependencies: [],
+      status: 'pending',
+      ...input,
       created: now,
       updated: now,
     };
