@@ -41,13 +41,16 @@ export class TaskService implements ITaskService {
   private cache: Map<string, { data: unknown; timestamp: number }> = new Map();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-  constructor(projectRoot: string, configService?: ConfigService) {
+  private constructor(projectRoot: string, configService?: ConfigService) {
     this.projectRoot = projectRoot;
     this.configService = configService || new ConfigService(projectRoot);
     this.tasksFilePath = path.join(projectRoot, '.taskmanager', 'tasks', 'tasks.json');
-    
-    // Initialize Bedrock client with current config
-    this.initializeBedrockClient();
+  }
+
+  public static async create(projectRoot: string, configService?: ConfigService): Promise<TaskService> {
+    const service = new TaskService(projectRoot, configService);
+    await service.initializeBedrockClient();
+    return service;
   }
 
   private async initializeBedrockClient(): Promise<void> {

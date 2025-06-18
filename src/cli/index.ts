@@ -66,7 +66,7 @@ class VibexCLI {
     }
     
     if (!this.taskService) {
-      this.taskService = new TaskService(this.projectRoot, this.configService);
+      this.taskService = await TaskService.create(this.projectRoot, this.configService);
     }
   }
 
