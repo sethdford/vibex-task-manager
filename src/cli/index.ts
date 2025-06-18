@@ -558,6 +558,8 @@ class VibexCLI {
   private async handleConfigSetup(options: any): Promise<void> {
     await this.initializeServices();
 
+    const existingConfig = await this.configService!.getConfig();
+
     // Check if we should auto-detect
     if (!options.mainModel && !options.researchModel && !options.fallbackModel) {
       console.log(chalk.blue('Detecting available AWS Bedrock models...'));
@@ -595,11 +597,11 @@ class VibexCLI {
     });
 
     const setupOptions = {
-      mainModel: options.mainModel || 'claude-3-5-sonnet-20241022',
-      researchModel: options.researchModel || 'claude-3-opus-20240229',
-      fallbackModel: options.fallbackModel || 'claude-3-haiku-20240307',
-      region: options.region || 'us-east-1',
-      profile: options.profile,
+      mainModel: options.mainModel || existingConfig.models?.main?.modelId || 'claude-3-haiku-20240307',
+      researchModel: options.researchModel || existingConfig.models?.research?.modelId || 'claude-3-opus-20240229',
+      fallbackModel: options.fallbackModel || existingConfig.models?.fallback?.modelId || 'claude-3-haiku-20240307',
+      region: options.region || (existingConfig as any).aws?.region || 'us-east-1',
+      profile: options.profile || (existingConfig as any).aws?.profile,
     };
 
     console.log(chalk.blue('Setting up configuration with:'));

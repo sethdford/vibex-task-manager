@@ -101,14 +101,29 @@ export const GlobalConfigSchema = z.object({
 });
 
 export const ConfigSchema = z.object({
-  models: z.object({
-    main: BedrockModelConfigSchema,
-    research: BedrockModelConfigSchema,
-    fallback: BedrockModelConfigSchema.optional(),
-  }),
+  projectName?: string;
+  version?: string;
+  created?: string;
+  aiProvider?: 'bedrock' | 'openai';
+  models: {
+    main: BedrockModelConfig;
+    research: BedrockModelConfig;
+    fallback: BedrockModelConfig;
+  };
+  aws?: {
+    region?: string;
+    profile?: string;
+  };
+  features?: {
+    aiTaskGeneration?: boolean;
+    complexityAnalysis?: boolean;
+  };
   global: GlobalConfigSchema,
-  version: z.string().default('1.0.0'),
   lastUpdated: z.string().datetime().optional(),
+  dataDirectory: z.string().default('.vibex'),
+  autoSave: z.boolean().default(true),
+  autoBackup: z.boolean().default(true),
+  maxBackups: z.number().min(1).max(100).default(10),
 });
 
 export type BedrockModelConfig = z.infer<typeof BedrockModelConfigSchema>;
