@@ -101,7 +101,7 @@ export async function syncTasksToReadme(projectRoot = null, options: { withSubta
 		const tasksOutput = await listTasks(
 			tasksPath ||
 				path.join(actualProjectRoot, '.taskmaster', 'tasks', 'tasks.json'),
-			status,
+			status || 'pending',
 			null,
 			withSubtasks,
 			'markdown-readme'
@@ -136,7 +136,7 @@ export async function syncTasksToReadme(projectRoot = null, options: { withSubta
 		try {
 			readmeContent = fs.readFileSync(readmePath, 'utf8');
 		} catch (err) {
-			if (err.code === 'ENOENT') {
+			if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
 				// Create basic README if it doesn't exist
 				readmeContent = createBasicReadme(projectName);
 			} else {
@@ -175,8 +175,8 @@ export async function syncTasksToReadme(projectRoot = null, options: { withSubta
 
 		return true;
 	} catch (error) {
-		console.log(chalk.red('❌ Failed to sync tasks to README:'), error.message);
-		log('error', `README sync error: ${error.message}`);
+		console.log(chalk.red('❌ Failed to sync tasks to README:'), (error as Error).message);
+		log('error', `README sync error: ${(error as Error).message}`);
 		return false;
 	}
 }

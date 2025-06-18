@@ -12,6 +12,7 @@ import {
 	disableSilentMode,
 	readJSON
 } from '../../../../scripts/modules/utils.js';
+import { AnyLogger, createLogger } from '../logger.js';
 
 // Type definitions for direct function interfaces
 interface Logger {
@@ -79,15 +80,16 @@ interface RemoveTaskCoreResult {
  */
 export async function removeTaskDirect(
 	args: RemoveTaskArgs,
-	log: Logger
+	log: AnyLogger
 ): Promise<ApiResult<RemoveTaskDirectResult>> {
 	// Destructure expected args
 	const { tasksJsonPath, id } = args;
-	
+	const logger = createLogger(log);
+
 	try {
 		// Check if tasksJsonPath was provided
 		if (!tasksJsonPath) {
-			log.error('removeTaskDirect called without tasksJsonPath');
+			logger.error('removeTaskDirect called without tasksJsonPath');
 			return {
 				success: false,
 				error: {
@@ -99,7 +101,7 @@ export async function removeTaskDirect(
 
 		// Validate task ID parameter
 		if (!id) {
-			log.error('Task ID is required');
+			logger.error('Task ID is required');
 			return {
 				success: false,
 				error: {
@@ -112,7 +114,7 @@ export async function removeTaskDirect(
 		// Split task IDs if comma-separated
 		const taskIdArray = id.split(',').map((taskId) => taskId.trim());
 
-		log.info(
+		logger.info(
 			`Removing ${taskIdArray.length} task(s) with ID(s): ${taskIdArray.join(', ')} from ${tasksJsonPath}`
 		);
 
@@ -161,7 +163,7 @@ export async function removeTaskDirect(
 							message: message,
 							removedTask: result.removedTasks[0] // Take the first removed task
 						});
-						log.info(`Successfully removed task: ${taskId}`);
+						logger.info(`Successfully removed task: ${taskId}`);
 					} else {
 						// Handle error case
 						const error = result.error || (result.errors && result.errors.join('; ')) || 'Unknown error';
@@ -170,7 +172,7 @@ export async function removeTaskDirect(
 							success: false,
 							error: error
 						});
-						log.error(`Error removing task ${taskId}: ${error}`);
+						logger.error(`Error removing task ${taskId}: ${error}`);
 					}
 				} catch (error: any) {
 					results.push({
@@ -178,7 +180,7 @@ export async function removeTaskDirect(
 						success: false,
 						error: error.message
 					});
-					log.error(`Error removing task ${taskId}: ${error.message}`);
+					logger.error(`Error removing task ${taskId}: ${error.message}`);
 				}
 			}
 		} finally {
@@ -220,7 +222,7 @@ export async function removeTaskDirect(
 		disableSilentMode();
 
 		// Catch any unexpected errors
-		log.error(`Unexpected error in removeTaskDirect: ${error.message}`);
+		logger.error(`Unexpected error in removeTaskDirect: ${error.message}`);
 		return {
 			success: false,
 			error: {

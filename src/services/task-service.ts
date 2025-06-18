@@ -34,7 +34,7 @@ import {
 import { ConfigService } from './config-service.js';
 
 export class TaskService implements ITaskService {
-  private bedrockClient: BedrockClient;
+  	private bedrockClient!: BedrockClient;
   private configService: ConfigService;
   private projectRoot: string;
   private tasksFilePath: string;

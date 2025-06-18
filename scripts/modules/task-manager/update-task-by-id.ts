@@ -88,16 +88,16 @@ function parseUpdatedTaskFromText(text, expectedTaskId, logFn, isMCP) {
 	// --- NEW Step 1: Try extracting between {} first ---
 	const firstBraceIndex = cleanedResponse.indexOf('{');
 	const lastBraceIndex = cleanedResponse.lastIndexOf('}');
-	let potentialJsonFromBraces = null;
+	let potentialJsonFromBraces: string | null = null;
 
 	if (firstBraceIndex !== -1 && lastBraceIndex > firstBraceIndex) {
 		potentialJsonFromBraces = cleanedResponse.substring(
 			firstBraceIndex,
 			lastBraceIndex + 1
 		);
-		if (potentialJsonFromBraces.length <= 2) {
-			potentialJsonFromBraces = null; // Ignore empty braces {}
-		}
+			if (potentialJsonFromBraces && potentialJsonFromBraces.length <= 2) {
+		potentialJsonFromBraces = null; // Ignore empty braces {}
+	}
 	}
 
 	// If {} extraction yielded something, try parsing it immediately
@@ -157,7 +157,7 @@ function parseUpdatedTaskFromText(text, expectedTaskId, logFn, isMCP) {
 	try {
 		parsedTask = JSON.parse(cleanedResponse);
 	} catch (parseError) {
-		report('error', `Failed to parse JSON object: ${parseError.message}`);
+		report('error', `Failed to parse JSON object: ${(parseError as Error).message}`);
 		report(
 			'error',
 			`Problematic JSON string (first 500 chars): ${cleanedResponse.substring(0, 500)}`
@@ -167,7 +167,7 @@ function parseUpdatedTaskFromText(text, expectedTaskId, logFn, isMCP) {
 			`Original Raw Response (first 500 chars): ${originalResponseForDebug.substring(0, 500)}`
 		);
 		throw new Error(
-			`Failed to parse JSON response object: ${parseError.message}`
+			`Failed to parse JSON response object: ${(parseError as Error).message}`
 		);
 	}
 
@@ -384,8 +384,8 @@ The changes described in the prompt should be thoughtfully applied to make the t
 		const userPrompt = `Here is the task to update:\n${taskDataString}\n\nPlease update this task based on the following new context:\n${prompt}\n\nIMPORTANT: In the task JSON above, any subtasks with "status": "done" or "status": "completed" should be preserved exactly as is. Build your changes around these completed items.\n\nReturn only the updated task as a valid JSON object.`;
 		// --- End Build Prompts ---
 
-		let loadingIndicator = null;
-		let aiServiceResponse = null;
+			let loadingIndicator: any = null;
+	let aiServiceResponse: any = null;
 
 		if (!isMCP && outputFormat === 'text') {
 			loadingIndicator = startLoadingIndicator(
@@ -450,23 +450,27 @@ The changes described in the prompt should be thoughtfully applied to make the t
 						(st) => st.status === 'done' || st.status === 'completed'
 					);
 					completedOriginal.forEach((compSub) => {
-						const updatedSub = updatedTask.subtasks.find(
-							(st) => st.id === compSub.id
+											const updatedSub = updatedTask.subtasks?.find(
+						(st) => st.id === compSub.id
+					);
+					if (
+						!updatedSub ||
+						JSON.stringify(updatedSub) !== JSON.stringify(compSub)
+					) {
+						report(
+							'warn',
+							`Completed subtask ${compSub.id} was modified or removed. Restoring.`
 						);
-						if (
-							!updatedSub ||
-							JSON.stringify(updatedSub) !== JSON.stringify(compSub)
-						) {
-							report(
-								'warn',
-								`Completed subtask ${compSub.id} was modified or removed. Restoring.`
-							);
-							// Remove potentially modified version
+						// Remove potentially modified version
+						if (updatedTask.subtasks) {
 							updatedTask.subtasks = updatedTask.subtasks.filter(
 								(st) => st.id !== compSub.id
 							);
-							// Add back original
+						}
+													// Add back original
+						if (updatedTask.subtasks) {
 							updatedTask.subtasks.push(compSub);
+						}
 						}
 					});
 					// Deduplicate just in case
@@ -506,8 +510,9 @@ The changes described in the prompt should be thoughtfully applied to make the t
 		} catch (error) {
 			// Catch errors from generateTextService
 			if (loadingIndicator) stopLoadingIndicator(loadingIndicator);
-			report('error', `Error during AI service call: ${error.message}`);
-			if (error.message.includes('API key')) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			report('error', `Error during AI service call: ${errorMessage}`);
+			if (errorMessage.includes('API key')) {
 				report('error', 'Please ensure API keys are configured correctly.');
 			}
 			throw error; // Re-throw error
@@ -515,9 +520,10 @@ The changes described in the prompt should be thoughtfully applied to make the t
 	} catch (error) {
 		// General error catch
 		// --- General Error Handling (Keep existing) ---
-		report('error', `Error updating task: ${error.message}`);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		report('error', `Error updating task: ${errorMessage}`);
 		if (outputFormat === 'text') {
-			console.error(chalk.red(`Error: ${error.message}`));
+			console.error(chalk.red(`Error: ${errorMessage}`));
 			// ... helpful hints ...
 			if (getDebugFlag(projectRoot)) console.error(error);
 			process.exit(1);

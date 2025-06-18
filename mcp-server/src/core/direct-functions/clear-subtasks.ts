@@ -9,6 +9,13 @@ import {
 	disableSilentMode
 } from '../../../../scripts/modules/utils.js';
 import fs from 'fs';
+import { AnyLogger, createLogger } from '../logger.js';
+
+interface ClearSubtasksArgs {
+	tasksJsonPath: string;
+	id?: string;
+	all?: boolean;
+}
 
 /**
  * Clear subtasks from specified tasks
@@ -19,15 +26,18 @@ import fs from 'fs';
  * @param {Object} log - Logger object
  * @returns {Promise<{success: boolean, data?: Object, error?: {code: string, message: string}}>}
  */
-export async function clearSubtasksDirect(args: any, log: Logger) {
-	// Destructure expected args
-	const { tasksJsonPath, id, all } = args;
+export async function clearSubtasksDirect(
+	args: ClearSubtasksArgs,
+	log: AnyLogger
+) {
+	const wrappedLogger = createLogger(log);
 	try {
-		log.info(`Clearing subtasks with args: ${JSON.stringify(args)}`);
+		wrappedLogger.info(`Clearing subtasks with args: ${JSON.stringify(args)}`);
+		const { tasksJsonPath, id, all } = args;
 
 		// Check if tasksJsonPath was provided
 		if (!tasksJsonPath) {
-			log.error('clearSubtasksDirect called without tasksJsonPath');
+			wrappedLogger.error('clearSubtasksDirect called without tasksJsonPath');
 			return {
 				success: false,
 				error: {
@@ -63,47 +73,40 @@ export async function clearSubtasksDirect(args: any, log: Logger) {
 			};
 		}
 
-		let taskIds;
+		let taskIdsString: string;
+		let taskIdArray: (string | number)[];
 
-		// If all is specified, get all task IDs
 		if (all) {
-			log.info('Clearing subtasks from all tasks');
 			const data = JSON.parse(fs.readFileSync(tasksPath, 'utf8'));
-			if (!data || !data.tasks || data.tasks.length === 0) {
-				return {
-					success: false,
-					error: {
-						code: 'INPUT_VALIDATION_ERROR',
-						message: 'No valid tasks found in the tasks file'
-					}
-				};
-			}
-			taskIds = data.tasks.map((t) => t.id).join(',');
+			taskIdArray = data.tasks.map((t: any) => t.id);
+			taskIdsString = taskIdArray.join(',');
 		} else {
-			// Use the provided task IDs
-			taskIds = id;
+			taskIdsString = args.id!;
+			taskIdArray = taskIdsString.split(',').map((i) => i.trim());
 		}
 
-		log.info(`Clearing subtasks from tasks: ${taskIds}`);
+		wrappedLogger.info(`Clearing subtasks from tasks: ${taskIdsString}`);
 
 		// Enable silent mode to prevent console logs from interfering with JSON response
 		enableSilentMode();
 
 		// Call the core function
-		clearSubtasks(tasksPath, taskIds);
+		await clearSubtasks(tasksPath, taskIdsString);
 
 		// Restore normal logging
 		disableSilentMode();
 
 		// Read the updated data to provide a summary
 		const updatedData = JSON.parse(fs.readFileSync(tasksPath, 'utf8'));
-		const taskIdArray = taskIds.split(',').map((id) => parseInt(id.trim(), 10));
 
 		// Build a summary of what was done
 		const clearedTasksCount = taskIdArray.length;
 		const taskSummary = taskIdArray.map((id) => {
-			const task = updatedData.tasks.find((t) => t.id === id);
-			return task ? { id, title: task.title } : { id, title: 'Task not found' };
+			const numId = typeof id === 'string' ? parseInt(id.trim(), 10) : id;
+			const task = updatedData.tasks.find((t: any) => t.id === numId);
+			return task
+				? { id: numId, title: task.title }
+				: { id: numId, title: 'Task not found' };
 		});
 
 		return {
@@ -117,11 +120,11 @@ export async function clearSubtasksDirect(args: any, log: Logger) {
 		// Make sure to restore normal logging even if there's an error
 		disableSilentMode();
 
-		log.error(`Error in clearSubtasksDirect: ${(error as Error).message}`);
+		wrappedLogger.error(`Error in clearSubtasksDirect: ${(error as Error).message}`);
 		return {
 			success: false,
 			error: {
-				code: 'CORE_FUNCTION_ERROR',
+				code: 'CLEAR_SUBTASKS_FAILED',
 				message: (error as Error).message
 			}
 		};

@@ -254,8 +254,8 @@ async function moveTask(
 
 		return movedTask;
 	} catch (error) {
-		log('error', `Error moving task/subtask: ${error.message}`);
-		throw error;
+		log('error', `Error moving task/subtask: ${(error as Error).message}`);
+		return { success: false, message: (error as Error).message };
 	}
 }
 

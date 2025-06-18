@@ -20,6 +20,7 @@ import {
 	findComplexityReportPath
 } from '../core/utils/path-utils.js';
 import { TASK_STATUS_OPTIONS } from '../../../src/constants/task-status.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the setTaskStatus tool with the MCP server
@@ -52,19 +53,19 @@ export function registerSetTaskStatusTool(server: any): void {
 				.string()
 				.describe('The directory of the project. Must be an absolute path.')
 		}),
-		execute: withNormalizedProjectRoot(async (args, { log }) => {
+		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(`Setting status of task(s) ${args.id} to: ${args.status}`);
+				wrappedLogger.info(`Setting task status with args: ${JSON.stringify(args)}`);
 
-				// Use args.projectRoot directly (guaranteed by withNormalizedProjectRoot)
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -77,38 +78,35 @@ export function registerSetTaskStatusTool(server: any): void {
 							projectRoot: args.projectRoot,
 							complexityReport: args.complexityReport
 						},
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`Error finding complexity report: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding complexity report: ${(error as Error).message}`);
 				}
 
 				const result = await setTaskStatusDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
-						id: args.id,
-						status: args.status,
+						...args,
+						tasksJsonPath,
 						complexityReportPath
 					},
 					log
 				);
 
 				if (result.success) {
-					log.info(
-						`Successfully updated status for task(s) ${args.id} to "${args.status}": ${result.data.message}`
+					wrappedLogger.info(
+						`Successfully updated status for task(s) ${args.id} to "${args.status}": ${result.data?.message}`
 					);
 				} else {
-					log.error(
+					wrappedLogger.error(
 						`Failed to update task status: ${result.error?.message || 'Unknown error'}`
 					);
 				}
 
 				return handleApiResult(apiResultToCommandResult(result), log, 'Error setting task status');
 			} catch (error) {
-				log.error(`Error in setTaskStatus tool: ${(error as Error).message}`);
-				return createErrorResponse(
-					`Error setting task status: ${(error as Error).message}`
-				);
+				wrappedLogger.error(`Error in set-task-status tool: ${(error as Error).message}`);
+				return createErrorResponse((error as Error).message);
 			}
 		})
 	};

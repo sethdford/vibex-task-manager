@@ -15,9 +15,10 @@ import {
 } from './utils.js';
 import { nextTaskDirect } from '../core/vibex-task-manager-core.js';
 import {
-	resolveTasksPath,
+	findTasksPath,
 	resolveComplexityReportPath
 } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the nextTask tool with the MCP server
@@ -42,42 +43,56 @@ export function registerNextTaskTool(server: any): void {
 				.describe('The directory of the project. Must be an absolute path.')
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(`Finding next task with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(`Finding next task with args: ${JSON.stringify(args)}`);
 
-				// Resolve the path to tasks.json using new path utilities
 				let tasksJsonPath;
 				try {
-					tasksJsonPath = resolveTasksPath(args, session);
+					tasksJsonPath = findTasksPath(
+						{ projectRoot: args.projectRoot, file: args.file },
+						wrappedLogger
+					);
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
 				}
 
-				// Resolve the path to complexity report (optional)
-				let complexityReportPath;
+				let complexityReportPath: string | null = null;
 				try {
 					complexityReportPath = resolveComplexityReportPath(args, session);
 				} catch (error) {
-					log.error(`Error finding complexity report: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding complexity report: ${(error as Error).message}`);
 					// This is optional, so we don't fail the operation
 					complexityReportPath = null;
 				}
 
 				const result = await nextTaskDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
-						reportPath: complexityReportPath
+						tasksJsonPath,
+						reportPath: complexityReportPath || undefined
 					},
-					log
+					log // Pass original logger
 				);
 
-				log.info(`Next task result: ${result.success ? 'found' : 'none'}`);
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error finding next task');
+				if (result.success && result.data?.nextTask) {
+					wrappedLogger.info(`Next task found: ${result.data.nextTask.id}`);
+				} else if (result.success) {
+					wrappedLogger.info(`No next task found or all tasks are complete.`);
+				} else {
+					wrappedLogger.error(
+						`Error finding next task: ${result.error?.message || 'Unknown error'}`
+					);
+				}
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Error finding next task'
+				);
 			} catch (error) {
-				log.error(`Error finding next task: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in next-task tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
 			}
 		})

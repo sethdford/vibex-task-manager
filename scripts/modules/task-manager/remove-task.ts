@@ -1,3 +1,5 @@
+// This is a new file to replace the old, problematic one.
+
 import fs from 'fs';
 import path from 'path';
 
@@ -5,14 +7,44 @@ import { log, readJSON, writeJSON } from '../utils.js';
 import generateTaskFiles from './generate-task-files.js';
 import taskExists from './task-exists.js';
 
+// Define interfaces for Task and Subtask
+interface Subtask {
+	id: number;
+	title: string;
+	description?: string;
+	status: string;
+	dependencies?: (number | string)[];
+	parentTaskId?: number;
+}
+
+interface Task {
+	id: number;
+	title: string;
+	description?: string;
+	status: string;
+	dependencies?: (number | string)[];
+	subtasks?: Subtask[];
+}
+
+interface TasksData {
+	tasks: Task[];
+}
+
+interface RemoveResult {
+	success: boolean;
+	messages: string[];
+	errors: string[];
+	removedTasks: (Task | Subtask)[];
+}
+
 /**
  * Removes one or more tasks or subtasks from the tasks file
  * @param {string} tasksPath - Path to the tasks file
  * @param {string} taskIds - Comma-separated string of task/subtask IDs to remove (e.g., '5,6.1,7')
  * @returns {Object} Result object with success status, messages, and removed task info
  */
-async function removeTask(tasksPath, taskIds) {
-	const results = {
+async function removeTask(tasksPath: string, taskIds: string) {
+	const results: RemoveResult = {
 		success: true,
 		messages: [],
 		errors: [],
@@ -31,12 +63,12 @@ async function removeTask(tasksPath, taskIds) {
 
 	try {
 		// Read the tasks file ONCE before the loop
-		const data = readJSON(tasksPath);
+		const data = readJSON(tasksPath) as TasksData;
 		if (!data || !data.tasks) {
 			throw new Error(`No valid tasks found in ${tasksPath}`);
 		}
 
-		const tasksToDeleteFiles = []; // Collect IDs of main tasks whose files should be deleted
+		const tasksToDeleteFiles: number[] = []; // Collect IDs of main tasks whose files should be deleted
 
 		for (const taskId of taskIdsToRemove) {
 			// Check if the task ID exists *before* attempting removal
@@ -73,9 +105,9 @@ async function removeTask(tasksPath, taskIds) {
 					}
 
 					// Store the subtask info before removal
-					const removedSubtask = {
+					const removedSubtask: Subtask = {
 						...parentTask.subtasks[subtaskIndex],
-						parentTaskId: parentTaskId
+						parentTaskId
 					};
 					results.removedTasks.push(removedSubtask);
 
@@ -104,9 +136,11 @@ async function removeTask(tasksPath, taskIds) {
 
 					results.messages.push(`Successfully removed task ${taskId}`);
 				}
-			} catch (innerError) {
+			} catch (innerError: any) {
 				// Catch errors specific to processing *this* ID
-				const errorMsg = `Error processing ID ${taskId}: ${innerError.message}`;
+				const errorMsg = `Error processing ID ${taskId}: ${
+					(innerError as Error).message
+				}`;
 				results.errors.push(errorMsg);
 				results.success = false;
 				log('warn', errorMsg); // Log as warning and continue with next ID
@@ -158,8 +192,10 @@ async function removeTask(tasksPath, taskIds) {
 					try {
 						fs.unlinkSync(taskFileName);
 						results.messages.push(`Deleted task file: ${taskFileName}`);
-					} catch (unlinkError) {
-						const unlinkMsg = `Failed to delete task file ${taskFileName}: ${unlinkError.message}`;
+					} catch (unlinkError: any) {
+						const unlinkMsg = `Failed to delete task file ${taskFileName}: ${
+							(unlinkError as Error).message
+						}`;
 						results.errors.push(unlinkMsg);
 						results.success = false;
 						log('warn', unlinkMsg);
@@ -171,8 +207,10 @@ async function removeTask(tasksPath, taskIds) {
 			try {
 				await generateTaskFiles(tasksPath, path.dirname(tasksPath));
 				results.messages.push('Task files regenerated successfully.');
-			} catch (genError) {
-				const genErrMsg = `Failed to regenerate task files: ${genError.message}`;
+			} catch (genError: any) {
+				const genErrMsg = `Failed to regenerate task files: ${
+					(genError as Error).message
+				}`;
 				results.errors.push(genErrMsg);
 				results.success = false;
 				log('warn', genErrMsg);
@@ -192,16 +230,16 @@ async function removeTask(tasksPath, taskIds) {
 			error: finalError || null,
 			removedTasks: results.removedTasks
 		};
-	} catch (error) {
+	} catch (error: any) {
 		// Catch errors from reading file or other initial setup
-		log('error', `Error removing tasks: ${error.message}`);
+		log('error', `Error removing tasks: ${(error as Error).message}`);
 		return {
 			success: false,
 			message: '',
-			error: `Operation failed: ${error.message}`,
+			error: `Operation failed: ${(error as Error).message}`,
 			removedTasks: []
 		};
 	}
 }
 
-export default removeTask;
+export default removeTask; 

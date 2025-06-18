@@ -1,6 +1,6 @@
 // mcp-server/src/tools/get-operation-status.js
 import { z } from 'zod';
-import { createErrorResponse, createContentResponse } from './utils.js'; // Assuming these utils exist
+import { createErrorResponse, createSuccessResponse } from './utils.js';
 
 import { MCPTool } from './utils.js';
 /**
@@ -34,10 +34,10 @@ export function registerGetOperationStatusTool(server, asyncManager) {
 				}
 
 				log.info(`Status for ${operationId}: ${status.status}`);
-				return createContentResponse(status);
+				return createSuccessResponse(status);
 			} catch (error) {
 				log.error(`Error in get_operation_status tool: ${(error as Error).message}`, {
-					stack: error.stack
+					stack: (error as Error).stack
 				});
 				return createErrorResponse(
 					`Failed to get operation status: ${(error as Error).message}`,

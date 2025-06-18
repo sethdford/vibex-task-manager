@@ -8,11 +8,13 @@ import { z } from 'zod';
 import {
 	handleApiResult,
 	createErrorResponse,
-	withNormalizedProjectRoot
+	withNormalizedProjectRoot,
+	apiResultToCommandResult
 } from './utils.js';
 import { complexityReportDirect } from '../core/vibex-task-manager-core.js';
 import { COMPLEXITY_REPORT_FILE } from '../../../src/constants/paths.js';
 import { findComplexityReportPath } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the complexityReport tool with the MCP server
@@ -35,49 +37,21 @@ export function registerComplexityReportTool(server: any): void {
 				.describe('The directory of the project. Must be an absolute path.')
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(
-					`Getting complexity report with args: ${JSON.stringify(args)}`
-				);
+				wrappedLogger.info(`Getting complexity report with args: ${JSON.stringify(args)}`);
 
-				const pathArgs = {
-					projectRoot: args.projectRoot,
-					complexityReport: args.file
-				};
-
-				const reportPath = findComplexityReportPath(pathArgs, log);
-
-				if (!reportPath) {
-					return createErrorResponse(
-						'No complexity report found. Run vibex-task-manager analyze-complexity first.'
-					);
-				}
+				const reportPath = findComplexityReportPath(args, wrappedLogger);
 
 				const result = await complexityReportDirect(
-					{
-						reportPath: reportPath
-					},
-					log
+					{ ...args, reportPath },
+					log // Pass original logger
 				);
 
-				if (result.success) {
-					log.info('Successfully retrieved complexity report');
-				} else {
-					log.error(
-						`Failed to retrieve complexity report: ${result.error}`
-					);
-				}
-
-				return handleApiResult(
-					result,
-					log,
-					'Error retrieving complexity report'
-				);
+				return handleApiResult(apiResultToCommandResult(result), log, 'Error getting complexity report');
 			} catch (error) {
-				log.error(`Error in complexity-report tool: ${(error as Error).message}`);
-				return createErrorResponse(
-					`Failed to retrieve complexity report: ${(error as Error).message}`
-				);
+				wrappedLogger.error(`Error in complexity-report tool: ${(error as Error).message}`);
+				return createErrorResponse((error as Error).message);
 			}
 		})
 	};

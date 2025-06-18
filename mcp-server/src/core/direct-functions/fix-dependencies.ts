@@ -2,13 +2,17 @@
  * Direct function wrapper for fixDependenciesCommand
  */
 
-import { Logger } from '../../../../src/types/index.js';
+import { AnyLogger, createLogger } from '../logger.js';
 import { fixDependenciesCommand } from '../../../../scripts/modules/dependency-manager.js';
 import {
 	enableSilentMode,
 	disableSilentMode
 } from '../../../../scripts/modules/utils.js';
 import fs from 'fs';
+
+interface FixDependenciesArgs {
+	tasksJsonPath: string;
+}
 
 /**
  * Fix invalid dependencies in tasks.json automatically
@@ -17,15 +21,18 @@ import fs from 'fs';
  * @param {Object} log - Logger object
  * @returns {Promise<{success: boolean, data?: Object, error?: {code: string, message: string}}>}
  */
-export async function fixDependenciesDirect(args: any, log: Logger) {
-	// Destructure expected args
+export async function fixDependenciesDirect(
+	args: FixDependenciesArgs,
+	log: AnyLogger
+) {
 	const { tasksJsonPath } = args;
+	const logger = createLogger(log);
 	try {
-		log.info(`Fixing invalid dependencies in tasks: ${tasksJsonPath}`);
+		logger.info(`Fixing invalid dependencies in tasks: ${tasksJsonPath}`);
 
 		// Check if tasksJsonPath was provided
 		if (!tasksJsonPath) {
-			log.error('fixDependenciesDirect called without tasksJsonPath');
+			logger.error('fixDependenciesDirect called without tasksJsonPath');
 			return {
 				success: false,
 				error: {
@@ -40,6 +47,7 @@ export async function fixDependenciesDirect(args: any, log: Logger) {
 
 		// Verify the file exists
 		if (!fs.existsSync(tasksPath)) {
+			logger.error(`Tasks file not found at ${tasksPath}`);
 			return {
 				success: false,
 				error: {
@@ -69,7 +77,7 @@ export async function fixDependenciesDirect(args: any, log: Logger) {
 		// Make sure to restore normal logging even if there's an error
 		disableSilentMode();
 
-		log.error(`Error fixing dependencies: ${(error as Error).message}`);
+		logger.error(`Error fixing dependencies: ${(error as Error).message}`);
 		return {
 			success: false,
 			error: {

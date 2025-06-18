@@ -13,6 +13,8 @@ import {
 } from './utils.js';
 import { removeTaskDirect } from '../core/vibex-task-manager-core.js';
 import { findTasksPath } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
+import { Ora } from 'ora';
 
 /**
  * Register the remove-task tool with the MCP server
@@ -38,44 +40,72 @@ export function registerRemoveTaskTool(server: any): void {
 				.optional()
 				.describe('Whether to skip confirmation prompt (default: false)')
 		}),
-		execute: withNormalizedProjectRoot(async (args, { log }) => {
+		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(`Removing task(s) with ID(s): ${args.id}`);
+				wrappedLogger.info(`Removing task with args: ${JSON.stringify(args)}`);
 
-				// Use args.projectRoot directly (guaranteed by withNormalizedProjectRoot)
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
 				}
 
-				log.info(`Using tasks file path: ${tasksJsonPath}`);
-
 				const result = await removeTaskDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
-						id: args.id
+						...args,
+						tasksJsonPath
 					},
-					log
+					log // Pass original logger
 				);
 
 				if (result.success) {
-					log.info(`Successfully removed task: ${args.id}`);
+					const successMessages: string[] = [];
+					const errorMessages: string[] = [];
+
+					const idList = args.id.split(',').map((id) => id.trim());
+
+					for (const id of idList) {
+						const taskResult = result.data?.results.find((r) => r.taskId === id);
+						if (taskResult?.success) {
+							successMessages.push(`#${id}`);
+						} else {
+							errorMessages.push(`#${id}: ${taskResult?.message}`);
+						}
+					}
+
+					if (errorMessages.length > 0) {
+						return createErrorResponse(
+							`Failed to remove some tasks: ${errorMessages.join(', ')}`,
+							404
+						);
+					}
+					return {
+						success: true,
+						stdout:
+							`Successfully removed tasks: ${successMessages.join(', ')}`
+					};
 				} else {
-					log.error(`Failed to remove task: ${result.error}`);
+					const errorMessages =
+						result.error?.details || 'Unknown error during task removal';
+					wrappedLogger.error(`Failed to remove task(s): ${errorMessages}`);
 				}
 
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error removing task');
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Error removing task'
+				);
 			} catch (error) {
-				log.error(`Error in remove-task tool: ${(error as Error).message}`);
-				return createErrorResponse(`Failed to remove task: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in remove-task tool: ${(error as Error).message}`);
+				return createErrorResponse((error as Error).message);
 			}
 		})
 	};

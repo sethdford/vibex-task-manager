@@ -3,18 +3,20 @@
  * Tool to get task details by ID
  */
 import { MCPTool } from './utils.js';
-
 import { z } from 'zod';
 import {
-	handleApiResult,
+	MCPToolResult,
 	createErrorResponse,
-	withNormalizedProjectRoot
+	withNormalizedProjectRoot,
+	handleApiResult,
+	apiResultToCommandResult
 } from './utils.js';
 import { showTaskDirect } from '../core/vibex-task-manager-core.js';
 import {
 	findTasksPath,
 	findComplexityReportPath
 } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Custom processor function that removes allTasks from the response
@@ -68,24 +70,19 @@ export function registerShowTaskTool(server: any): void {
 					'Absolute path to the project root directory (Optional, usually from session)'
 				)
 		}),
-		execute: withNormalizedProjectRoot(async (args, { log }) => {
-			const { id, file, status, projectRoot } = args;
-
+		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(
-					`Getting task details for ID: ${id}${status ? ` (filtering subtasks by status: ${status})` : ''} in root: ${projectRoot}`
-				);
+				wrappedLogger.info(`Getting task with args: ${JSON.stringify(args)}`);
 
-				// Resolve the path to tasks.json using the NORMALIZED projectRoot from args
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
-						{ projectRoot: projectRoot, file: file },
-						log
+						{ projectRoot: args.projectRoot, file: args.file },
+						wrappedLogger
 					);
-					log.info(`Resolved tasks path: ${tasksJsonPath}`);
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -97,42 +94,39 @@ export function registerShowTaskTool(server: any): void {
 				try {
 					complexityReportPath = findComplexityReportPath(
 						{
-							projectRoot: projectRoot,
+							projectRoot: args.projectRoot,
 							complexityReport: args.complexityReport
 						},
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`Error finding complexity report: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding complexity report: ${(error as Error).message}`);
 				}
 				const result = await showTaskDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
-						reportPath: complexityReportPath,
-						// Pass other relevant args
-						id: id,
-						status: status,
-						projectRoot: projectRoot
+						...args,
+						tasksJsonPath,
+						reportPath: complexityReportPath
 					},
-					log
+					log // Pass original logger
 				);
 
 				if (result.success) {
-					log.info(`Successfully retrieved task details for ID: ${args.id}`);
+					wrappedLogger.info(
+						`Successfully retrieved task details for ID: ${args.id}`
+					);
 				} else {
-					log.error(`Failed to get task: ${result.error}`);
+					wrappedLogger.error(`Failed to get task: ${result.error}`);
 				}
 
-				// Use our custom processor function
 				return handleApiResult(
-					result,
+					apiResultToCommandResult(result),
 					log,
-					'Error retrieving task details',
-					processTaskResponse
+					'Error getting task'
 				);
 			} catch (error) {
-				log.error(`Error in get-task tool: ${(error as Error).message}\n${error.stack}`);
-				return createErrorResponse(`Failed to get task: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in get-task tool: ${(error as Error).message}`);
+				return createErrorResponse((error as Error).message);
 			}
 		})
 	};

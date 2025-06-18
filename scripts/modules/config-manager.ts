@@ -28,6 +28,51 @@ interface ModelMap {
 	[provider: string]: SupportedModel[];
 }
 
+// --- Configuration-related Type Definitions ---
+interface ModelConfig {
+	provider: string;
+	modelId: string;
+	maxTokens: number;
+	temperature: number;
+}
+
+// Fallback can have missing provider/modelId
+interface FallbackModelConfig extends Omit<ModelConfig, 'provider' | 'modelId'> {
+	provider?: string;
+	modelId?: string;
+}
+
+type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+type Priority = 'high' | 'medium' | 'low';
+
+interface GlobalConfig {
+	logLevel: LogLevel;
+	debug: boolean;
+	defaultSubtasks: number;
+	defaultPriority: Priority;
+	projectName: string;
+	bedrockBaseURL: string;
+	vertexProjectId?: string;
+	vertexLocation?: string;
+}
+
+interface Config {
+	models: {
+		main: ModelConfig;
+		research: ModelConfig;
+		fallback: FallbackModelConfig;
+	};
+	global: GlobalConfig;
+}
+
+// Utility type for deep partials
+type DeepPartial<T> = T extends object
+	? {
+			[P in keyof T]?: DeepPartial<T[P]>;
+	  }
+	: T;
+// --- End Type Definitions ---
+
 let MODEL_MAP: ModelMap;
 try {
 	const supportedModelsRaw = fs.readFileSync(
@@ -50,7 +95,7 @@ try {
 const VALID_PROVIDERS = Object.keys(MODEL_MAP || {});
 
 // Default configuration values (used if config file is missing or incomplete)
-const DEFAULTS = {
+const DEFAULTS: Config = {
 	models: {
 		main: {
 			provider: 'bedrock',
@@ -83,8 +128,8 @@ const DEFAULTS = {
 };
 
 // --- Internal Config Loading ---
-let loadedConfig = null;
-let loadedConfigRoot = null; // Track which root loaded the config
+let loadedConfig: Config | null = null;
+let loadedConfigRoot: string | null = null; // Track which root loaded the config
 
 // Custom Error for configuration issues
 class ConfigurationError extends Error {
@@ -94,7 +139,7 @@ class ConfigurationError extends Error {
 	}
 }
 
-function _loadAndValidateConfig(explicitRoot: string | null = null) {
+function _loadAndValidateConfig(explicitRoot: string | null = null): Config {
 	const defaults = DEFAULTS; // Use the defined defaults
 	let rootToUse = explicitRoot;
 	let configSource = explicitRoot
@@ -115,7 +160,7 @@ function _loadAndValidateConfig(explicitRoot: string | null = null) {
 
 	// --- Find configuration file using centralized path utility ---
 	const configPath = findConfigPath(null, { projectRoot: rootToUse });
-	let config = { ...defaults }; // Start with a deep copy of defaults
+	let config: Config = structuredClone(defaults); // Start with a deep copy of defaults
 	let configExists = false;
 
 	if (configPath) {
@@ -124,7 +169,7 @@ function _loadAndValidateConfig(explicitRoot: string | null = null) {
 
 		try {
 			const rawData = fs.readFileSync(configPath, 'utf-8');
-			const parsedConfig = JSON.parse(rawData);
+			const parsedConfig = JSON.parse(rawData) as DeepPartial<Config>;
 
 			// Deep merge parsed config onto defaults
 			config = {
@@ -138,9 +183,9 @@ function _loadAndValidateConfig(explicitRoot: string | null = null) {
 						parsedConfig?.models?.fallback?.provider &&
 						parsedConfig?.models?.fallback?.modelId
 							? { ...defaults.models.fallback, ...parsedConfig.models.fallback }
-							: { ...defaults.models.fallback }
+							: { ...defaults.models.fallback },
 				},
-				global: { ...defaults.global, ...parsedConfig?.global }
+				global: { ...defaults.global, ...parsedConfig?.global },
 			};
 			configSource = `file (${configPath})`; // Update source info
 
@@ -183,14 +228,14 @@ function _loadAndValidateConfig(explicitRoot: string | null = null) {
 				config.models.fallback.provider = undefined;
 				config.models.fallback.modelId = undefined;
 			}
-		} catch (error) {
+		} catch (error: any) {
 			// Use console.error for actual errors during parsing
 			console.error(
 				chalk.red(
 					`Error reading or parsing ${configPath}: ${error.message}. Using default configuration.`
 				)
 			);
-			config = { ...defaults }; // Reset to defaults on parse error
+			config = structuredClone(defaults); // Reset to defaults on parse error
 			configSource = `defaults (parse error at ${configPath})`;
 		}
 	} else {
@@ -210,7 +255,7 @@ function _loadAndValidateConfig(explicitRoot: string | null = null) {
 			);
 		}
 		// Keep config as defaults
-		config = { ...defaults };
+		config = structuredClone(defaults);
 		configSource = `defaults (no config file found at ${rootToUse})`;
 	}
 
@@ -224,7 +269,10 @@ function _loadAndValidateConfig(explicitRoot: string | null = null) {
  * @param {boolean} forceReload - Force reloading the config file.
  * @returns {object} The loaded configuration object.
  */
-function getConfig(explicitRoot: string | null = null, forceReload: boolean = false) {
+function getConfig(
+	explicitRoot: string | null = null,
+	forceReload: boolean = false
+): Config {
 	// Determine if a reload is necessary
 	const needsLoad =
 		!loadedConfig ||
@@ -245,7 +293,7 @@ function getConfig(explicitRoot: string | null = null, forceReload: boolean = fa
 	}
 
 	// If no load was needed, return the cached config
-	return loadedConfig;
+	return loadedConfig || DEFAULTS;
 }
 
 /**
@@ -283,121 +331,116 @@ function validateProviderModelCombination(providerName: string, modelId: string)
 
 // --- Role-Specific Getters ---
 
-function getModelConfigForRole(role: string, explicitRoot: string | null = null) {
+function getModelConfigForRole(
+	role: string,
+	explicitRoot: string | null = null
+) {
 	const config = getConfig(explicitRoot);
-	const roleConfig = config?.models?.[role];
-	if (!roleConfig) {
-		log(
-			'warn',
-			`No model configuration found for role: ${role}. Returning default.`
-		);
-		return DEFAULTS.models[role] || {};
+	if (!config) return null;
+
+	switch (role) {
+		case 'main':
+			return config.models.main;
+		case 'research':
+			return config.models.research;
+		case 'fallback':
+			return config.models.fallback;
+		default:
+			// log.warn(`Unknown model role: ${role}. Falling back to 'main' config.`);
+			return config.models.main; // Default to main if role is unknown
 	}
-	return roleConfig;
 }
 
-function getMainProvider(explicitRoot: string | null = null) {
-	return getModelConfigForRole('main', explicitRoot).provider;
+function getMainProvider(explicitRoot: string | null = null): string {
+	return getConfig(explicitRoot).models.main.provider;
 }
 
-function getMainModelId(explicitRoot: string | null = null) {
-	return getModelConfigForRole('main', explicitRoot).modelId;
+function getMainModelId(explicitRoot: string | null = null): string {
+	return getConfig(explicitRoot).models.main.modelId;
 }
 
-function getMainMaxTokens(explicitRoot: string | null = null) {
-	// Directly return value from config (which includes defaults)
-	return getModelConfigForRole('main', explicitRoot).maxTokens;
+function getMainMaxTokens(explicitRoot: string | null = null): number {
+	return getConfig(explicitRoot).models.main.maxTokens;
 }
 
-function getMainTemperature(explicitRoot: string | null = null) {
-	// Directly return value from config
-	return getModelConfigForRole('main', explicitRoot).temperature;
+function getMainTemperature(explicitRoot: string | null = null): number {
+	return getConfig(explicitRoot).models.main.temperature;
 }
 
-function getResearchProvider(explicitRoot: string | null = null) {
-	return getModelConfigForRole('research', explicitRoot).provider;
+function getResearchProvider(explicitRoot: string | null = null): string {
+	return getConfig(explicitRoot).models.research.provider;
 }
 
-function getResearchModelId(explicitRoot: string | null = null) {
-	return getModelConfigForRole('research', explicitRoot).modelId;
+function getResearchModelId(explicitRoot: string | null = null): string {
+	return getConfig(explicitRoot).models.research.modelId;
 }
 
-function getResearchMaxTokens(explicitRoot: string | null = null) {
-	// Directly return value from config
-	return getModelConfigForRole('research', explicitRoot).maxTokens;
+function getResearchMaxTokens(explicitRoot: string | null = null): number {
+	return getConfig(explicitRoot).models.research.maxTokens;
 }
 
-function getResearchTemperature(explicitRoot: string | null = null) {
-	// Directly return value from config
-	return getModelConfigForRole('research', explicitRoot).temperature;
+function getResearchTemperature(explicitRoot: string | null = null): number {
+	return getConfig(explicitRoot).models.research.temperature;
 }
 
-function getFallbackProvider(explicitRoot: string | null = null) {
-	// Directly return value from config (will be undefined if not set)
-	return getModelConfigForRole('fallback', explicitRoot).provider;
+function getFallbackProvider(
+	explicitRoot: string | null = null
+): string | undefined {
+	return getConfig(explicitRoot).models.fallback.provider;
 }
 
-function getFallbackModelId(explicitRoot: string | null = null) {
-	// Directly return value from config
-	return getModelConfigForRole('fallback', explicitRoot).modelId;
+function getFallbackModelId(
+	explicitRoot: string | null = null
+): string | undefined {
+	return getConfig(explicitRoot).models.fallback.modelId;
 }
 
-function getFallbackMaxTokens(explicitRoot: string | null = null) {
-	// Directly return value from config
-	return getModelConfigForRole('fallback', explicitRoot).maxTokens;
+function getFallbackMaxTokens(explicitRoot: string | null = null): number {
+	return getConfig(explicitRoot).models.fallback.maxTokens;
 }
 
-function getFallbackTemperature(explicitRoot: string | null = null) {
-	// Directly return value from config
-	return getModelConfigForRole('fallback', explicitRoot).temperature;
+function getFallbackTemperature(explicitRoot: string | null = null): number {
+	return getConfig(explicitRoot).models.fallback.temperature;
 }
 
 // --- Global Settings Getters ---
 
-function getGlobalConfig(explicitRoot: string | null = null) {
-	const config = getConfig(explicitRoot);
-	// Ensure global defaults are applied if global section is missing
-	return { ...DEFAULTS.global, ...(config?.global || {}) };
+function getGlobalConfig(explicitRoot: string | null = null): GlobalConfig {
+	return getConfig(explicitRoot).global;
 }
 
-function getLogLevel(explicitRoot: string | null = null) {
-	// Directly return value from config
-	return getGlobalConfig(explicitRoot).logLevel.toLowerCase();
+function getLogLevel(explicitRoot: string | null = null): LogLevel {
+	return getConfig(explicitRoot).global.logLevel;
 }
 
-function getDebugFlag(explicitRoot: string | null = null) {
-	// Directly return value from config, ensure boolean
-	return getGlobalConfig(explicitRoot).debug === true;
+function getDebugFlag(explicitRoot: string | null = null): boolean {
+	return getConfig(explicitRoot).global.debug;
 }
 
-function getDefaultSubtasks(explicitRoot: string | null = null) {
-	// Directly return value from config, ensure integer
-	const val = getGlobalConfig(explicitRoot).defaultSubtasks;
-	const parsedVal = parseInt(val, 10);
-	return Number.isNaN(parsedVal) ? DEFAULTS.global.defaultSubtasks : parsedVal;
+function getDefaultSubtasks(explicitRoot: string | null = null): number {
+	return getConfig(explicitRoot).global.defaultSubtasks;
 }
 
-function getDefaultNumTasks(explicitRoot: string | null = null) {
-	const val = getGlobalConfig(explicitRoot).defaultNumTasks;
-	const parsedVal = parseInt(String(val), 10);
-	return Number.isNaN(parsedVal) ? 5 : parsedVal;
+function getDefaultNumTasks(explicitRoot: string | null = null): number {
+	return getConfig(explicitRoot).global.defaultSubtasks;
 }
 
-function getDefaultPriority(explicitRoot: string | null = null) {
-	// Directly return value from config
-	return getGlobalConfig(explicitRoot).defaultPriority;
+function getDefaultPriority(explicitRoot: string | null = null): Priority {
+	return getConfig(explicitRoot).global.defaultPriority;
 }
 
-function getProjectName(explicitRoot: string | null = null) {
-	// Directly return value from config
-	return getGlobalConfig(explicitRoot).projectName;
+function getProjectName(explicitRoot: string | null = null): string {
+	return getConfig(explicitRoot).global.projectName;
 }
 
 // Azure and Ollama support removed - only Bedrock is supported
 
-function getBedrockBaseURL(explicitRoot: string | null = null) {
-	// Directly return value from config
-	return getGlobalConfig(explicitRoot).bedrockBaseURL;
+function getBedrockBaseURL(explicitRoot: string | null = null): string | undefined {
+	const config = getConfig(explicitRoot);
+	// Prioritize environment variable, then config file, then default
+	return (
+		process.env.BEDROCK_BASE_URL ?? config.global.bedrockBaseURL ?? undefined
+	);
 }
 
 /**
@@ -405,9 +448,15 @@ function getBedrockBaseURL(explicitRoot: string | null = null) {
  * @param {string|null} explicitRoot - Optional explicit path to the project root.
  * @returns {string|null} The project ID or null if not configured
  */
-function getVertexProjectId(explicitRoot: string | null = null) {
-	// Return value from config
-	return getGlobalConfig(explicitRoot).vertexProjectId;
+function getVertexProjectId(explicitRoot: string | null = null): string | undefined {
+	const config = getConfig(explicitRoot);
+	// This property is not part of the defined GlobalConfig, so we handle it as potentially undefined.
+	// To fix this long-term, 'vertexProjectId' should be added to the GlobalConfig interface.
+	return (
+		resolveEnvVariable('VERTEX_PROJECT_ID') ??
+		config.global.vertexProjectId ??
+		undefined
+	);
 }
 
 /**
@@ -415,9 +464,15 @@ function getVertexProjectId(explicitRoot: string | null = null) {
  * @param {string|null} explicitRoot - Optional explicit path to the project root.
  * @returns {string} The location or default value of "us-central1"
  */
-function getVertexLocation(explicitRoot: string | null = null) {
-	// Return value from config or default
-	return getGlobalConfig(explicitRoot).vertexLocation || 'us-central1';
+function getVertexLocation(explicitRoot: string | null = null): string | undefined {
+	const config = getConfig(explicitRoot);
+	// This property is not part of the defined GlobalConfig, so we handle it as potentially undefined.
+	// To fix this long-term, 'vertexLocation' should be added to the GlobalConfig interface.
+	return (
+		resolveEnvVariable('VERTEX_LOCATION') ??
+		config.global.vertexLocation ??
+		undefined
+	);
 }
 
 /**
@@ -427,243 +482,140 @@ function getVertexLocation(explicitRoot: string | null = null) {
  * @param {string|null} explicitRoot - Optional explicit path to the project root.
  * @returns {{maxTokens: number, temperature: number}}
  */
-function getParametersForRole(role: string, explicitRoot: string | null = null) {
-	const roleConfig = getModelConfigForRole(role, explicitRoot);
-	const roleMaxTokens = roleConfig.maxTokens;
-	const roleTemperature = roleConfig.temperature;
-	const modelId = roleConfig.modelId;
-	const providerName = roleConfig.provider;
+function getParametersForRole(
+	role: 'main' | 'research' | 'fallback',
+	explicitRoot: string | null = null
+) {
+	const config = getConfig(explicitRoot);
+	const modelConfig = getModelConfigForRole(role, explicitRoot);
 
-	let effectiveMaxTokens = roleMaxTokens; // Start with the role's default
-
-	try {
-		// Find the model definition in MODEL_MAP
-		const providerModels = MODEL_MAP[providerName];
-		if (providerModels && Array.isArray(providerModels)) {
-			const modelDefinition = providerModels.find((m) => m.id === modelId);
-
-			// Check if a model-specific max_tokens is defined and valid
-			if (
-				modelDefinition &&
-				typeof modelDefinition.max_tokens === 'number' &&
-				modelDefinition.max_tokens > 0
-			) {
-				const modelSpecificMaxTokens = modelDefinition.max_tokens;
-				// Use the minimum of the role default and the model specific limit
-				effectiveMaxTokens = Math.min(roleMaxTokens, modelSpecificMaxTokens);
-				log(
-					'debug',
-					`Applying model-specific max_tokens (${modelSpecificMaxTokens}) for ${modelId}. Effective limit: ${effectiveMaxTokens}`
-				);
-			} else {
-				log(
-					'debug',
-					`No valid model-specific max_tokens override found for ${modelId}. Using role default: ${roleMaxTokens}`
-				);
-			}
-		} else {
-			log(
-				'debug',
-				`No model definitions found for provider ${providerName} in MODEL_MAP. Using role default maxTokens: ${roleMaxTokens}`
-			);
-		}
-	} catch (lookupError) {
-		log(
-			'warn',
-			`Error looking up model-specific max_tokens for ${modelId}: ${lookupError.message}. Using role default: ${roleMaxTokens}`
-		);
-		// Fallback to role default on error
-		effectiveMaxTokens = roleMaxTokens;
+	if (!modelConfig || !modelConfig.provider) {
+		return null; // Can't get params if base model config is invalid
 	}
 
-	return {
-		maxTokens: effectiveMaxTokens,
-		temperature: roleTemperature
-	};
+	const { provider, modelId, maxTokens, temperature } = modelConfig;
+	const commonParams = { provider, modelId, maxTokens, temperature };
+
+	// Add provider-specific parameters
+	switch (provider) {
+		case 'bedrock':
+			return {
+				...commonParams,
+				bedrockBaseURL: getBedrockBaseURL(explicitRoot)
+			};
+		case 'google': // Gemini
+			return {
+				...commonParams,
+				vertexProjectId: getVertexProjectId(explicitRoot),
+				vertexLocation: getVertexLocation(explicitRoot)
+			};
+		// Cases for 'openai', 'anthropic', 'openrouter' if they need specific params
+		default:
+			return commonParams;
+	}
 }
 
 /**
- * Checks if the API key for a given provider is set in the environment.
- * Checks process.env first, then session.env if session is provided, then .env file if projectRoot provided.
+ * Checks if the API key for a given provider is set, either in environment variables,
+ * or for MCP, checks the session.
  * @param {string} providerName - The name of the provider (e.g., 'openai', 'anthropic').
- * @param {object|null} [session=null] - The MCP session object (optional).
- * @param {string|null} [projectRoot=null] - The project root directory (optional, for .env file check).
- * @returns {boolean} True if the API key is set, false otherwise.
+ * @param {object|null} session - The MCP session object (optional).
+ * @param {string|null} projectRoot - The project root path (optional).
+ * @returns {boolean} True if the key is considered set, false otherwise.
  */
-function isApiKeySet(providerName: string, session: any = null, projectRoot: string | null = null) {
-	// Define the expected environment variable name for each provider
-	// Ollama support removed - only Bedrock is supported
-	
-	// Bedrock uses AWS credentials, not API keys
-	if (providerName?.toLowerCase() === 'bedrock') {
-		// AWS SDK handles credential resolution from multiple sources:
-		// 1. Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-		// 2. AWS credentials file (~/.aws/credentials)
-		// 3. AWS config file (~/.aws/config with profiles)
-		// 4. EC2/ECS instance metadata
-		// 5. IAM roles
-		// We'll return true and let the SDK handle credential resolution
+function isApiKeySet(
+	providerName: string,
+	session: any = null,
+	projectRoot: string | null = null
+): boolean {
+	if (!providerName) return false;
+
+	const upperProvider = providerName.toUpperCase();
+	const envVarName = `${upperProvider}_API_KEY`;
+
+	// 1. Check environment variable first (e.g., OPENAI_API_KEY)
+	if (process.env[envVarName] && process.env[envVarName] !== 'YOUR_..._KEY') {
 		return true;
 	}
 
-	const keyMap = {
-		openai: 'OPENAI_API_KEY',
-		anthropic: 'ANTHROPIC_API_KEY',
-		google: 'GOOGLE_API_KEY',
-		perplexity: 'PERPLEXITY_API_KEY',
-		mistral: 'MISTRAL_API_KEY',
-		openrouter: 'OPENROUTER_API_KEY',
-		xai: 'XAI_API_KEY',
-		vertex: 'GOOGLE_API_KEY' // Vertex uses the same key as Google
-		// Add other providers as needed
-	};
-
-	const providerKey = providerName?.toLowerCase();
-	if (!providerKey || !keyMap[providerKey]) {
-		log('warn', `Unknown provider name: ${providerName} in isApiKeySet check.`);
-		return false;
+	// 2. Check for AWS credentials if provider is bedrock
+	if (
+		providerName.toLowerCase() === 'bedrock' &&
+		(process.env.AWS_ACCESS_KEY_ID || process.env.AWS_SESSION_TOKEN)
+	) {
+		return true;
 	}
 
-	const envVarName = keyMap[providerKey];
-	const apiKeyValue = resolveEnvVariable(envVarName, session, projectRoot);
+	// 3. Check MCP session if provided
+	if (session && projectRoot) {
+		try {
+			const status = getMcpApiKeyStatus(providerName, projectRoot);
+			return status.isSet;
+		} catch (lookupError: any) {
+			log(
+				'warn',
+				`Could not determine API key status for '${providerName}' via MCP: ${lookupError.message}`
+			);
+			return false; // Fail safe if MCP check fails
+		}
+	}
 
-	// Check if the key exists, is not empty, and is not a placeholder
-	return (
-		apiKeyValue &&
-		apiKeyValue.trim() !== '' &&
-		!/YOUR_.*_API_KEY_HERE/.test(apiKeyValue) && // General placeholder check
-		!apiKeyValue.includes('KEY_HERE')
-	); // Another common placeholder pattern
+	return false;
 }
 
 /**
- * Checks the API key status within .cursor/mcp.json for a given provider.
- * Reads the mcp.json file, finds the taskmanager-ai server config, and checks the relevant env var.
- * @param {string} providerName The name of the provider.
- * @param {string|null} projectRoot - Optional explicit path to the project root.
- * @returns {boolean} True if the key exists and is not a placeholder, false otherwise.
+ * Specifically for MCP, determines if an API key is set by checking the .mcp/
+ * directory for the corresponding environment file.
+ *
+ * This function provides a more detailed status object compared to `isApiKeySet`.
+ *
+ * @param {string} providerName - The name of the provider.
+ * @param {string|null} projectRoot - The project root.
+ * @returns {{isSet: boolean, source: string|null, value: string|null}}
+ *          An object indicating if the key is set, its source (e.g., 'env_file'),
+ *          and the key value itself (or a placeholder).
  */
-function getMcpApiKeyStatus(providerName: string, projectRoot: string | null = null) {
-	const rootDir = projectRoot || findProjectRoot(); // Use existing root finding
-	if (!rootDir) {
-		console.warn(
-			chalk.yellow('Warning: Could not find project root to check mcp.json.')
-		);
-		return false; // Cannot check without root
-	}
-	const mcpConfigPath = path.join(rootDir, '.cursor', 'mcp.json');
-
-	if (!fs.existsSync(mcpConfigPath)) {
-		// console.warn(chalk.yellow('Warning: .cursor/mcp.json not found.'));
-		return false; // File doesn't exist
+function getMcpApiKeyStatus(
+	providerName: string,
+	projectRoot: string | null
+): { isSet: boolean; source: string | null; value: string | null } {
+	const root = projectRoot || findProjectRoot();
+	if (!root) {
+		return {
+			isSet: false,
+			source: null,
+			value: 'Project root not found.'
+		};
 	}
 
-	try {
-		const mcpConfigRaw = fs.readFileSync(mcpConfigPath, 'utf-8');
-		const mcpConfig = JSON.parse(mcpConfigRaw);
+	const envFileName = `.${providerName.toLowerCase()}.env`;
+	const envFilePath = path.join(root, '.mcp', envFileName);
 
-		const mcpEnv = mcpConfig?.mcpServers?.['taskmanager-ai']?.env;
-		if (!mcpEnv) {
-			// console.warn(chalk.yellow('Warning: Could not find taskmanager-ai env in mcp.json.'));
-			return false; // Structure missing
+	if (fs.existsSync(envFilePath)) {
+		const content = fs.readFileSync(envFilePath, 'utf-8');
+		const keyVar = `${providerName.toUpperCase()}_API_KEY`;
+		const match = content.match(new RegExp(`^${keyVar}=(.*)$`, 'm'));
+
+		if (match && match[1] && match[1].trim()) {
+			const keyValue = match[1].trim();
+			// Avoid returning placeholder keys
+			if (!keyValue.startsWith('YOUR_')) {
+				return { isSet: true, source: 'env_file', value: keyValue };
+			}
 		}
-
-		let apiKeyToCheck = null;
-		let placeholderValue = null;
-
-		switch (providerName) {
-			case 'anthropic':
-				apiKeyToCheck = mcpEnv.ANTHROPIC_API_KEY;
-				placeholderValue = 'YOUR_ANTHROPIC_API_KEY_HERE';
-				break;
-			case 'openai':
-				apiKeyToCheck = mcpEnv.OPENAI_API_KEY;
-				placeholderValue = 'YOUR_OPENAI_API_KEY_HERE'; // Assuming placeholder matches OPENAI
-				break;
-			case 'openrouter':
-				apiKeyToCheck = mcpEnv.OPENROUTER_API_KEY;
-				placeholderValue = 'YOUR_OPENROUTER_API_KEY_HERE';
-				break;
-			case 'google':
-				apiKeyToCheck = mcpEnv.GOOGLE_API_KEY;
-				placeholderValue = 'YOUR_GOOGLE_API_KEY_HERE';
-				break;
-			case 'perplexity':
-				apiKeyToCheck = mcpEnv.PERPLEXITY_API_KEY;
-				placeholderValue = 'YOUR_PERPLEXITY_API_KEY_HERE';
-				break;
-			case 'xai':
-				apiKeyToCheck = mcpEnv.XAI_API_KEY;
-				placeholderValue = 'YOUR_XAI_API_KEY_HERE';
-				break;
-			case 'mistral':
-				apiKeyToCheck = mcpEnv.MISTRAL_API_KEY;
-				placeholderValue = 'YOUR_MISTRAL_API_KEY_HERE';
-				break;
-			case 'vertex':
-				apiKeyToCheck = mcpEnv.GOOGLE_API_KEY; // Vertex uses Google API key
-				placeholderValue = 'YOUR_GOOGLE_API_KEY_HERE';
-				break;
-			default:
-				return false; // Unknown provider
-		}
-
-		return !!apiKeyToCheck && !/KEY_HERE$/.test(apiKeyToCheck);
-	} catch (error) {
-		console.error(
-			chalk.red(`Error reading or parsing .cursor/mcp.json: ${error.message}`)
-		);
-		return false;
 	}
+
+	// Default fallback if no valid key found in the .env file
+	return { isSet: false, source: null, value: null };
 }
 
 /**
- * Gets a list of available models based on the MODEL_MAP.
- * @returns {Array<{id: string, name: string, provider: string, swe_score: number|null, cost_per_1m_tokens: {input: number|null, output: number|null}|null, allowed_roles: string[]}>}
+ * Returns a structured map of all supported models, categorized by provider.
+ * This is the raw data from the JSON file.
+ * @returns {ModelMap}
  */
-function getAvailableModels() {
-	const available = [];
-	for (const [provider, models] of Object.entries(MODEL_MAP)) {
-		if (models.length > 0) {
-			models.forEach((modelObj) => {
-				// Basic name generation - can be improved
-				const modelId = modelObj.id;
-				const sweScore = modelObj.swe_score;
-				const cost = modelObj.cost_per_1m_tokens;
-				const allowedRoles = modelObj.allowed_roles || ['main', 'fallback'];
-				const nameParts = modelId
-					.split('-')
-					.map((p) => p.charAt(0).toUpperCase() + p.slice(1));
-				// Handle specific known names better if needed
-				let name = nameParts.join(' ');
-				if (modelId === 'claude-3.5-sonnet-20240620')
-					name = 'Claude 3.5 Sonnet';
-				if (modelId === 'claude-3-7-sonnet-20250219')
-					name = 'Claude 3.7 Sonnet';
-				if (modelId === 'gpt-4o') name = 'GPT-4o';
-				if (modelId === 'gpt-4-turbo') name = 'GPT-4 Turbo';
-				if (modelId === 'sonar-pro') name = 'Perplexity Sonar Pro';
-				if (modelId === 'sonar-mini') name = 'Perplexity Sonar Mini';
-
-				available.push({
-					id: modelId,
-					name: name,
-					provider: provider,
-					swe_score: sweScore,
-					cost_per_1m_tokens: cost,
-					allowed_roles: allowedRoles
-				});
-			});
-		} else {
-			// For providers with empty lists (like ollama), maybe add a placeholder or skip
-			available.push({
-				id: `[${provider}-any]`,
-				name: `Any (${provider})`,
-				provider: provider
-			});
-		}
-	}
-	return available;
+function getAvailableModels(): ModelMap {
+	return MODEL_MAP;
 }
 
 /**
@@ -672,44 +624,34 @@ function getAvailableModels() {
  * @param {string|null} explicitRoot - Optional explicit path to the project root.
  * @returns {boolean} True if successful, false otherwise.
  */
-function writeConfig(config: any, explicitRoot: string | null = null) {
-	// ---> Determine root path reliably <---
-	let rootPath = explicitRoot;
-	if (explicitRoot === null || explicitRoot === undefined) {
-		// Logic matching _loadAndValidateConfig
-		const foundRoot = findProjectRoot(); // *** Explicitly call findProjectRoot ***
-		if (!foundRoot) {
-			console.error(
-				chalk.red(
-					'Error: Could not determine project root. Configuration not saved.'
-				)
-			);
-			return false;
-		}
-		rootPath = foundRoot;
+function writeConfig(config: Config, explicitRoot: string | null = null) {
+	const projectRoot = explicitRoot || findProjectRoot();
+	if (!projectRoot) {
+		throw new ConfigurationError(
+			'Cannot write config: Project root not found.'
+		);
 	}
-	// ---> End determine root path logic <---
 
-	// Use new config location: .taskmanager/config.json
-	const taskmanagerDir = path.join(rootPath, '.taskmanager');
-	const configPath = path.join(taskmanagerDir, 'config.json');
+	const configDir = path.join(projectRoot, '.taskmanager');
+	const configPath = path.join(configDir, 'config.json');
 
 	try {
-		// Ensure .taskmanager directory exists
-		if (!fs.existsSync(taskmanagerDir)) {
-			fs.mkdirSync(taskmanagerDir, { recursive: true });
+		// Ensure the .taskmanager directory exists
+		if (!fs.existsSync(configDir)) {
+			fs.mkdirSync(configDir, { recursive: true });
 		}
 
-		fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-		loadedConfig = config; // Update the cache after successful write
+		// Write the file
+		fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
+		log('info', `Configuration saved to ${configPath}`);
+
+		// Force a reload of the cached config on next getConfig call
+		getConfig(projectRoot, true);
 		return true;
-	} catch (error) {
-		console.error(
-			chalk.red(
-				`Error writing configuration to ${configPath}: ${error.message}`
-			)
+	} catch (error: any) {
+		throw new ConfigurationError(
+			`Failed to write configuration to ${configPath}: ${error.message}`
 		);
-		return false;
 	}
 }
 
@@ -719,7 +661,10 @@ function writeConfig(config: any, explicitRoot: string | null = null) {
  * @returns {boolean} True if the file exists, false otherwise
  */
 function isConfigFilePresent(explicitRoot: string | null = null) {
-	return findConfigPath(null, { projectRoot: explicitRoot }) !== null;
+	const configPath = findConfigPath(null, {
+		projectRoot: explicitRoot || undefined
+	});
+	return !!configPath;
 }
 
 /**
@@ -727,27 +672,35 @@ function isConfigFilePresent(explicitRoot: string | null = null) {
  * @param {string|null} explicitRoot - Optional explicit path to the project root.
  * @returns {string|null} The user ID or null if not found.
  */
-function getUserId(explicitRoot: string | null = null) {
-	const config = getConfig(explicitRoot);
-	if (!config.global) {
-		config.global = {}; // Ensure global object exists
+function getUserId(explicitRoot: string | null = null): string | null {
+	const projectRoot = explicitRoot || findProjectRoot();
+	if (!projectRoot) {
+		return null; // Cannot store user ID without a project context
 	}
-	if (!config.global.userId) {
-		config.global.userId = '1234567890';
-		// Attempt to write the updated config.
-		// It's important that writeConfig correctly resolves the path
-		// using explicitRoot, similar to how getConfig does.
-		const success = writeConfig(config, explicitRoot);
-		if (!success) {
-			// Log an error or handle the failure to write,
-			// though for now, we'll proceed with the in-memory default.
-			log(
-				'warn',
-				'Failed to write updated configuration with new userId. Please let the developers know.'
-			);
+
+	const configDir = path.join(projectRoot, '.taskmanager');
+	const userIdPath = path.join(configDir, '.user_id');
+
+	try {
+		if (fs.existsSync(userIdPath)) {
+			return fs.readFileSync(userIdPath, 'utf-8').trim();
+		} else {
+			// Generate a new user ID using a simple random string
+			const newUserId =
+				Math.random().toString(36).substring(2, 15) +
+				Math.random().toString(36).substring(2, 15);
+
+			// Ensure directory exists
+			if (!fs.existsSync(configDir)) {
+				fs.mkdirSync(configDir, { recursive: true });
+			}
+			fs.writeFileSync(userIdPath, newUserId, 'utf-8');
+			return newUserId;
 		}
+	} catch (error: any) {
+		log('error', `Could not get or create user ID: ${error.message}`);
+		return null;
 	}
-	return config.global.userId;
 }
 
 /**
@@ -755,14 +708,23 @@ function getUserId(explicitRoot: string | null = null) {
  * @returns {string[]} An array of provider names.
  */
 function getAllProviders() {
-	return Object.keys(MODEL_MAP || {});
+	return VALID_PROVIDERS;
 }
 
-function getBaseUrlForRole(role: string, explicitRoot: string | null = null) {
-	const roleConfig = getModelConfigForRole(role, explicitRoot);
-	return roleConfig && typeof roleConfig.baseURL === 'string'
-		? roleConfig.baseURL
-		: undefined;
+function getBaseUrlForRole(
+	role: 'main' | 'research' | 'fallback',
+	explicitRoot: string | null = null
+): string | undefined {
+	const params = getParametersForRole(role, explicitRoot);
+	if (!params) return undefined;
+
+	switch (params.provider) {
+		case 'bedrock':
+			return (params as any).bedrockBaseURL;
+		// Add other providers if they have a concept of a base URL
+		default:
+			return undefined;
+	}
 }
 
 export {

@@ -8,6 +8,7 @@ import {
 	LEGACY_CONFIG_FILE,
 	TASKMANAGER_CONFIG_FILE
 } from '../../../src/constants/paths.js';
+import { getDebugFlag } from '../config-manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,8 +101,10 @@ export async function migrateProject(options: MigrationOptions = {}) {
 			);
 		}
 	} catch (error) {
-		log.error(`Migration failed: ${error.message}`);
-		throw error;
+		log.error(`Migration failed: ${(error as Error).message}`);
+		if (getDebugFlag()) {
+			console.error(error);
+		}
 	}
 }
 
@@ -111,7 +114,7 @@ export async function migrateProject(options: MigrationOptions = {}) {
  * @returns {Array} Migration plan items
  */
 function analyzeMigrationNeeds(projectRoot) {
-	const migrationPlan = [];
+	const migrationPlan: Array<{from: string, to: string, type: string}> = [];
 
 	// Check for tasks directory
 	const tasksDir = path.join(projectRoot, 'tasks');

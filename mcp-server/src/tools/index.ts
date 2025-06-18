@@ -13,26 +13,22 @@ import { registerUpdateSubtaskTool } from './update-subtask.js';
 import { registerGenerateTool } from './generate.js';
 import { registerShowTaskTool } from './get-task.js';
 import { registerNextTaskTool } from './next-task.js';
-import { registerExpandTaskTool } from './expand-task.js';
-import { registerAddTaskTool } from './add-task.js';
-import { registerAddSubtaskTool } from './add-subtask.js';
 import { registerRemoveSubtaskTool } from './remove-subtask.js';
 import { registerAnalyzeProjectComplexityTool } from './analyze.js';
 import { registerClearSubtasksTool } from './clear-subtasks.js';
-import { registerExpandAllTool } from './expand-all.js';
 import { registerRemoveDependencyTool } from './remove-dependency.js';
 import { registerValidateDependenciesTool } from './validate-dependencies.js';
 import { registerFixDependenciesTool } from './fix-dependencies.js';
 import { registerComplexityReportTool } from './complexity-report.js';
 import { registerAddDependencyTool } from './add-dependency.js';
 import { registerRemoveTaskTool } from './remove-task.js';
-import { registerInitializeProjectTool } from './initialize-project.js';
 import { registerModelsTool } from './models.js';
-import { registerMoveTaskTool } from './move-task.js';
+// // import { registerMoveTaskTool } from './move-task.js';
+// // // import { registerCopyTagTool } from './copy-tag.js';
 
 // Type for FastMCP server instance
 interface MCPServer {
-  tool: (name: string, description: string, inputSchema: any, handler: (args: any) => Promise<any>) => void;
+  addTool: (tool: any) => void;
   // Add other methods as needed
 }
 
@@ -44,7 +40,7 @@ export function registerVibexTaskManagerTools(server: MCPServer): void {
 		// Register each tool in a logical workflow order
 
 		// Group 1: Initialization & Setup
-		registerInitializeProjectTool(server);
+		// // registerInitializeProjectTool(server); // DELETED
 		registerModelsTool(server);
 		registerParsePRDTool(server);
 
@@ -55,26 +51,29 @@ export function registerVibexTaskManagerTools(server: MCPServer): void {
 		registerComplexityReportTool(server);
 
 		// Group 3: Task Management
-		registerAddTaskTool(server);
+		// // registerAddTaskTool(server); // DELETED
 		registerUpdateTaskTool(server);
 		registerRemoveTaskTool(server);
-		registerMoveTaskTool(server);
+		// // // registerMoveTaskTool(server); // DELETED
 		registerSetTaskStatusTool(server);
 
 		// Group 4: Subtask Management
-		registerAddSubtaskTool(server);
+		// // registerAddSubtaskTool(server); // DELETED
 		registerUpdateSubtaskTool(server);
 		registerRemoveSubtaskTool(server);
 		registerClearSubtasksTool(server);
 
 		// Group 5: Task Expansion & Analysis
-		registerExpandTaskTool(server);
-		registerExpandAllTool(server);
+		// // registerExpandTaskTool(server); // DELETED
+		// // registerExpandAllTool(server); // DELETED
 		registerAnalyzeProjectComplexityTool(server);
 
 		// Group 6: Dependency Management
 		registerAddDependencyTool(server);
 		registerRemoveDependencyTool(server);
+		// registerMoveTaskTool(server);
+		// // registerCopyTagTool(server);
+		registerClearSubtasksTool(server);
 		registerValidateDependenciesTool(server);
 		registerFixDependenciesTool(server);
 
@@ -96,7 +95,7 @@ export function registerVibexTaskManagerTools(server: MCPServer): void {
  */
 function getTotalToolCount(): number {
 	// This should match the number of registerXXXTool calls
-	return 26;
+	return 20;
 }
 
 // Export individual registration functions for testing or selective loading
@@ -110,20 +109,21 @@ export {
 	registerGenerateTool,
 	registerShowTaskTool,
 	registerNextTaskTool,
-	registerExpandTaskTool,
-	registerAddTaskTool,
-	registerAddSubtaskTool,
+	// // registerExpandTaskTool, // DELETED
+	// // registerAddTaskTool, // DELETED
+	// // registerAddSubtaskTool, // DELETED
 	registerRemoveSubtaskTool,
 	registerAnalyzeProjectComplexityTool,
 	registerClearSubtasksTool,
-	registerExpandAllTool,
+	// // registerExpandAllTool, // DELETED
 	registerRemoveDependencyTool,
 	registerValidateDependenciesTool,
 	registerFixDependenciesTool,
 	registerComplexityReportTool,
 	registerAddDependencyTool,
 	registerRemoveTaskTool,
-	registerInitializeProjectTool,
+	// // registerInitializeProjectTool, // DELETED
 	registerModelsTool,
-	registerMoveTaskTool,
+	// // registerMoveTaskTool, // DELETED
+	// // registerCopyTagTool, // DELETED
 };

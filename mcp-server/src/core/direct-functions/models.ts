@@ -14,6 +14,7 @@ import {
 	disableSilentMode
 } from '../../../../scripts/modules/utils.js';
 import { createLogWrapper } from '../../tools/utils.js';
+import { AnyLogger } from '../logger.js';
 
 /**
  * Get or update model configuration
@@ -22,7 +23,11 @@ import { createLogWrapper } from '../../tools/utils.js';
  * @param {Object} context - MCP context (contains session)
  * @returns {Object} Result object with success, data/error fields
  */
-export async function modelsDirect(args: any, log: any, context: any = {}): Promise<any> {
+export async function modelsDirect(
+	args: any,
+	log: AnyLogger,
+	context: any = {}
+): Promise<any> {
 	const { session } = context;
 	const { projectRoot } = args; // Extract projectRoot from args
 
@@ -115,7 +120,7 @@ export async function modelsDirect(args: any, log: any, context: any = {}): Prom
 			error: {
 				code: 'DIRECT_FUNCTION_ERROR',
 				message: (error as Error).message,
-				details: error.stack
+				details: (error as Error).stack
 			}
 		};
 	}

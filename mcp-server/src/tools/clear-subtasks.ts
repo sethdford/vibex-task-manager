@@ -17,6 +17,7 @@ import {
 	clearSubtasksDirect } from '../core/vibex-task-manager-core.js';
 import {
 	findTasksPath } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the clearSubtasks tool with the MCP server
@@ -49,18 +50,18 @@ export function registerClearSubtasksTool(server: any): void {
 				path: ['id', 'all']
 			}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(`Clearing subtasks with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(`Clearing subtasks with args: ${JSON.stringify(args)}`);
 
-				// Use args.projectRoot directly (guaranteed by withNormalizedProjectRoot)
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -68,22 +69,21 @@ export function registerClearSubtasksTool(server: any): void {
 
 				const result = await clearSubtasksDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
-						id: args.id,
-						all: args.all
+						...args,
+						tasksJsonPath,
 					},
 					log
 				);
 
 				if (result.success) {
-					log.info(`Subtasks cleared successfully: ${result.data.message}`);
+					wrappedLogger.info(`Subtasks cleared successfully: ${result.data?.message}`);
 				} else {
-					log.error(`Failed to clear subtasks: ${result.error}`);
+					wrappedLogger.error(`Failed to clear subtasks: ${result.error}`);
 				}
 
 				return handleApiResult(apiResultToCommandResult(result), log, 'Error clearing subtasks');
 			} catch (error) {
-				log.error(`Error in clearSubtasks tool: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in clear-subtasks tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
 			}
 		})

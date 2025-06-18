@@ -18,6 +18,7 @@ import { generateObjectService } from '../ai-services-unified.js';
 import { getDebugFlag } from '../config-manager.js';
 import generateTaskFiles from './generate-task-files.js';
 import { displayAiUsageSummary } from '../ui.js';
+import { Task, TasksData } from './types.js';
 
 // Define the Zod schema for a SINGLE task object
 const prdSingleTaskSchema = z.object({
@@ -41,6 +42,13 @@ const prdResponseSchema = z.object({
 		generatedAt: z.string()
 	})
 });
+
+type GeneratedTasks = z.infer<typeof prdResponseSchema>;
+
+interface AITaskGenerationResponse {
+	mainResult: GeneratedTasks | null;
+	telemetryData: any; // Define a more specific type if possible
+}
 
 interface ParsePRDOptions {
 	force?: boolean;
@@ -99,9 +107,9 @@ async function parsePRD(prdPath: string, tasksPath: string, numTasks: number, op
 		`Parsing PRD file: ${prdPath}, Force: ${force}, Append: ${append}, Research: ${research}`
 	);
 
-	let existingTasks = [];
+	let existingTasks: Task[] = [];
 	let nextId = 1;
-	let aiServiceResponse = null;
+	let aiServiceResponse: AITaskGenerationResponse | null = null;
 
 	try {
 		// Handle file existence and overwrite/append logic
@@ -111,7 +119,7 @@ async function parsePRD(prdPath: string, tasksPath: string, numTasks: number, op
 					`Append mode enabled. Reading existing tasks from ${tasksPath}`,
 					'info'
 				);
-				const existingData = readJSON(tasksPath); // Use readJSON utility
+				const existingData = readJSON(tasksPath) as TasksData; // Use readJSON utility
 				if (existingData && Array.isArray(existingData.tasks)) {
 					existingTasks = existingData.tasks;
 					if (existingTasks.length > 0) {
@@ -231,7 +239,7 @@ Guidelines:
 		);
 
 		// Call generateObjectService with the CORRECT schema and additional telemetry params
-		aiServiceResponse = await generateObjectService({
+		let aiServiceResponse: any = null; aiServiceResponse = await generateObjectService({
 			role: research ? 'research' : 'main', // Use research role if flag is set
 			session: session,
 			projectRoot: projectRoot,
@@ -252,134 +260,114 @@ Guidelines:
 			`Successfully parsed PRD via AI service${research ? ' with research-backed analysis' : ''}.`
 		);
 
-		// Validate and Process Tasks
-		// const generatedData = aiServiceResponse?.mainResult?.object;
+		let generatedData: GeneratedTasks | null = null;
 
-		// Robustly get the actual AI-generated object
-		let generatedData = null;
 		if (aiServiceResponse?.mainResult) {
+			// Check if the mainResult has the tasks property directly
 			if (
 				typeof aiServiceResponse.mainResult === 'object' &&
 				aiServiceResponse.mainResult !== null &&
 				'tasks' in aiServiceResponse.mainResult
 			) {
-				// If mainResult itself is the object with a 'tasks' property
 				generatedData = aiServiceResponse.mainResult;
-			} else if (
-				typeof aiServiceResponse.mainResult.object === 'object' &&
-				aiServiceResponse.mainResult.object !== null &&
-				'tasks' in aiServiceResponse.mainResult.object
+			}
+			// This handles a nested object structure which might occur.
+			else if (
+				typeof (aiServiceResponse.mainResult as any).object === 'object' &&
+				(aiServiceResponse.mainResult as any).object !== null &&
+				'tasks' in (aiServiceResponse.mainResult as any).object
 			) {
-				// If mainResult.object is the object with a 'tasks' property
-				generatedData = aiServiceResponse.mainResult.object;
+				generatedData = (aiServiceResponse.mainResult as any).object;
 			}
 		}
 
 		if (!generatedData || !Array.isArray(generatedData.tasks)) {
-			logFn.error(
-				`Internal Error: generateObjectService returned unexpected data structure: ${JSON.stringify(generatedData)}`
-			);
 			throw new Error(
-				'AI service returned unexpected data structure after validation.'
+				'AI service did not return a valid "tasks" array. Please check the AI response.'
 			);
 		}
 
-		let currentId = nextId;
-		const taskMap = new Map();
-		const processedNewTasks = generatedData.tasks.map((task) => {
-			const newId = currentId++;
-			taskMap.set(task.id, newId);
+		report(
+			`Successfully received and parsed ${generatedData.tasks.length} tasks from AI.`,
+			'info'
+		);
+
+		// Process and validate new tasks, ensuring they have the correct nextId
+		const processedNewTasks: Task[] = generatedData.tasks.map((task: any, index) => {
+			const newId = nextId + index;
+
+			// Validate dependencies: ensure they refer to existing or newly created tasks
+			const validDependencies = (task.dependencies || []).filter((depId) => {
+				// Check against existing tasks
+				const existsInOld = existingTasks.some((t) => t.id === depId);
+				// Check against other new tasks (must have a lower ID)
+				const existsInNew = depId >= nextId && depId < newId;
+
+				if (!existsInOld && !existsInNew) {
+					report(
+						`Task "${task.title}" has an invalid dependency: ID ${depId} does not exist. Removing.`,
+						'warn'
+					);
+					return false;
+				}
+				return true;
+			});
+
 			return {
 				...task,
 				id: newId,
-				status: 'pending',
-				priority: task.priority || 'medium',
-				dependencies: Array.isArray(task.dependencies) ? task.dependencies : [],
-				subtasks: []
+				status: 'pending', // Explicitly set status
+				dependencies: validDependencies,
+				subtasks: [] // Initialize with empty subtasks array
 			};
 		});
 
-		// Remap dependencies for the NEWLY processed tasks
-		processedNewTasks.forEach((task) => {
-			task.dependencies = task.dependencies
-				.map((depId) => taskMap.get(depId)) // Map old AI ID to new sequential ID
-				.filter(
-					(newDepId) =>
-						newDepId != null && // Must exist
-						newDepId < task.id && // Must be a lower ID (could be existing or newly generated)
-						(findTaskById(existingTasks, newDepId) || // Check if it exists in old tasks OR
-							processedNewTasks.some((t) => t.id === newDepId)) // check if it exists in new tasks
-				);
-		});
+		const finalTasks = append ? [...existingTasks, ...processedNewTasks] : processedNewTasks;
+		const finalData = { tasks: finalTasks };
 
-		const finalTasks = append
-			? [...existingTasks, ...processedNewTasks]
-			: processedNewTasks;
-		const outputData = { tasks: finalTasks };
+		writeJSON(tasksPath, finalData);
+		report(`Successfully saved ${processedNewTasks.length} new tasks to ${tasksPath}`, 'success');
 
-		// Write the final tasks to the file
-		writeJSON(tasksPath, outputData);
-		report(
-			`Successfully ${append ? 'appended' : 'generated'} ${processedNewTasks.length} tasks in ${tasksPath}${research ? ' with research-backed analysis' : ''}`,
-			'success'
-		);
+		await generateTaskFiles(tasksPath, path.dirname(tasksPath));
 
-		// Generate markdown task files after writing tasks.json
-		await generateTaskFiles(tasksPath, path.dirname(tasksPath), { mcpLog });
-
-		// Handle CLI output (e.g., success message)
-		if (outputFormat === 'text') {
+		if (outputFormat === 'text' && !isSilentMode()) {
 			console.log(
 				boxen(
 					chalk.green(
-						`Successfully generated ${processedNewTasks.length} new tasks${research ? ' with research-backed analysis' : ''}. Total tasks in ${tasksPath}: ${finalTasks.length}`
+						`✅ Success! Generated ${processedNewTasks.length} tasks from ${path.basename(
+							prdPath
+						)}.\n\nRun ${chalk.cyan(
+							`vibex-task-manager list`
+						)} to see the new tasks.`
 					),
-					{ padding: 1, borderColor: 'green', borderStyle: 'round' }
+					{ padding: 1, margin: 1, borderStyle: 'round', borderColor: 'green' }
 				)
 			);
-
-			console.log(
-				boxen(
-					chalk.white.bold('Next Steps:') +
-						'\n\n' +
-						`${chalk.cyan('1.')} Run ${chalk.yellow('vibex-task-manager list')} to view all tasks\n` +
-						`${chalk.cyan('2.')} Run ${chalk.yellow('vibex-task-manager expand --id=<id>')} to break down a task into subtasks`,
-					{
-						padding: 1,
-						borderColor: 'cyan',
-						borderStyle: 'round',
-						margin: { top: 1 }
-					}
-				)
-			);
-
-			if (aiServiceResponse && aiServiceResponse.telemetryData) {
-				displayAiUsageSummary(aiServiceResponse.telemetryData, 'cli');
-			}
+		}
+		if (aiServiceResponse && aiServiceResponse.telemetryData) {
+			displayAiUsageSummary(aiServiceResponse.telemetryData, 'cli');
 		}
 
-		// Return telemetry data
 		return {
 			success: true,
+			message: `Generated ${processedNewTasks.length} tasks.`,
 			tasksPath,
 			telemetryData: aiServiceResponse?.telemetryData
 		};
-	} catch (error) {
+	} catch (error: any) {
 		report(`Error parsing PRD: ${error.message}`, 'error');
-
-		// Only show error UI for text output (CLI)
-		if (outputFormat === 'text') {
+		if (outputFormat === 'text' && !isSilentMode()) {
 			console.error(chalk.red(`Error: ${error.message}`));
-
-			if (getDebugFlag(projectRoot)) {
-				// Use projectRoot for debug flag check
-				console.error(error);
-			}
-
-			process.exit(1);
-		} else {
-			throw error; // Re-throw for JSON output
 		}
+		// Re-throw for MCP or return error object
+		if (isMCP) {
+			throw error;
+		} else {
+			process.exit(1);
+		}
+	} finally {
+		// Ensure silent mode is disabled
+		disableSilentMode();
 	}
 }
 

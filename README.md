@@ -1,108 +1,25 @@
-# Vibex Task Manager [![GitHub stars](https://img.shields.io/github/stars/sethdford/vibex-task-manager?style=social)](https://github.com/sethdford/vibex-task-manager/stargazers)
+# Vibex Task Manager
 
-[![CI](https://github.com/sethdford/vibex-task-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/sethdford/vibex-task-manager/actions/workflows/ci.yml) [![npm version](https://badge.fury.io/js/vibex-task-manager.svg)](https://badge.fury.io/js/vibex-task-manager) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+An AI-powered task management system designed for modern development workflows. Vibex Task Manager uses AWS Bedrock exclusively to provide intelligent task generation, complexity analysis, and multi-agent coordination capabilities.
 
-[![NPM Downloads](https://img.shields.io/npm/d18m/vibex-task-manager?style=flat)](https://www.npmjs.com/package/vibex-task-manager) [![NPM Downloads](https://img.shields.io/npm/dm/vibex-task-manager?style=flat)](https://www.npmjs.com/package/vibex-task-manager) [![NPM Downloads](https://img.shields.io/npm/dw/vibex-task-manager?style=flat)](https://www.npmjs.com/package/vibex-task-manager)
+## ✨ Key Features
 
-## AI-Powered Task Management for Development Teams
+- **🎯 Zero-Configuration AWS Integration**: Automatic model detection and setup
+- **🤖 AI-Powered Task Management**: Generate and manage tasks with Claude models
+- **🔗 MCP Integration**: Seamless integration with AI-powered editors (Cursor, Claude Code, VS Code)
+- **📊 Intelligent Analysis**: Automatic task complexity assessment and recommendations
+- **🤝 Multi-Agent Coordination**: Enable multiple AI agents to work together effectively
+- **🔒 Enterprise Security**: AWS-grade security and compliance
+- **💰 Cost Optimization**: Pay-per-use AWS Bedrock pricing
 
+## 🚀 Quick Start
 
-A task management system for AI-driven development using AWS Bedrock, designed to work seamlessly with Cursor AI and other MCP-compatible editors.
+### 1. Install Vibex Task Manager
 
-## ⚡ What's New in v0.17.3
+Choose your preferred installation method:
 
-**Vibex Task Manager** now features **Zero-Configuration Setup** with intelligent AWS Bedrock auto-detection! This provides:
-
-- 🎯 **Auto-Detection**: Automatically discovers available Claude models in your AWS region
-- 🚀 **Zero-Config**: Works out of the box with existing AWS credentials
-- 🔒 **Enterprise Security**: AWS-grade security and compliance
-- 🌍 **Global Scale**: AWS infrastructure worldwide
-- 💰 **Smart Recommendations**: Suggests optimal models based on performance and cost
-- 🔧 **Graceful Fallback**: Helpful guidance when AWS access isn't available
-
-## Documentation
-
-For more detailed information, check out the documentation in the `docs` directory:
-
-- [Configuration Guide](docs/configuration.md) - Set up AWS credentials and customize Vibex Task Manager
-- [Tutorial](docs/tutorial.md) - Step-by-step guide to getting started
-- [Command Reference](docs/command-reference.md) - Complete list of all available commands
-- [Task Structure](docs/task-structure.md) - Understanding the task format and features
-- [Example Interactions](docs/examples.md) - Common AI interaction examples
-- [Migration Guide](docs/migration-guide.md) - Guide to migrating to the new project structure
-
-## Requirements
-
-Vibex Task Manager uses AWS Bedrock for all AI operations. You'll need:
-
-### AWS Prerequisites
-- **AWS Account** with Bedrock access
-- **AWS Credentials** configured (AWS CLI, environment variables, or IAM roles)
-- **Bedrock Model Access** enabled for the models you want to use
-
-### Supported Models
-- **Claude 3.5 Sonnet** (`anthropic.claude-3-5-sonnet-20241022-v2:0`) - Latest and most capable
-- **Claude 3 Opus** (`anthropic.claude-3-opus-20240229-v1:0`) - Best for complex reasoning
-- **Claude 3 Sonnet** (`anthropic.claude-3-sonnet-20240229-v1:0`) - Balanced performance
-- **Claude 3 Haiku** (`anthropic.claude-3-haiku-20240307-v1:0`) - Fast and efficient
-- **Amazon Titan Text** (`amazon.titan-text-premier-v1:0`) - AWS native model
-
-## 🎯 Zero-Configuration Setup with Auto-Detection
-
-Starting with version 0.17.3, Vibex Task Manager automatically detects and configures AWS Bedrock models for you! This revolutionary feature means:
-
-### Automatic Setup During Init
-
-When you run `vibex-task-manager init`, the system will:
-
-1. **Check AWS Credentials** - Automatically validates your AWS access
-2. **Scan Available Models** - Discovers all Claude models in your current AWS region
-3. **Smart Configuration** - Intelligently configures your project with:
-   - **Main Model**: Claude 4 (3.7) Sonnet or Claude 3.5 Sonnet for primary tasks
-   - **Research Model**: Claude 3 Opus for complex reasoning and analysis
-   - **Fallback Model**: Claude 3 Haiku for cost-effective operations
-4. **Zero Manual Config** - No need to manually select models or edit configuration files!
-
-### Graceful Fallback Behavior
-
-If AWS credentials aren't available, Vibex Task Manager provides:
-- Clear instructions on setting up AWS access
-- Helpful links to AWS Bedrock documentation
-- Option to configure manually later
-- Default configuration that can be updated when AWS access is available
-
-### Auto-Detection Commands
-
-```bash
-# Initialize with auto-detection (default behavior)
-vibex-task-manager init
-
-# Manually detect models in your current region
-vibex-task-manager config-detect
-
-# Detect models in a specific region
-vibex-task-manager config-detect --region us-west-2
-
-# Detect models using a specific AWS profile
-vibex-task-manager config-detect --profile production
-
-# Detect and automatically apply to configuration
-vibex-task-manager config-detect --apply
-
-# Setup configuration with auto-detection
-vibex-task-manager config-setup
-
-# Skip auto-detection during init
-vibex-task-manager init --skip-setup
-```
-
-## Quick Start
-
-### Option 1: Using with Claude Code/Cursor AI (Recommended)
-
-#### 1. Install via MCP
-
-###### Cursor & Windsurf (`mcpServers`)
+#### MCP Integration (Recommended for AI Editors)
+Add to your `.cursor/mcp.json` or equivalent:
 
 ```json
 {
@@ -119,212 +36,340 @@ vibex-task-manager init --skip-setup
 }
 ```
 
-###### VS Code (`servers` + `type`)
-
-```json
-{
-  "servers": {
-    "vibex-task-manager": {
-      "command": "npx",
-      "args": ["-y", "--package=vibex-task-manager", "vibex-task-manager"],
-      "env": {
-        "AWS_PROFILE": "your-aws-profile", 
-        "AWS_DEFAULT_REGION": "us-east-1"
-      }
-    }
-  },
-  "type": "mcp"
-}
-```
-
-> 🔑 Replace `your-aws-profile` with your AWS profile name and set your preferred region.
-
-#### 2. Configure AWS Credentials
-
-Make sure you have AWS credentials configured. You can do this via:
-
-**AWS CLI:**
+#### Global CLI Installation
 ```bash
-aws configure
-```
-
-**Environment Variables:**
-```bash
-export AWS_ACCESS_KEY_ID=your-access-key
-export AWS_SECRET_ACCESS_KEY=your-secret-key
-export AWS_DEFAULT_REGION=us-east-1
-```
-
-**IAM Roles** (recommended for EC2/Lambda):
-AWS will automatically use IAM roles when available.
-
-#### 3. Enable Bedrock Model Access
-
-In your AWS Console:
-1. Go to AWS Bedrock service
-2. Navigate to "Model access" in the left sidebar
-3. Request access to the models you want to use:
-   - Anthropic Claude models
-   - Amazon Titan models
-
-#### 4. Initialize Your Project (with Auto-Detection!)
-
-In your editor's AI chat pane, say:
-
-```txt
-Initialize vibex-task-manager in my project
-```
-
-**The system will automatically:**
-- ✅ Detect your AWS credentials
-- ✅ Find available Claude models in your region
-- ✅ Configure optimal model selection
-- ✅ Create your project with zero manual setup!
-
-#### 5. Start Building
-
-You can now ask the AI to help you with tasks like:
-
-```txt
-Create a task for implementing user authentication
-```
-
-```txt
-Parse my PRD and create a task list
-```
-
-[More examples on how to use Vibex Task Manager in chat](docs/examples.md)
-
-### Option 2: Using Command Line
-
-#### Installation
-
-```bash
-# Install globally
 npm install -g vibex-task-manager
+```
 
-# OR install locally within your project
+#### Project Dependency
+```bash
 npm install vibex-task-manager
 ```
 
-#### Configure AWS
+### 2. Configure AWS Bedrock
+
+Ensure you have AWS credentials configured and Bedrock access enabled:
 
 ```bash
-# Configure AWS CLI (recommended)
+# Configure AWS credentials (if not already done)
 aws configure
 
-# OR set environment variables
-export AWS_ACCESS_KEY_ID=your-access-key-id
-export AWS_SECRET_ACCESS_KEY=your-secret-access-key
-export AWS_DEFAULT_REGION=us-east-1
+# Test AWS Bedrock connection and auto-detect models
+vibex-task-manager config detect
 ```
 
-#### Initialize a new project (with Auto-Detection!)
+### 3. Initialize Your Project
 
 ```bash
-# If installed globally
+# Navigate to your project directory
+cd your-project
+
+# Initialize Vibex Task Manager with auto-detection
 vibex-task-manager init
 
-# If installed locally
-npx vibex-task-manager init
+# Or initialize with custom settings
+vibex-task-manager init --name "My Project" --description "Project description"
 ```
 
-**What happens during init:**
-1. 🔍 Automatically detects your AWS credentials
-2. 🎯 Scans for available Claude models in your region
-3. 💡 Recommends optimal model configuration
-4. ✅ Sets up your project with zero manual configuration
-
-If AWS credentials aren't found, you'll receive helpful instructions on how to set them up.
-
-#### Common Commands
+### 4. Start Managing Tasks
 
 ```bash
-# Initialize a new project
-vibex-task-manager init
-
-# Parse a PRD and generate tasks
-vibex-task-manager parse-prd your-prd.txt
+# Parse a PRD document into tasks
+vibex-task-manager parse-prd requirements.md
 
 # List all tasks
 vibex-task-manager list
 
-# Show the next task to work on
+# Get the next recommended task
 vibex-task-manager next
 
-# Generate task files
+# Update a task with AI assistance
+vibex-task-manager update-task --id 5 --prompt "Add authentication features"
+
+# Set task status
+vibex-task-manager set-status --id 5 --status done
+```
+
+## 📚 Documentation
+
+### 🎯 **Getting Started**
+- **[Installation Guide](docs/getting-started/installation.md)** - Complete installation instructions
+- **[AWS Setup Guide](docs/getting-started/aws-setup.md)** - AWS Bedrock configuration
+- **[Tutorial](docs/getting-started/tutorial.md)** - Step-by-step walkthrough
+- **[Auto-Detection](docs/getting-started/auto-detection.md)** - Automatic AWS model discovery
+
+### 🛠️ **Usage Guides**
+- **[CLI Reference](docs/usage/cli-reference.md)** - Complete command documentation
+- **[Configuration](docs/usage/configuration.md)** - Project and global settings
+- **[Task Structure](docs/usage/task-structure.md)** - Understanding tasks and dependencies
+- **[Examples](docs/usage/examples.md)** - Real-world usage patterns
+
+### 🔗 **Integration**
+- **[MCP Tools](docs/integration/mcp-tools.md)** - Model Context Protocol integration
+- **[Platform Integrations](docs/integration/platform-integrations.md)** - Editor and IDE setup
+- **[Integration Examples](docs/integration/integration-examples.md)** - Practical scenarios
+
+### 📖 **Reference**
+- **[API Reference](docs/reference/api-reference.md)** - Programming interfaces
+- **[TypeScript API](docs/reference/typescript-api.md)** - TypeScript definitions
+- **[Troubleshooting](docs/reference/troubleshooting.md)** - Common issues and solutions
+- **[Migration Guide](docs/reference/migration-guide.md)** - Migrating from other tools
+
+### ⚡ **Advanced**
+- **[Agent Coordination](docs/advanced/coordination.md)** - Multi-agent collaboration
+- **[Memory System](docs/advanced/memory-system.md)** - Context preservation and learning
+
+## 🎯 Common Use Cases
+
+### Individual Developers
+```bash
+# Break down a large feature into manageable tasks
+vibex-task-manager parse-prd feature-spec.md --num-tasks 15
+
+# Get AI assistance for complex tasks
+vibex-task-manager expand --id 5 --research --prompt "Focus on security aspects"
+
+# Track progress and get recommendations
+vibex-task-manager next
+vibex-task-manager analyze --research
+```
+
+### AI Agent Teams
+```bash
+# Agent A: Claim and start working on a task
+vibex-task-manager set-status --id 5 --status in-progress
+vibex-task-manager update-task --id 5 --prompt "Implementing OAuth2 integration"
+
+# Agent B: Find available work
+vibex-task-manager next  # Gets next available task based on dependencies
+
+# Agent C: Review and coordinate
+vibex-task-manager list --status review
+vibex-task-manager research --query "OAuth2 security best practices" --save-to 5.2
+```
+
+### Development Teams
+```bash
+# Project manager: Set up project structure
+vibex-task-manager init --name "E-commerce Platform"
+vibex-task-manager parse-prd requirements.md --research
+
+# Developer: Work on assigned tasks
+vibex-task-manager show 5  # Get detailed task information
+vibex-task-manager update-task --id 5 --append --prompt "Progress update: API endpoints completed"
+
+# Reviewer: Quality assurance workflow
+vibex-task-manager set-status --id 5 --status review
+vibex-task-manager update-task --id 5 --append --prompt "Code review complete, ready for deployment"
+```
+
+## 🚀 Why Vibex Task Manager?
+
+### 🎯 **Zero-Configuration AI**
+- Automatic AWS Bedrock model detection
+- No API key management for multiple providers
+- Intelligent model selection based on use case
+
+### 🔒 **Enterprise-Ready**
+- AWS-grade security and compliance
+- Local data processing with cloud AI
+- Granular access controls and audit trails
+
+### 💰 **Cost-Effective**
+- Pay-per-use AWS Bedrock pricing
+- No subscription fees or monthly costs
+- Transparent usage tracking
+
+### 🤖 **AI-Agent Optimized**
+- Built for multi-agent coordination
+- Context preservation across sessions
+- Intelligent conflict resolution
+
+### 🌍 **Global Scale**
+- AWS infrastructure worldwide
+- Multi-region support
+- High availability and performance
+
+## 🛠️ Supported Environments
+
+### Operating Systems
+- ✅ macOS (Intel & Apple Silicon)
+- ✅ Windows (10/11)
+- ✅ Linux (Ubuntu, Debian, CentOS, etc.)
+
+### Node.js Versions
+- ✅ Node.js 18.x (LTS)
+- ✅ Node.js 20.x (LTS)
+- ✅ Node.js 22.x (Current)
+
+### AI Editors with MCP Support
+- ✅ **Cursor** (recommended)
+- ✅ **Claude Code**
+- ✅ **VS Code** (with MCP extension)
+- ✅ **Windsurf**
+- ✅ Any MCP-compatible editor
+
+### AWS Bedrock Models
+- **Claude 3.5 Sonnet** - Latest and most capable
+- **Claude 3 Opus** - Best for complex reasoning  
+- **Claude 3 Sonnet** - Balanced performance
+- **Claude 3 Haiku** - Fast and efficient
+
+## 🔧 Configuration
+
+### AWS Credentials
+Configure AWS access using any of these methods:
+
+```bash
+# AWS CLI (recommended)
+aws configure
+
+# Environment variables
+export AWS_ACCESS_KEY_ID=your-key
+export AWS_SECRET_ACCESS_KEY=your-secret
+export AWS_DEFAULT_REGION=us-east-1
+
+# AWS Profile
+export AWS_PROFILE=your-profile
+```
+
+### Project Configuration
+Vibex Task Manager automatically creates a `.vibex/` directory with:
+
+- **`config.json`** - Project settings and model configurations
+- **`tasks/tasks.json`** - Task data and relationships
+- **`docs/research/`** - AI research findings and cache
+- **`reports/`** - Complexity analysis and metrics
+
+## 📊 Example Workflows
+
+### Project Initialization
+```bash
+# 1. Initialize with auto-detection
+vibex-task-manager init
+
+# 2. Parse requirements document
+vibex-task-manager parse-prd requirements.md --num-tasks 20
+
+# 3. Analyze and expand complex tasks
+vibex-task-manager analyze --research
+vibex-task-manager expand --all --force
+
+# 4. Generate individual task files
 vibex-task-manager generate
 ```
 
-## Troubleshooting
-
-### If AWS Bedrock calls fail
-
-- Verify your AWS credentials are properly configured
-- Ensure you have enabled model access in AWS Bedrock console
-- Check that your AWS region supports Bedrock
-- Verify your IAM permissions include Bedrock access
-
-### If `vibex-task-manager init` doesn't respond
-
-Try running it with Node directly:
-
+### Daily Development
 ```bash
-node node_modules/vibex-task-manager/scripts/init.js
+# 1. Get next recommended task
+vibex-task-manager next
+
+# 2. Start working on task
+vibex-task-manager set-status --id 5 --status in-progress
+
+# 3. Get AI assistance as needed
+vibex-task-manager research --query "React hooks best practices" --save-to 5.2
+vibex-task-manager update-task --id 5 --prompt "Implemented custom hooks for state management"
+
+# 4. Complete and move to next
+vibex-task-manager set-status --id 5 --status done
+vibex-task-manager next
 ```
 
-Or clone the repository and run:
-
+### Team Coordination
 ```bash
+# 1. Check team progress
+vibex-task-manager list --format table
+
+# 2. Review tasks needing attention
+vibex-task-manager list --status review
+
+# 3. Coordinate dependencies
+vibex-task-manager validate-dependencies
+vibex-task-manager add-dependency --id 7 --depends-on 5
+
+# 4. Share research findings
+vibex-task-manager research --query "API security checklist" --save-to-file
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+```bash
+# Clone the repository
 git clone https://github.com/sethdford/vibex-task-manager.git
 cd vibex-task-manager
-node scripts/init.js
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Run tests
+npm test
+
+# Link for local development
+npm link
 ```
 
-## AWS Bedrock Regions
+## 📄 License
 
-AWS Bedrock is available in these regions:
-- `us-east-1` (N. Virginia) - Recommended
-- `us-west-2` (Oregon)
-- `eu-west-1` (Ireland)
-- `ap-southeast-1` (Singapore)
-- `ap-northeast-1` (Tokyo)
+This project is licensed under an extremely permissive MIT License that explicitly allows commercial use, repackaging, and selling. See the [LICENSE](LICENSE) file for details.
 
-Choose the region closest to you for best performance.
+### Commercial Use Explicitly Permitted
+- ✅ Use in commercial products
+- ✅ Sell and redistribute
+- ✅ Repackage and rebrand
+- ✅ Integrate into proprietary software
+- ✅ No attribution required in end products
 
-## Contributors
+## 🆘 Support
 
-<a href="https://github.com/sethdford/vibex-task-manager/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=sethdford/vibex-task-manager" alt="Vibex Task Manager project contributors" />
-</a>
+### Documentation
+- **[Complete Documentation](docs/README.md)** - Comprehensive guides and references
+- **[Troubleshooting Guide](docs/reference/troubleshooting.md)** - Common issues and solutions
+- **[FAQ](docs/reference/troubleshooting.md#frequently-asked-questions)** - Frequently asked questions
 
-## Star History
+### Community Support
+- **GitHub Issues** - Bug reports and feature requests
+- **Discussions** - Community Q&A and best practices
+- **Examples** - Real-world usage patterns and workflows
 
-[![Star History Chart](https://api.star-history.com/svg?repos=sethdford/vibex-task-manager&type=Timeline)](https://www.star-history.com/#sethdford/vibex-task-manager&Timeline)
+### Enterprise Support
+For enterprise deployments and custom integrations, contact us for professional support options.
 
-## Licensing
+## 🔄 Migration
 
-Vibex Task Manager is licensed under the MIT License. This means you can:
+### From task-master-ai
+Migrating from the legacy `task-master-ai`? We've got you covered:
 
-✅ **Allowed**:
-- Use Vibex Task Manager for any purpose (personal, commercial, academic)
-- Modify the source code for your own needs
-- Distribute modified versions
-- Use in proprietary software
+```bash
+# Update MCP configuration
+# Replace "task-master-ai" with "vibex-task-manager" in your MCP config
 
-❌ **Not Allowed**:
-- Sell Vibex Task Manager as a software product or service
-- Offer Vibex Task Manager as a hosted service for others
+# Run migration command
+vibex-task-manager migrate
 
-## Security & Privacy
+# The migration will:
+# - Convert old .taskmaster/ directories to .vibex/
+# - Update configuration format
+# - Preserve all task data and relationships
+# - Migrate to AWS Bedrock models
+```
 
-- **Local Processing**: All task data stays on your machine
-- **AWS Bedrock**: AI calls are processed securely through AWS Bedrock
-- **No Data Storage**: We don't store or log your tasks or code
-- **Enterprise Ready**: Built on AWS infrastructure with enterprise-grade security
+See the [Migration Guide](docs/reference/migration-guide.md) for detailed instructions.
+
+## 🚀 What's Next?
+
+1. **[Install Vibex Task Manager](docs/getting-started/installation.md)** using your preferred method
+2. **[Set up AWS Bedrock](docs/getting-started/aws-setup.md)** for AI capabilities  
+3. **[Follow the tutorial](docs/getting-started/tutorial.md)** to learn the basics
+4. **[Explore examples](docs/usage/examples.md)** for your specific use case
+5. **[Configure advanced features](docs/advanced/)** as needed
 
 ---
 
-**Ready to supercharge your development workflow with AWS Bedrock?** 🚀
-
-[Get Started](#quick-start) | [Documentation](docs/) | [Contributing](CONTRIBUTING.md)
+**Transform your project management with AI-powered task management.** Get started with Vibex Task Manager today!

@@ -541,7 +541,7 @@ export function getMcpApiKeyStatus(providerName: string, projectRoot: string | n
         return false; // Only Bedrock is supported
     }
 
-    return !!apiKeyToCheck && !/KEY_HERE$/.test(apiKeyToCheck);
+    	return !!apiKeyToCheck && !/KEY_HERE$/.test(apiKeyToCheck || '');
   } catch (error) {
     console.error(
       chalk.red(`Error reading or parsing .cursor/mcp.json: ${(error as Error).message}`)

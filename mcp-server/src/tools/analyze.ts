@@ -18,6 +18,7 @@ import {
 import { analyzeTaskComplexityDirect } from '../core/vibex-task-manager-core.js'; // Assuming core functions are exported via vibex-task-manager-core.js
 import { findTasksPath } from '../core/utils/path-utils.js';
 import { COMPLEXITY_REPORT_FILE } from '../../../src/constants/paths.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the analyze_project_complexity tool
@@ -78,21 +79,20 @@ export function registerAnalyzeProjectComplexityTool(server: any): void {
 				.describe('The directory of the project. Must be an absolute path.')
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			const toolName = 'analyze_project_complexity'; // Define tool name for logging
 			try {
-				log.info(
-					`Executing ${toolName} tool with args: ${JSON.stringify(args)}`
-				);
+				wrappedLogger.info(`Analyzing task complexity with args: ${JSON.stringify(args)}`);
 
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
-					log.info(`${toolName}: Resolved tasks path: ${tasksJsonPath}`);
+					wrappedLogger.info(`${toolName}: Resolved tasks path: ${tasksJsonPath}`);
 				} catch (error) {
-					log.error(`${toolName}: Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`${toolName}: Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json within project root '${args.projectRoot}': ${(error as Error).message}`
 					);
@@ -102,49 +102,45 @@ export function registerAnalyzeProjectComplexityTool(server: any): void {
 					? path.resolve(args.projectRoot, args.output)
 					: path.resolve(args.projectRoot, COMPLEXITY_REPORT_FILE);
 
-				log.info(`${toolName}: Report output path: ${outputPath}`);
+				wrappedLogger.info(`${toolName}: Report output path: ${outputPath}`);
 
 				// Ensure output directory exists
 				const outputDir = path.dirname(outputPath);
-				try {
-					if (!fs.existsSync(outputDir)) {
+				if (fs.existsSync(outputDir)) {
+					wrappedLogger.info(
+						`${toolName}: Output directory ${outputDir} already exists. Overwriting.`
+					);
+				} else {
+					try {
 						fs.mkdirSync(outputDir, { recursive: true });
-						log.info(`${toolName}: Created output directory: ${outputDir}`);
+					} catch (dirError: any) {
+						wrappedLogger.error(
+							`${toolName}: Failed to create output directory ${outputDir}: ${dirError.message}`
+						);
+						return createErrorResponse(
+							`Failed to create output directory: ${dirError.message}`
+						);
 					}
-				} catch (dirError) {
-					log.error(
-						`${toolName}: Failed to create output directory ${outputDir}: ${dirError.message}`
-					);
-					return createErrorResponse(
-						`Failed to create output directory: ${dirError.message}`
-					);
 				}
 
 				// 3. Call Direct Function - Pass projectRoot in first arg object
 				const result = await analyzeTaskComplexityDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
-						outputPath: outputPath,
-						threshold: args.threshold,
-						research: args.research,
-						projectRoot: args.projectRoot,
-						ids: args.ids,
-						from: args.from,
-						to: args.to
+						...args,
+						tasksJsonPath,
+						outputPath
 					},
-					log,
+					wrappedLogger, // Pass wrapped logger
 					{ session }
 				);
 
 				// 4. Handle Result
-				log.info(
+				wrappedLogger.info(
 					`${toolName}: Direct function result: success=${result.success}`
 				);
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error analyzing task complexity');
+				return handleApiResult(apiResultToCommandResult(result), wrappedLogger, 'Error analyzing task complexity');
 			} catch (error) {
-				log.error(
-					`Critical error in ${toolName} tool execute: ${(error as Error).message}`
-				);
+				wrappedLogger.error(`Critical error in ${toolName} tool execute: ${(error as Error).message}`);
 				return createErrorResponse(
 					`Internal tool error (${toolName}): ${(error as Error).message}`
 				);

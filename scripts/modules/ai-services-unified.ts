@@ -3,8 +3,11 @@
  * Centralized AI service layer using provider modules and config-manager.
  */
 
-// Vercel AI SDK functions are NOT called directly anymore.
-// import { generateText, streamText, generateObject } from 'ai';
+export interface AIServiceResponse {
+	mainResult: string | null;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	telemetryData: Record<string, any> | null;
+}
 
 // --- Core Dependencies ---
 import {
@@ -27,39 +30,45 @@ import { log, findProjectRoot, resolveEnvVariable } from './utils.js';
 // Import provider classes
 import { BedrockAIProvider } from '../../src/ai-providers/index.js';
 
-// Create provider instances
-const PROVIDERS = {
+// --- Type Definitions ---
+interface Provider {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	generateText(params: any): Promise<any>;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	streamText(params: any): Promise<any>;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	generateObject(params: any): Promise<any>;
+}
+
+interface Message {
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+}
+
+// --- Provider Instances ---
+const PROVIDERS: { [key: string]: Provider } = {
 	bedrock: new BedrockAIProvider()
 };
 
 // Helper function to get cost for a specific model
-function _getCostForModel(providerName: string, modelId: string) {
-	if (!MODEL_MAP || !MODEL_MAP[providerName]) {
-		log(
-			'warn',
-			`Provider "${providerName}" not found in MODEL_MAP. Cannot determine cost for model ${modelId}.`
-		);
-		return { inputCost: 0, outputCost: 0, currency: 'USD' }; // Default to zero cost
+function _getCostForModel(providerName: string, modelId: string | null) {
+	if (!modelId) return { inputCost: 0, outputCost: 0, currency: 'USD' };
+
+	const providerMap = MODEL_MAP[providerName as keyof typeof MODEL_MAP];
+	if (!providerMap) {
+		log('warn', `Provider "${providerName}" not found. Cannot determine cost.`);
+		return { inputCost: 0, outputCost: 0, currency: 'USD' };
 	}
 
-	const modelData = MODEL_MAP[providerName].find((m) => m.id === modelId);
-
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const modelData = providerMap.find((m: any) => m.id === modelId);
 	if (!modelData || !modelData.cost_per_1m_tokens) {
-		log(
-			'debug',
-			`Cost data not found for model "${modelId}" under provider "${providerName}". Assuming zero cost.`
-		);
-		return { inputCost: 0, outputCost: 0, currency: 'USD' }; // Default to zero cost
+		log('debug', `Cost data not found for "${modelId}". Assuming zero cost.`);
+		return { inputCost: 0, outputCost: 0, currency: 'USD' };
 	}
 
-	// Ensure currency is part of the returned object, defaulting if not present
-	const currency = modelData.cost_per_1m_tokens.currency || 'USD';
-
-	return {
-		inputCost: modelData.cost_per_1m_tokens.input || 0,
-		outputCost: modelData.cost_per_1m_tokens.output || 0,
-		currency: currency
-	};
+	const { input = 0, output = 0, currency = 'USD' } = modelData.cost_per_1m_tokens;
+	return { inputCost: input, outputCost: output, currency };
 }
 
 // --- Configuration for Retries ---
@@ -67,65 +76,22 @@ const MAX_RETRIES = 2;
 const INITIAL_RETRY_DELAY_MS = 1000;
 
 // Helper function to check if an error is retryable
-function isRetryableError(error: any) {
-	const errorMessage = error.message?.toLowerCase() || '';
-	return (
-		errorMessage.includes('rate limit') ||
-		errorMessage.includes('overloaded') ||
-		errorMessage.includes('service temporarily unavailable') ||
-		errorMessage.includes('timeout') ||
-		errorMessage.includes('network error') ||
-		error.status === 429 ||
-		error.status >= 500
-	);
-}
-
-/**
- * Extracts a user-friendly error message from a potentially complex AI error object.
- * Prioritizes nested messages and falls back to the top-level message.
- * @param {Error | object | any} error - The error object.
- * @returns {string} A concise error message.
- */
-function _extractErrorMessage(error: any) {
-	try {
-		// Attempt 1: Look for Vercel SDK specific nested structure (common)
-		if (error?.data?.error?.message) {
-			return error.data.error.message;
-		}
-
-		// Attempt 2: Look for nested error message directly in the error object
-		if (error?.error?.message) {
-			return error.error.message;
-		}
-
-		// Attempt 3: Look for nested error message in response body if it's JSON string
-		if (typeof error?.responseBody === 'string') {
-			try {
-				const body = JSON.parse(error.responseBody);
-				if (body?.error?.message) {
-					return body.error.message;
-				}
-			} catch (parseError) {
-				// Ignore if responseBody is not valid JSON
-			}
-		}
-
-		// Attempt 4: Use the top-level message if it exists
-		if (typeof error?.message === 'string' && error.message) {
-			return error.message;
-		}
-
-		// Attempt 5: Handle simple string errors
-		if (typeof error === 'string') {
-			return error;
-		}
-
-		// Fallback
-		return 'An unknown AI service error occurred.';
-	} catch (e) {
-		// Safety net
-		return 'Failed to extract error message.';
+function isRetryableError(error: unknown): boolean {
+	if (error instanceof Error) {
+		const errorMessage = error.message?.toLowerCase() || '';
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const status = (error as any).status;
+		return (
+			errorMessage.includes('rate limit') ||
+			errorMessage.includes('overloaded') ||
+			errorMessage.includes('service temporarily unavailable') ||
+			errorMessage.includes('timeout') ||
+			errorMessage.includes('network error') ||
+			status === 429 ||
+			status >= 500
+		);
 	}
+	return false;
 }
 
 /**
@@ -136,6 +102,7 @@ function _extractErrorMessage(error: any) {
  * @returns {string|null} The API key or null if not found/needed.
  * @throws {Error} If a required API key is missing.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function _resolveApiKey(providerName: string, session: any, projectRoot: string | null = null) {
 	const keyMap: { [key: string]: string } = {
 		bedrock: 'AWS_ACCESS_KEY_ID'
@@ -176,8 +143,9 @@ function _resolveApiKey(providerName: string, session: any, projectRoot: string 
  * @throws {Error} If the call fails after all retries.
  */
 async function _attemptProviderCallWithRetries(
-	provider: any,
-	serviceType: string,
+	provider: Provider,
+	serviceType: keyof Provider,
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	callParams: any,
 	providerName: string,
 	modelId: string,
@@ -206,9 +174,10 @@ async function _attemptProviderCallWithRetries(
 			}
 			return result;
 		} catch (error) {
+			const message = error instanceof Error ? error.message : 'An unknown error occurred';
 			log(
 				'warn',
-				`Attempt ${retries + 1} failed for role ${attemptRole} (${fnName} / ${providerName}): ${(error as any).message}`
+				`Attempt ${retries + 1} failed for role ${attemptRole} (${fnName} / ${providerName}): ${message}`
 			);
 
 			if (isRetryableError(error) && retries < MAX_RETRIES) {
@@ -224,7 +193,7 @@ async function _attemptProviderCallWithRetries(
 					'error',
 					`Something went wrong on the provider side. Max retries reached for role ${attemptRole} (${fnName} / ${providerName}).`
 				);
-				throw error;
+				throw error; // Re-throw the original error
 			}
 		}
 	}
@@ -249,7 +218,8 @@ async function _attemptProviderCallWithRetries(
  * @param {string} [params.objectName] - Name for object/tool.
  * @returns {Promise<any>} Result from the underlying provider call.
  */
-async function _unifiedServiceRunner(serviceType: string, params: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function _unifiedServiceRunner(serviceType: keyof Provider, params: any): Promise<AIServiceResponse | null> {
 	const {
 		role: initialRole,
 		session,
@@ -266,346 +236,202 @@ async function _unifiedServiceRunner(serviceType: string, params: any) {
 		log('info', `${serviceType}Service called`, {
 			role: initialRole,
 			commandName,
-			outputType,
-			projectRoot
+			outputType
 		});
 	}
 
-	const effectiveProjectRoot = projectRoot || findProjectRoot();
+	const effectiveProjectRoot = projectRoot || findProjectRoot() || process.cwd();
 	const userId = getUserId(effectiveProjectRoot);
+	const telemetryPayloads: (Record<string, unknown> | null)[] = [];
 
-	let sequence;
-	if (initialRole === 'main') {
-		sequence = ['main', 'fallback', 'research'];
-	} else if (initialRole === 'research') {
-		sequence = ['research', 'fallback', 'main'];
-	} else if (initialRole === 'fallback') {
-		sequence = ['fallback', 'main', 'research'];
-	} else {
-		log(
-			'warn',
-			`Unknown initial role: ${initialRole}. Defaulting to main -> fallback -> research sequence.`
-		);
-		sequence = ['main', 'fallback', 'research'];
+	const attemptSequence = [
+		{
+			role: initialRole,
+			getProvider:
+				initialRole === 'research' ? getResearchProvider : getMainProvider,
+			getModelId:
+				initialRole === 'research' ? getResearchModelId : getMainModelId,
+			getBaseUrl: getBaseUrlForRole
+		}
+	];
+
+	// Only add fallback if it's different from the primary and research roles
+	const mainProvider = getMainProvider();
+	const researchProvider = getResearchProvider();
+	const fallbackProvider = getFallbackProvider();
+	const fallbackModelId = getFallbackModelId();
+
+	if (
+		fallbackProvider &&
+		fallbackModelId &&
+		fallbackProvider !== mainProvider &&
+		fallbackProvider !== researchProvider
+	) {
+		attemptSequence.push({
+			role: 'fallback',
+				getProvider: (explicitRoot?: string | null) => getFallbackProvider(explicitRoot) || '',
+	getModelId: (explicitRoot?: string | null) => getFallbackModelId(explicitRoot) || '',
+			getBaseUrl: getBaseUrlForRole
+		});
 	}
 
-	let lastError = null;
-	let lastCleanErrorMessage =
-		'AI service call failed for all configured roles.';
+	for (const attempt of attemptSequence) {
+		const providerName = attempt.getProvider();
+		const modelId = attempt.getModelId();
+		const baseUrl = attempt.getBaseUrl(attempt.role, effectiveProjectRoot);
 
-	for (const currentRole of sequence) {
-		let providerName,
-			modelId,
-			apiKey,
-			roleParams,
-			provider,
-			baseURL,
-			providerResponse,
-			telemetryData = null;
+		if (!providerName || !modelId) {
+			log(
+				'debug',
+				`Skipping attempt for role '${attempt.role}' because provider or model is not configured.`
+			);
+			continue;
+		}
+
+		if (!isApiKeySet(providerName, session, effectiveProjectRoot)) {
+			log(
+				'warn',
+				`Skipping attempt for role '${attempt.role}' (${providerName}) due to missing API key.`
+			);
+			continue;
+		}
 
 		try {
-			log('info', `New AI service call with role: ${currentRole}`);
-
-			if (currentRole === 'main') {
-				providerName = getMainProvider(effectiveProjectRoot);
-				modelId = getMainModelId(effectiveProjectRoot);
-			} else if (currentRole === 'research') {
-				providerName = getResearchProvider(effectiveProjectRoot);
-				modelId = getResearchModelId(effectiveProjectRoot);
-			} else if (currentRole === 'fallback') {
-				providerName = getFallbackProvider(effectiveProjectRoot);
-				modelId = getFallbackModelId(effectiveProjectRoot);
-			} else {
-				log(
-					'error',
-					`Unknown role encountered in _unifiedServiceRunner: ${currentRole}`
-				);
-				lastError =
-					lastError || new Error(`Unknown AI role specified: ${currentRole}`);
-				continue;
-			}
-
-			if (!providerName || !modelId) {
-				log(
-					'warn',
-					`Skipping role '${currentRole}': Provider or Model ID not configured.`
-				);
-				lastError =
-					lastError ||
-					new Error(
-						`Configuration missing for role '${currentRole}'. Provider: ${providerName}, Model: ${modelId}`
-					);
-				continue;
-			}
-
-			// Get provider instance
-			provider = (PROVIDERS as any)[providerName?.toLowerCase()];
+			const provider = PROVIDERS[providerName];
 			if (!provider) {
-				log(
-					'warn',
-					`Skipping role '${currentRole}': Provider '${providerName}' not supported.`
-				);
-				lastError =
-					lastError ||
-					new Error(`Unsupported provider configured: ${providerName}`);
-				continue;
+				throw new Error(`Provider implementation for '${providerName}' not found.`);
 			}
 
-			// Check API key if needed (Bedrock uses AWS credentials, others need API keys)
-			if (providerName?.toLowerCase() !== 'bedrock') {
-				if (!isApiKeySet(providerName, session, effectiveProjectRoot)) {
-					log(
-						'warn',
-						`Skipping role '${currentRole}' (Provider: ${providerName}): API key not set or invalid.`
-					);
-					lastError =
-						lastError ||
-						new Error(
-							`API key for provider '${providerName}' (role: ${currentRole}) is not set.`
-						);
-					continue; // Skip to the next role in the sequence
-				}
-			}
-
-			// Get base URL if configured (optional for most providers)
-			baseURL = getBaseUrlForRole(currentRole, effectiveProjectRoot);
-
-			// For Bedrock, use the global Bedrock base URL if role-specific URL is not configured
-			if (providerName?.toLowerCase() === 'bedrock' && !baseURL) {
-				// For Bedrock, use the global Bedrock base URL if role-specific URL is not configured
-				baseURL = getBedrockBaseURL(effectiveProjectRoot);
-				log('debug', `Using global Bedrock base URL: ${baseURL}`);
-			}
-
-			// Get AI parameters for the current role
-			roleParams = getParametersForRole(currentRole, effectiveProjectRoot);
-			apiKey = _resolveApiKey(
-				providerName?.toLowerCase(),
-				session,
-				effectiveProjectRoot
-			);
-
-			// Prepare provider-specific configuration
-			let providerSpecificParams = {};
-
-			// Only Bedrock provider is supported
-			if (providerName?.toLowerCase() === 'bedrock') {
-				// Get Bedrock base URL if configured
-				const baseURL = getBedrockBaseURL(effectiveProjectRoot);
-				if (baseURL) {
-					providerSpecificParams = { baseURL };
-				}
-			}
-
-			const messages = [];
+			const messages: Message[] = [];
 			if (systemPrompt) {
 				messages.push({ role: 'system', content: systemPrompt });
 			}
-
-			// IN THE FUTURE WHEN DOING CONTEXT IMPROVEMENTS
-			// {
-			//     type: 'text',
-			//     text: 'Large cached context here like a tasks json',
-			//     providerOptions: {
-			//       anthropic: { cacheControl: { type: 'ephemeral' } }
-			//     }
-			//   }
-
-			// Example
-			// if (params.context) { // context is a json string of a tasks object or some other stu
-			//     messages.push({
-			//         type: 'text',
-			//         text: params.context,
-			//         providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }
-			//     });
-			// }
-
 			if (prompt) {
 				messages.push({ role: 'user', content: prompt });
-			} else {
-				throw new Error('User prompt content is missing.');
 			}
 
 			const callParams = {
-				apiKey,
-				modelId,
-				maxTokens: roleParams.maxTokens,
-				temperature: roleParams.temperature,
-				messages,
-				...(baseURL && { baseURL }),
-				...(serviceType === 'generateObject' && { schema, objectName }),
-				...providerSpecificParams,
-				...restApiParams
+				...restApiParams,
+				model: modelId,
+				messages: messages,
+				...(baseUrl && { baseURL: baseUrl }),
+				...(schema && { schema: schema }),
+				...(objectName && { objectName: objectName })
 			};
 
-			providerResponse = await _attemptProviderCallWithRetries(
+			const result = await _attemptProviderCallWithRetries(
 				provider,
 				serviceType,
 				callParams,
 				providerName,
 				modelId,
-				currentRole
+				attempt.role
 			);
 
-			if (userId && providerResponse && providerResponse.usage) {
-				try {
-					telemetryData = await logAiUsage({
-						userId,
-						commandName,
-						providerName,
-						modelId,
-						inputTokens: providerResponse.usage.inputTokens,
-						outputTokens: providerResponse.usage.outputTokens,
-						outputType
-					});
-				} catch (telemetryError) {
-					// logAiUsage already logs its own errors and returns null on failure
-					// No need to log again here, telemetryData will remain null
-				}
-			} else if (userId && providerResponse && !providerResponse.usage) {
-				log(
-					'warn',
-					`Cannot log telemetry for ${commandName} (${providerName}/${modelId}): AI result missing 'usage' data. (May be expected for streams)`
-				);
-			}
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const { text: mainResult = null, usage = {} } = (result || {}) as any;
+			const { inputTokens = 0, outputTokens = 0 } = usage;
 
-			let finalMainResult;
-			if (serviceType === 'generateText') {
-				finalMainResult = providerResponse.text;
-			} else if (serviceType === 'generateObject') {
-				finalMainResult = providerResponse.object;
-			} else if (serviceType === 'streamText') {
-				finalMainResult = providerResponse;
+			if (userId) {
+				const telemetryData = await logAiUsage({
+					userId,
+					commandName,
+					providerName,
+					modelId,
+					inputTokens,
+					outputTokens,
+					outputType
+				});
+				telemetryPayloads.push(telemetryData);
 			} else {
-				log(
-					'error',
-					`Unknown serviceType in _unifiedServiceRunner: ${serviceType}`
-				);
-				finalMainResult = providerResponse;
+				log('debug', 'Skipping telemetry logging because no user ID was found.');
 			}
 
-			return {
-				mainResult: finalMainResult,
-				telemetryData: telemetryData
-			};
+
+			if (getDebugFlag()) {
+				log('info', `Successfully executed ${serviceType} with role '${attempt.role}'`, { result, telemetryData: telemetryPayloads[telemetryPayloads.length - 1] });
+			}
+
+			return { mainResult, telemetryData: telemetryPayloads.length > 0 ? telemetryPayloads[telemetryPayloads.length -1] : null };
 		} catch (error) {
-			const cleanMessage = _extractErrorMessage(error);
 			log(
 				'error',
-				`Service call failed for role ${currentRole} (Provider: ${providerName || 'unknown'}, Model: ${modelId || 'unknown'}): ${cleanMessage}`
+				`Service call failed for role '${attempt.role}' with provider '${providerName}'.`,
+				error instanceof Error ? error.message : String(error)
 			);
-			lastError = error;
-			lastCleanErrorMessage = cleanMessage;
-
-			if (serviceType === 'generateObject') {
-				const lowerCaseMessage = cleanMessage.toLowerCase();
-				if (
-					lowerCaseMessage.includes(
-						'no endpoints found that support tool use'
-					) ||
-					lowerCaseMessage.includes('does not support tool_use') ||
-					lowerCaseMessage.includes('tool use is not supported') ||
-					lowerCaseMessage.includes('tools are not supported') ||
-					lowerCaseMessage.includes('function calling is not supported') ||
-					lowerCaseMessage.includes('tool use is not supported')
-				) {
-					const specificErrorMsg = `Model '${modelId || 'unknown'}' via provider '${providerName || 'unknown'}' does not support the 'tool use' required by generateObjectService. Please configure a model that supports tool/function calling for the '${currentRole}' role, or use generateTextService if structured output is not strictly required.`;
-					log('error', `[Tool Support Error] ${specificErrorMsg}`);
-					throw new Error(specificErrorMsg);
-				}
-			}
+			// Don't re-throw here; loop to the next provider (fallback)
 		}
 	}
 
-	log('error', `All roles in the sequence [${sequence.join(', ')}] failed.`);
-	throw new Error(lastCleanErrorMessage);
+	log(
+		'error',
+		`All configured AI providers (${attemptSequence.map((a) => a.role).join(', ')}) failed for ${serviceType}.`
+	);
+	return null;
 }
 
 /**
- * Unified service function for generating text.
- * Handles client retrieval, retries, and fallback sequence.
+ * Generates text using the configured AI services, with fallback logic.
  *
- * @param {object} params - Parameters for the service call.
- * @param {string} params.role - The initial client role ('main', 'research', 'fallback').
+ * @param {object} params - The parameters for the text generation.
+ * @param {'main'|'research'} params.role - The primary role to use ('main' or 'research').
+ * @param {string} params.prompt - The user prompt.
+ * @param {string} [params.systemPrompt] - An optional system prompt.
  * @param {object} [params.session=null] - Optional MCP session object.
- * @param {string} [params.projectRoot=null] - Optional project root path for .env fallback.
- * @param {string} params.prompt - The prompt for the AI.
- * @param {string} [params.systemPrompt] - Optional system prompt.
- * @param {string} params.commandName - Name of the command invoking the service.
- * @param {string} [params.outputType='cli'] - 'cli' or 'mcp'.
- * @returns {Promise<object>} Result object containing generated text and usage data.
+ * @param {string} [params.projectRoot=null] - Optional project root path.
+ * @param {string} params.commandName - Name of the command for telemetry.
+ * @param {'cli'|'mcp'} params.outputType - Output type for telemetry.
+ * @returns {Promise<AIServiceResponse|null>} An object containing the main result and telemetry data, or null if all services fail.
  */
-async function generateTextService(params: any) {
-	// Ensure default outputType if not provided
-	const defaults = { outputType: 'cli' };
-	const combinedParams = { ...defaults, ...params };
-	// TODO: Validate commandName exists?
-	return _unifiedServiceRunner('generateText', combinedParams);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function generateTextService(params: any): Promise<AIServiceResponse | null> {
+	return _unifiedServiceRunner('generateText', params);
 }
 
 /**
- * Unified service function for streaming text.
- * Handles client retrieval, retries, and fallback sequence.
+ * Streams text using the configured AI services, with fallback logic.
+ * Note: Streaming results are handled by the provider and not returned directly here.
  *
- * @param {object} params - Parameters for the service call.
- * @param {string} params.role - The initial client role ('main', 'research', 'fallback').
+ * @param {object} params - The parameters for the text streaming.
+ * @param {'main'|'research'} params.role - The primary role to use.
+ * @param {string} params.prompt - The user prompt.
+ * @param {string} [params.systemPrompt] - An optional system prompt.
  * @param {object} [params.session=null] - Optional MCP session object.
- * @param {string} [params.projectRoot=null] - Optional project root path for .env fallback.
- * @param {string} params.prompt - The prompt for the AI.
- * @param {string} [params.systemPrompt] - Optional system prompt.
- * @param {string} params.commandName - Name of the command invoking the service.
- * @param {string} [params.outputType='cli'] - 'cli' or 'mcp'.
- * @returns {Promise<object>} Result object containing the stream and usage data.
+ * @param {string} [params.projectRoot=null] - Optional project root path.
+ * @param {string} params.commandName - Name of the command for telemetry.
+ * @param {'cli'|'mcp'} params.outputType - Output type for telemetry.
+ * @returns {Promise<AIServiceResponse|null>} An object containing telemetry data, or null if all services fail. The mainResult will be null for streams.
  */
-async function streamTextService(params: any) {
-	const defaults = { outputType: 'cli' };
-	const combinedParams = { ...defaults, ...params };
-	// TODO: Validate commandName exists?
-	// NOTE: Telemetry for streaming might be tricky as usage data often comes at the end.
-	// The current implementation logs *after* the stream is returned.
-	// We might need to adjust how usage is captured/logged for streams.
-	return _unifiedServiceRunner('streamText', combinedParams);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function streamTextService(params: any): Promise<AIServiceResponse | null> {
+	return _unifiedServiceRunner('streamText', params);
 }
 
 /**
- * Unified service function for generating structured objects.
- * Handles client retrieval, retries, and fallback sequence.
+ * Generates a structured object using the configured AI services, with fallback logic.
  *
- * @param {object} params - Parameters for the service call.
- * @param {string} params.role - The initial client role ('main', 'research', 'fallback').
+ * @param {object} params - The parameters for the object generation.
+ * @param {'main'|'research'} params.role - The primary role to use.
+ * @param {string} params.prompt - The user prompt.
+ * @param {string} [params.systemPrompt] - An optional system prompt.
+ * @param {z.ZodSchema<T>} params.schema - The Zod schema for the expected object.
+ * @param {string} params.objectName - A name for the object/tool being generated.
  * @param {object} [params.session=null] - Optional MCP session object.
- * @param {string} [params.projectRoot=null] - Optional project root path for .env fallback.
- * @param {import('zod').ZodSchema} params.schema - The Zod schema for the expected object.
- * @param {string} params.prompt - The prompt for the AI.
- * @param {string} [params.systemPrompt] - Optional system prompt.
- * @param {string} [params.objectName='generated_object'] - Name for object/tool.
- * @param {number} [params.maxRetries=3] - Max retries for object generation.
- * @param {string} params.commandName - Name of the command invoking the service.
- * @param {string} [params.outputType='cli'] - 'cli' or 'mcp'.
- * @returns {Promise<object>} Result object containing the generated object and usage data.
+ * @param {string} [params.projectRoot=null] - Optional project root path.
+ * @param {string} params.commandName - Name of the command for telemetry.
+ * @param {'cli'|'mcp'} params.outputType - Output type for telemetry.
+ * @returns {Promise<AIServiceResponse|null>} An object containing the generated object in mainResult and telemetry data, or null if all services fail.
  */
-async function generateObjectService(params: any) {
-	const defaults = {
-		objectName: 'generated_object',
-		maxRetries: 3,
-		outputType: 'cli'
-	};
-	const combinedParams = { ...defaults, ...params };
-	// TODO: Validate commandName exists?
-	return _unifiedServiceRunner('generateObject', combinedParams);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function generateObjectService(params: any): Promise<AIServiceResponse | null> {
+	return _unifiedServiceRunner('generateObject', params);
 }
 
-// --- Telemetry Function ---
 /**
- * Logs AI usage telemetry data.
- * For now, it just logs to the console. Sending will be implemented later.
- * @param {object} params - Telemetry parameters.
- * @param {string} params.userId - Unique user identifier.
- * @param {string} params.commandName - The command that triggered the AI call.
- * @param {string} params.providerName - The AI provider used (e.g., 'openai').
- * @param {string} params.modelId - The specific AI model ID used.
- * @param {number} params.inputTokens - Number of input tokens.
- * @param {number} params.outputTokens - Number of output tokens.
+ * Logs AI usage and calculates cost for telemetry.
+ * This is an internal function and should not be exported.
+ *
+ * @returns {Promise<object|null>} Telemetry data object or null on failure.
  */
 async function logAiUsage({
 	userId,
@@ -619,60 +445,49 @@ async function logAiUsage({
 	userId: string;
 	commandName: string;
 	providerName: string;
-	modelId: string;
+	modelId: string | null;
 	inputTokens: number;
 	outputTokens: number;
 	outputType: string;
-}) {
-	// Use outputType for telemetry categorization (placeholder for future use)
-	const _telemetryCategory = outputType === 'mcp' ? 'mcp' : 'cli';
-	try {
-		// const isMCP = outputType === 'mcp'; // Unused variable
-		const timestamp = new Date().toISOString();
-		const totalTokens = (inputTokens || 0) + (outputTokens || 0);
+}): Promise<Record<string, unknown> | null> {
+	if (outputType !== 'cli') return null; // Only log for CLI usage for now
+	if (!userId) {
+		log('debug', 'Cannot log AI usage: User ID is not available.');
+		return null;
+	}
+	// Ensure we don't log empty stats
+	if (inputTokens === 0 && outputTokens === 0) {
+		return null;
+	}
 
-		// Destructure currency along with costs
+	try {
 		const { inputCost, outputCost, currency } = _getCostForModel(
 			providerName,
 			modelId
 		);
 
-		const totalCost =
-			((inputTokens || 0) / 1_000_000) * inputCost +
-			((outputTokens || 0) / 1_000_000) * outputCost;
-
 		const telemetryData = {
-			timestamp,
+			timestamp: new Date().toISOString(),
 			userId,
 			commandName,
-			modelUsed: modelId, // Consistent field name from requirements
-			providerName, // Keep provider name for context
-			inputTokens: inputTokens || 0,
-			outputTokens: outputTokens || 0,
-			totalTokens,
-			totalCost: parseFloat(totalCost.toFixed(6)),
-			currency // Add currency to the telemetry data
+			modelUsed: modelId,
+			providerName,
+			inputTokens,
+			outputTokens,
+			totalTokens: inputTokens + outputTokens,
+			totalCost: (inputTokens / 1_000_000) * inputCost + (outputTokens / 1_000_000) * outputCost,
+			currency: currency
 		};
 
 		if (getDebugFlag()) {
 			log('info', 'AI Usage Telemetry:', telemetryData);
 		}
 
-		// TODO (Subtask 77.2): Send telemetryData securely to the external endpoint.
-
+		// In a real application, you would send this to your telemetry service
+		// For now, we just return it
 		return telemetryData;
 	} catch (error) {
-		log('error', `Failed to log AI usage telemetry: ${(error as any).message}`, {
-			error
-		});
-		// Don't re-throw; telemetry failure shouldn't block core functionality.
+		log('warn', `Failed to log AI usage: ${error}`);
 		return null;
 	}
-}
-
-export {
-	generateTextService,
-	streamTextService,
-	generateObjectService,
-	logAiUsage
-};
+} 

@@ -37,7 +37,7 @@ function generateTaskFiles(tasksPath: string, outputDir: string, options: Genera
 
 		// Validate and fix dependencies before generating files
 		log('info', `Validating and fixing dependencies`);
-		validateAndFixDependencies(data, tasksPath);
+		validateAndFixDependencies(data, null);
 
 		// Get valid task IDs from tasks.json
 		const validTaskIds = data.tasks.map((task) => task.id);
@@ -74,7 +74,7 @@ function generateTaskFiles(tasksPath: string, outputDir: string, options: Genera
 					} catch (err) {
 						log(
 							'warn',
-							`Failed to remove orphaned task file ${file}: ${err.message}`
+							`Failed to remove orphaned task file ${file}: ${(err as Error).message}`
 						);
 					}
 				});
@@ -82,7 +82,7 @@ function generateTaskFiles(tasksPath: string, outputDir: string, options: Genera
 				log('info', 'No orphaned task files found');
 			}
 		} catch (err) {
-			log('warn', `Error cleaning up orphaned task files: ${err.message}`);
+			log('warn', `Error cleaning up orphaned task files: ${(err as Error).message}`);
 			// Continue with file generation even if cleanup fails
 		}
 
@@ -183,11 +183,11 @@ function generateTaskFiles(tasksPath: string, outputDir: string, options: Genera
 			};
 		}
 	} catch (error) {
-		log('error', `Error generating task files: ${error.message}`);
+		log('error', `Error generating task files: ${(error as Error).message}`);
 
 		// Only show error UI in CLI mode
 		if (!options?.mcpLog) {
-			console.error(chalk.red(`Error generating task files: ${error.message}`));
+			console.error(chalk.red(`Error generating task files: ${(error as Error).message}`));
 
 			if (getDebugFlag()) {
 				// Use getter

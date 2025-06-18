@@ -66,7 +66,7 @@ async function removeSubtask(
 			delete parentTask.subtasks;
 		}
 
-		let convertedTask = null;
+		let convertedTask: any = null;
 
 		// Convert the subtask to a standalone task if requested
 		if (convertToTask) {
@@ -111,7 +111,7 @@ async function removeSubtask(
 
 		return convertedTask;
 	} catch (error) {
-		log('error', `Error removing subtask: ${error.message}`);
+		log('error', `Error removing subtask: ${(error as Error).message}`);
 		throw error;
 	}
 }

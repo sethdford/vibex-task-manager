@@ -360,7 +360,7 @@ Schema requirements:
 
     } catch (parseError) {
       throw new BedrockClientError(
-        `Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
+        `Failed to parse JSON response: ${parseError instanceof Error ? (parseError as Error).message : 'Unknown error'}`,
         'JSON_PARSE_ERROR'
       );
     }

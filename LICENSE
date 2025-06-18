@@ -5,9 +5,10 @@ Copyright (c) 2025 Seth Ford
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+to use, copy, modify, merge, publish, distribute, sublicense, sell, repackage,
+rebrand, commercialize, and/or create derivative works of the Software, and to 
+permit persons to whom the Software is furnished to do so, subject to the 
+following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
@@ -19,3 +20,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+ADDITIONAL PERMISSIONS:
+- You may sell this software or derivative works commercially
+- You may repackage, rebrand, or redistribute under any name
+- You may integrate this software into proprietary products
+- You may modify and distribute without releasing source code
+- No attribution required in end-user products (though appreciated)
+- Use for any purpose, commercial or non-commercial, is explicitly permitted

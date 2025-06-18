@@ -6,21 +6,24 @@ import { MCPTool } from './utils.js';
 
 import { z } from 'zod';
 import {
-	apiResultToCommandResult,
-	handleApiResult,
+	MCPToolResult,
 	createErrorResponse,
-	withNormalizedProjectRoot
+	withNormalizedProjectRoot,
+	apiResultToCommandResult,
+	createSuccessResponse,
+	InputLogger,
+	Logger
 } from './utils.js';
 import { addDependencyDirect } from '../core/vibex-task-manager-core.js';
 import { findTasksPath } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the addDependency tool with the MCP server
  * @param {Object} server - FastMCP server instance
  */
 export function registerAddDependencyTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'add_dependency',
 		description: 'Add a dependency relationship between two tasks',
 		parameters: z.object({
@@ -28,59 +31,53 @@ export function registerAddDependencyTool(server: any): void {
 			dependsOn: z
 				.string()
 				.describe('ID of task that will become a dependency'),
-			file: z
-				.string()
-				.optional()
-				.describe(
-					'Absolute path to the tasks file (default: tasks/tasks.json)'
-				),
-			projectRoot: z
-				.string()
-				.describe('The directory of the project. Must be an absolute path.')
+			file: z.string().optional().describe('Path to the tasks file'),
+			projectRoot: z.string().optional().describe('The project root directory.')
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(
-					`Adding dependency for task ${args.id} to depend on ${args.dependsOn}`
-				);
+				wrappedLogger.info(`Adding dependency for task ${args.id} to depend on ${args.dependsOn}`);
 
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
 				}
 
-				// Call the direct function with the resolved path
 				const result = await addDependencyDirect(
 					{
-						// Pass the explicitly resolved path
-						tasksJsonPath: tasksJsonPath,
-						// Pass other relevant args
+						tasksJsonPath,
 						id: args.id,
 						dependsOn: args.dependsOn
 					},
-					log
-					// Remove context object
+					log // Pass original logger
 				);
 
-				// Log result
 				if (result.success) {
-					log.info(`Successfully added dependency: ${result.data.message}`);
+					wrappedLogger.info(`Successfully added dependency: ${result.data?.message || 'Done'}`);
 				} else {
-					log.error(`Failed to add dependency: ${result.error}`);
+					wrappedLogger.error(`Failed to add dependency: ${result.error?.message || 'Unknown error'}`);
 				}
 
-				// Use handleApiResult to format the response
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error adding dependency');
+				const commandResult = apiResultToCommandResult(result);
+				if (commandResult.success) {
+					return createSuccessResponse(commandResult.data || commandResult.stdout);
+				} else {
+					const errorMessage = commandResult.error || commandResult.stderr || 'Unknown error occurred';
+					const errorPrefix = 'Error adding dependency';
+					wrappedLogger.error(`${errorPrefix}: ${errorMessage}`);
+					return createErrorResponse(`${errorPrefix}: ${errorMessage}`);
+				}
 			} catch (error) {
-				log.error(`Error in addDependency tool: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in addDependency tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
 			}
 		})

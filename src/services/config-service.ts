@@ -268,9 +268,13 @@ export class ConfigService implements IConfigService {
         ...updates,
       };
     } else {
-      config.models[modelType] = {
-        ...config.models[modelType],
-        ...updates,
+      				config.models[modelType] = {
+			temperature: 0.7,
+			region: 'us-east-1',
+			maxTokens: 4000,
+			modelId: '',
+			...config.models[modelType],
+			...updates,
       };
     }
 

@@ -150,18 +150,30 @@ function ensureDirectoryExists(dirPath: string): void {
 }
 
 // Function to add shell aliases to the user's shell configuration
-function addShellAliases(): boolean {
-	const homeDir = process.env.HOME || process.env.USERPROFILE;
-	let shellConfigFile;
-
-	// Determine which shell config file to use
-	if (process.env.SHELL?.includes('zsh')) {
-		shellConfigFile = path.join(homeDir, '.zshrc');
-	} else if (process.env.SHELL?.includes('bash')) {
-		shellConfigFile = path.join(homeDir, '.bashrc');
-	} else {
-		log('warn', 'Could not determine shell type. Aliases not added.');
-		return false;
+async function addShellAliases(
+	shellConfigFile: string | null
+): Promise<void> {
+	if (!shellConfigFile) {
+		const homeDir = process.env.HOME;
+		if (!homeDir) {
+			log(
+				'warn',
+				'Could not determine home directory to add shell aliases.'
+			);
+			return;
+		}
+		const shell = process.env.SHELL;
+		if (shell?.includes('zsh')) {
+			shellConfigFile = path.join(homeDir, '.zshrc');
+		} else if (shell?.includes('bash')) {
+			shellConfigFile = path.join(homeDir, '.bashrc');
+		} else {
+			log(
+				'warn',
+				'Could not determine shell type to add aliases. Please add them manually.'
+			);
+			return;
+		}
 	}
 
 	try {
@@ -171,14 +183,14 @@ function addShellAliases(): boolean {
 				'warn',
 				`Shell config file ${shellConfigFile} not found. Aliases not added.`
 			);
-			return false;
+			return;
 		}
 
 		// Check if aliases already exist
 		const configContent = fs.readFileSync(shellConfigFile, 'utf8');
 		if (configContent.includes("alias tm='vibex-task-manager'")) {
 			log('info', 'Task Manager aliases already exist in shell config.');
-			return true;
+			return;
 		}
 
 		// Add aliases to the shell config file
@@ -194,11 +206,8 @@ alias taskmanager='vibex-task-manager'
 			'info',
 			`To use the aliases in your current terminal, run: source ${shellConfigFile}`
 		);
-
-		return true;
 	} catch (error) {
-		log('error', `Failed to add aliases: ${error.message}`);
-		return false;
+		log('error', `Failed to add aliases: ${(error as Error).message}`);
 	}
 }
 
@@ -451,7 +460,7 @@ async function initializeProject(options: InitOptions = {}): Promise<{ dryRun?: 
 			createProjectStructure(addAliasesPrompted, dryRun, options);
 		} catch (error) {
 			rl.close();
-			log('error', `Error during initialization process: ${error.message}`);
+			log('error', `Error during initialization process: ${(error as Error).message}`);
 			process.exit(1);
 		}
 	}
@@ -611,7 +620,7 @@ function createProjectStructure(addAliases: boolean, dryRun: boolean, options: I
 					});
 					log('success', 'AI Models configured.');
 				} catch (setupError) {
-					log('error', 'Failed to configure AI models:', setupError.message);
+					log('error', 'Failed to configure AI models:', (setupError as Error).message);
 					log(
 						'warn',
 						'You may need to run "vibex-task-manager models --setup" manually.'
@@ -767,7 +776,7 @@ function setupMCPConfiguration(targetDir: string): void {
 			fs.writeFileSync(mcpJsonPath, JSON.stringify(mcpConfig, null, 4));
 			log('success', 'Updated MCP configuration file');
 		} catch (error) {
-			log('error', `Failed to update MCP configuration: ${error.message}`);
+			log('error', `Failed to update MCP configuration: ${(error as Error).message}`);
 			// Create a backup before potentially modifying
 			const backupPath = `${mcpJsonPath}.backup-${Date.now()}`;
 			if (fs.existsSync(mcpJsonPath)) {

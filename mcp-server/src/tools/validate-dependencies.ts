@@ -17,6 +17,7 @@ import {
 	validateDependenciesDirect } from '../core/vibex-task-manager-core.js';
 import {
 	findTasksPath } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the validateDependencies tool with the MCP server
@@ -35,41 +36,43 @@ export function registerValidateDependenciesTool(server: any): void {
 				.describe('The directory of the project. Must be an absolute path.')
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(`Validating dependencies with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info('Validating dependencies...');
 
-				// Use args.projectRoot directly (guaranteed by withNormalizedProjectRoot)
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
 				}
 
 				const result = await validateDependenciesDirect(
-					{
-						tasksJsonPath: tasksJsonPath
-					},
-					log
+					{ tasksJsonPath },
+					log // Pass original logger
 				);
 
 				if (result.success) {
-					log.info(
-						`Successfully validated dependencies: ${result.data.message}`
+					wrappedLogger.info(
+						`Successfully validated dependencies: ${result.data?.message}`
 					);
 				} else {
-					log.error(`Failed to validate dependencies: ${result.error}`);
+					wrappedLogger.error(`Failed to validate dependencies: ${result.error}`);
 				}
 
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error validating dependencies');
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Error validating dependencies'
+				);
 			} catch (error) {
-				log.error(`Error in validateDependencies tool: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in validate-dependencies tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
 			}
 		})

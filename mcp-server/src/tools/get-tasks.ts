@@ -18,6 +18,7 @@ import {
 	resolveTasksPath,
 	resolveComplexityReportPath
 } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 // Define the input schema
 const getTasksSchema = z.object({
@@ -60,15 +61,21 @@ export function registerListTasksTool(server: any): void {
 			'Get all tasks from Task Manager, optionally filtering by status and including subtasks.',
 		parameters: getTasksSchema,
 		execute: withNormalizedProjectRoot(async (args: GetTasksInput, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(`Getting tasks with filters: ${JSON.stringify(args)}`);
+				wrappedLogger.info(`Getting all tasks with args: ${JSON.stringify(args)}`);
 
-				// Resolve the path to tasks.json using new path utilities
 				let tasksJsonPath: string;
 				try {
-					tasksJsonPath = resolveTasksPath(args, log);
+					const resolvedPath = resolveTasksPath(args, wrappedLogger);
+					if (!resolvedPath) {
+						return createErrorResponse('Could not find tasks.json');
+					}
+					tasksJsonPath = resolvedPath;
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -79,27 +86,27 @@ export function registerListTasksTool(server: any): void {
 				try {
 					complexityReportPath = resolveComplexityReportPath(args, session);
 				} catch (error) {
-					log.error(`Error finding complexity report: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding complexity report: ${(error as Error).message}`);
 					// This is optional, so we don't fail the operation
 					complexityReportPath = null;
 				}
 
 				const result = await listTasksDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
-						status: args.status,
-						withSubtasks: args.withSubtasks,
-						reportPath: complexityReportPath
+						...args,
+						tasksJsonPath, reportPath: complexityReportPath || undefined
 					},
 					log
 				);
 
-				log.info(
-					`Retrieved ${result.success ? result.data?.tasks?.length || 0 : 0} tasks`
-				);
+				if (result.success) {
+					wrappedLogger.info (
+						`Retrieved ${result.data?.tasks?.length || 0} tasks`
+					);
+				}
 				return handleApiResult(apiResultToCommandResult(result), log, 'Error getting tasks');
 			} catch (error) {
-				log.error(`Error getting tasks: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in get-tasks tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
 			}
 		})

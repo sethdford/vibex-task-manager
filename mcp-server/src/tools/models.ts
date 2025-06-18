@@ -15,6 +15,7 @@ import {
 } from './utils.js';
 import {
 	modelsDirect } from '../core/vibex-task-manager-core.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the models tool with the MCP server
@@ -64,19 +65,33 @@ export function registerModelsTool(server: any): void {
 				.describe('Indicates the set model ID is a custom Ollama model.')
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(`Starting models tool with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(`Models tool execution with args: ${JSON.stringify(args)}`);
 
-				// Use args.projectRoot directly (guaranteed by withNormalizedProjectRoot)
 				const result = await modelsDirect(
-					{ ...args, projectRoot: args.projectRoot },
-					log,
+					{
+						...args
+					},
+					log, // Pass original logger
 					{ session }
 				);
 
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error in models operation');
+				if (result.success) {
+					wrappedLogger.info(`Models operation successful: ${result.data?.message}`);
+				} else {
+					wrappedLogger.error(
+						`Models operation failed: ${result.error?.message || 'Unknown error'}`
+					);
+				}
+
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Models operation failed'
+				);
 			} catch (error) {
-				log.error(`Error in models tool: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in models tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
 			}
 		})

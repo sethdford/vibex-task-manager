@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 
 interface ServerOptions {
 	name: string;
-	version: string;
+	version: `${number}.${number}.${number}`;
 }
 
 interface PackageJson {
@@ -31,7 +31,6 @@ class VibexTaskManagerMCPServer {
 	private server: FastMCP;
 	private initialized: boolean;
 	private logger: typeof logger;
-	private asyncManager: any;
 
 	constructor() {
 		// Get version from package.json using synchronous fs
@@ -40,15 +39,11 @@ class VibexTaskManagerMCPServer {
 
 		this.options = {
 			name: 'Vibex Task Manager MCP Server',
-			version: packageJson.version
+			version: packageJson.version as `${number}.${number}.${number}`
 		};
 
 		this.server = new FastMCP(this.options);
 		this.initialized = false;
-
-		this.server.addResource({});
-
-		this.server.addResourceTemplate({});
 
 		// Bind methods
 		this.init = this.init.bind(this);
@@ -65,8 +60,8 @@ class VibexTaskManagerMCPServer {
 	async init(): Promise<VibexTaskManagerMCPServer> {
 		if (this.initialized) return this;
 
-		// Pass the manager instance to the tool registration function
-		registerVibexTaskManagerTools(this.server, this.asyncManager);
+		// Pass the server instance to the tool registration function
+		registerVibexTaskManagerTools(this.server);
 
 		this.initialized = true;
 
@@ -81,10 +76,9 @@ class VibexTaskManagerMCPServer {
 			await this.init();
 		}
 
-		// Start the FastMCP server with increased timeout
+		// Start the FastMCP server
 		await this.server.start({
-			transportType: 'stdio',
-			timeout: 120000 // 2 minutes timeout (in milliseconds)
+			transportType: 'stdio'
 		});
 
 		return this;

@@ -107,7 +107,10 @@ export async function nextTaskDirect(
 			const complexityReport = readComplexityReport(reportPath);
 
 			// Find the next task
-			const nextTask: NextTaskData | null = findNextTask(data.tasks, complexityReport);
+			const nextTask: NextTaskData | null = findNextTask(
+				data.tasks,
+				complexityReport as any
+			);
 
 			if (!nextTask) {
 				log.info(

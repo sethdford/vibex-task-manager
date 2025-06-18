@@ -18,6 +18,7 @@ import {
 import {
 	findTasksPath } from '../core/utils/path-utils.js';
 import path from 'path';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the generate tool with the MCP server
@@ -40,18 +41,18 @@ export function registerGenerateTool(server: any): void {
 				.describe('The directory of the project. Must be an absolute path.')
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(`Generating task files with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(`Generating task files with args: ${JSON.stringify(args)}`);
 
-				// Use args.projectRoot directly (guaranteed by withNormalizedProjectRoot)
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -63,23 +64,23 @@ export function registerGenerateTool(server: any): void {
 
 				const result = await generateTaskFilesDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
+						tasksJsonPath,
 						outputDir: outputDir
 					},
 					log
 				);
 
 				if (result.success) {
-					log.info(`Successfully generated task files: ${result.data.message}`);
+					wrappedLogger.info(`Successfully generated task files: ${result.data?.message}`);
 				} else {
-					log.error(
+					wrappedLogger.error(
 						`Failed to generate task files: ${result.error?.message || 'Unknown error'}`
 					);
 				}
 
 				return handleApiResult(apiResultToCommandResult(result), log, 'Error generating task files');
 			} catch (error) {
-				log.error(`Error in generate tool: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in generate tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
 			}
 		})

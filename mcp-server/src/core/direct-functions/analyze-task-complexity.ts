@@ -2,15 +2,15 @@
  * Direct function wrapper for analyzeTaskComplexity
  */
 
-import { Logger } from '../../../../src/types/index.js';
-import analyzeTaskComplexity from '../../../../scripts/modules/task-manager/analyze-task-complexity.js';
+import { analyzeTaskComplexity } from '../../../../scripts/modules/task-manager.js';
 import {
 	enableSilentMode,
 	disableSilentMode,
 	isSilentMode
 } from '../../../../scripts/modules/utils.js';
 import fs from 'fs';
-import { createLogWrapper } from '../../tools/utils.js'; // Import the new utility
+import { createLogWrapper } from '../../tools/utils.js';
+import { AnyLogger, DirectFunctionContext, ApiResult } from './types.js';
 
 /**
  * Analyze task complexity and generate recommendations
@@ -23,13 +23,16 @@ import { createLogWrapper } from '../../tools/utils.js'; // Import the new utili
  * @param {number} [args.from] - Starting task ID in a range to analyze
  * @param {number} [args.to] - Ending task ID in a range to analyze
  * @param {string} [args.projectRoot] - Project root path.
- * @param {Object} log - Logger object
- * @param {Object} [context={}] - Context object containing session data
- * @param {Object} [context.session] - MCP session object
- * @returns {Promise<{success: boolean, data?: Object, error?: {code: string, message: string}}>}
+ * @param {AnyLogger} log - Logger object
+ * @param {DirectFunctionContext} [context={}] - Context object containing session data
+ * @returns {Promise<ApiResult>}
  */
-export async function analyzeTaskComplexityDirect(args, log, context = {}) {
-	const { session } = context;
+export async function analyzeTaskComplexityDirect(
+	args: any, 
+	log: AnyLogger, 
+	context: DirectFunctionContext = {}
+): Promise<ApiResult> {
+	const { session = null } = context;
 	const {
 		tasksJsonPath,
 		outputPath,
@@ -111,9 +114,7 @@ export async function analyzeTaskComplexityDirect(args, log, context = {}) {
 			// Pass context object { session, mcpLog } as the second argument
 			coreResult = await analyzeTaskComplexity(coreOptions, {
 				session,
-				mcpLog: logWrapper,
-				commandName: 'analyze-complexity',
-				outputType: 'mcp'
+				mcpLog: logWrapper
 			});
 			report = coreResult.report;
 		} catch (error) {
@@ -202,12 +203,12 @@ export async function analyzeTaskComplexityDirect(args, log, context = {}) {
 			};
 		} catch (parseError) {
 			// Should not happen if core function returns object, but good safety check
-			log.error(`Internal error processing report data: ${parseError.message}`);
+			log.error(`Internal error processing report data: ${(parseError as Error).message}`);
 			return {
 				success: false,
 				error: {
 					code: 'REPORT_PROCESS_ERROR',
-					message: `Internal error processing complexity report: ${parseError.message}`
+					message: `Internal error processing complexity report: ${(parseError as Error).message}`
 				}
 			};
 		}

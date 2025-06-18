@@ -50,7 +50,7 @@ function findNextTask(tasks, complexityReport = null) {
 	});
 
 	// ---------- 1) look for eligible subtasks ------------------------------
-	const candidateSubtasks = [];
+	const candidateSubtasks: Array<{id: string, title: any, status: any, priority: any, dependencies: any, parentId: any}> = [];
 
 	tasks
 		.filter((t) => t.status === 'in-progress' && Array.isArray(t.subtasks))
@@ -99,7 +99,8 @@ function findNextTask(tasks, complexityReport = null) {
 
 		// Add complexity to the task before returning
 		if (nextTask && complexityReport) {
-			addComplexityToTask(nextTask, complexityReport);
+			const [parentId, subId] = nextTask.id.split('.').map(Number);
+			addComplexityToTask({ ...nextTask, id: subId, parentId: parentId }, complexityReport);
 		}
 
 		return nextTask;

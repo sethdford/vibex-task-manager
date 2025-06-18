@@ -9,6 +9,7 @@ import {
 	readJSON
 } from '../../../../scripts/modules/utils.js';
 import { findTasksPath } from '../utils/path-utils.js';
+import { createLogger, AnyLogger } from '../../core/logger.js';
 
 // Type definitions for direct function interfaces
 interface Logger {
@@ -59,27 +60,31 @@ interface TaskDetails {
  */
 export async function showTaskDirect(
 	args: ShowTaskArgs,
-	log: Logger
+	log: AnyLogger
 ): Promise<ApiResult<TaskDetails>> {
 	// Destructure projectRoot and other args. projectRoot is assumed normalized.
 	const { id, file, reportPath, status, projectRoot } = args;
 
-	log.info(
+	const mcpLog = createLogger(log);
+	mcpLog.info(
 		`Showing task direct function. ID: ${id}, File: ${file}, Status Filter: ${status}, ProjectRoot: ${projectRoot}`
 	);
 
 	// --- Path Resolution using the passed (already normalized) projectRoot ---
-	let tasksJsonPath: string;
+	let tasksJsonPath: string | null;
 	try {
 		// Use the projectRoot passed directly from args
 		tasksJsonPath = findTasksPath(
 			{ projectRoot: projectRoot, file: file },
-			log
+			mcpLog
 		);
-		log.info(`Resolved tasks path: ${tasksJsonPath}`);
+		if (!tasksJsonPath) {
+			throw new Error('Could not find tasks.json path.');
+		}
+		mcpLog.info(`Resolved tasks path: ${tasksJsonPath}`);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-		log.error(`Error finding tasks.json: ${errorMessage}`);
+		mcpLog.error(`Error finding tasks.json: ${errorMessage}`);
 		return {
 			success: false,
 			error: {
@@ -121,7 +126,7 @@ export async function showTaskDirect(
 			};
 		}
 
-		log.info(`Successfully retrieved task ${id}.`);
+		mcpLog.info(`Successfully retrieved task ${id}.`);
 
 		const returnData: TaskDetails = { ...task };
 		if (originalSubtaskCount !== null) {
@@ -132,7 +137,7 @@ export async function showTaskDirect(
 		return { success: true, data: returnData };
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-		log.error(`Error showing task ${id}: ${errorMessage}`);
+		mcpLog.error(`Error showing task ${id}: ${errorMessage}`);
 		return {
 			success: false,
 			error: {

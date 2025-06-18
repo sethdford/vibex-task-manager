@@ -24,7 +24,14 @@ import {
 } from '../types/core.js';
 
 // Version from package.json
-const packageJson = require('../../package.json');
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJsonPath = join(__dirname, '../../../package.json');
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 const VERSION = packageJson.version || '1.0.0';
 
 // Global error handler
@@ -726,6 +733,7 @@ class VibexCLI {
         status: 'pending' as TaskStatus,
         priority: (options.priority as Priority) || 'medium',
         dependencies: options.dependsOn ? options.dependsOn.split(',').map(Number) : [],
+        tags: [],
       };
 
       task = await this.taskService!.createTask(basicTask);
@@ -749,6 +757,7 @@ class VibexCLI {
         status: 'pending' as TaskStatus,
         priority: (options.priority as Priority) || 'medium',
         dependencies: options.dependsOn ? options.dependsOn.split(',').map(Number) : [],
+        tags: [],
       };
 
       task = await this.taskService!.createTask(taskData);

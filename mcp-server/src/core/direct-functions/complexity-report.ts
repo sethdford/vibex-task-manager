@@ -2,13 +2,8 @@
  * complexity-report.js
  * Direct function implementation for displaying complexity analysis report
  */
-import { Logger } from '../../../../src/types/index.js';
-
-import {
-	readComplexityReport,
-	enableSilentMode,
-	disableSilentMode
-} from '../../../../scripts/modules/utils.js';
+import { readComplexityReport } from '../../../../scripts/modules/utils.js';
+import { AnyLogger, createLogger } from '../logger.js';
 
 /**
  * Direct function wrapper for displaying the complexity report with error handling and caching.
@@ -18,100 +13,23 @@ import {
  * @param {Object} log - Logger object
  * @returns {Promise<Object>} - Result object with success status and data/error information
  */
-export async function complexityReportDirect(args: any, log: Logger): Promise<any> {
-	// Destructure expected args
-	const { reportPath } = args;
+export async function complexityReportDirect(
+	args: { reportPath: string },
+	log: AnyLogger
+): Promise<any> {
+	const wrappedLogger = createLogger(log);
 	try {
-		log.info(`Getting complexity report with args: ${JSON.stringify(args)}`);
-
-		// Check if reportPath was provided
-		if (!reportPath) {
-			log.error('complexityReportDirect called without reportPath');
-			return {
-				success: false,
-				error: { code: 'MISSING_ARGUMENT', message: 'reportPath is required' }
+		wrappedLogger.info(`Reading complexity report from: ${args.reportPath}`);
+		const reportData = readComplexityReport(args.reportPath);
+		if (!reportData) {
+			return { 
+				success: false, 
+				error: { code: 'REPORT_NOT_FOUND', message: `Complexity report not found at ${args.reportPath}` } 
 			};
 		}
-
-		// Use the provided report path
-		log.info(`Looking for complexity report at: ${reportPath}`);
-
-		// Generate cache key based on report path
-		const cacheKey = `complexityReport:${reportPath}`;
-
-		// Define the core action function to read the report
-		const coreActionFn = async () => {
-			try {
-				// Enable silent mode to prevent console logs from interfering with JSON response
-				enableSilentMode();
-
-				const report = readComplexityReport(reportPath);
-
-				// Restore normal logging
-				disableSilentMode();
-
-				if (!report) {
-					log.warn(`No complexity report found at ${reportPath}`);
-					return {
-						success: false,
-						error: {
-							code: 'FILE_NOT_FOUND_ERROR',
-							message: `No complexity report found at ${reportPath}. Run 'analyze-complexity' first.`
-						}
-					};
-				}
-
-				return {
-					success: true,
-					data: {
-						report,
-						reportPath
-					}
-				};
-			} catch (error) {
-				// Make sure to restore normal logging even if there's an error
-				disableSilentMode();
-
-				log.error(`Error reading complexity report: ${(error as Error).message}`);
-				return {
-					success: false,
-					error: {
-						code: 'READ_ERROR',
-						message: (error as Error).message
-					}
-				};
-			}
-		};
-
-		// Use the caching utility
-		try {
-			const result = await coreActionFn();
-			log.info('complexityReportDirect completed');
-			return result;
-		} catch (error) {
-			// Ensure silent mode is disabled
-			disableSilentMode();
-
-			log.error(`Unexpected error during complexityReport: ${(error as Error).message}`);
-			return {
-				success: false,
-				error: {
-					code: 'UNEXPECTED_ERROR',
-					message: (error as Error).message
-				}
-			};
-		}
+		return { success: true, data: reportData };
 	} catch (error) {
-		// Ensure silent mode is disabled if an outer error occurs
-		disableSilentMode();
-
-		log.error(`Error in complexityReportDirect: ${(error as Error).message}`);
-		return {
-			success: false,
-			error: {
-				code: 'UNEXPECTED_ERROR',
-				message: (error as Error).message
-			}
-		};
+		wrappedLogger.error(`Error in complexityReportDirect: ${(error as Error).message}`);
+		return { success: false, error: { code: 'REPORT_FAILED', message: (error as Error).message } };
 	}
 }

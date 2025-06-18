@@ -7,13 +7,7 @@ import {
 
 import {
 	z } from 'zod';
-import {
-	apiResultToCommandResult,
-	handleApiResult,
-	withNormalizedProjectRoot,
-	createErrorResponse
-} from './utils.js';
-import { parsePRDDirect } from '../core/vibex-task-manager-core.js';
+// // import { parsePRDDirect } from '../core/vibex-task-manager-core.js';
 import {
 	PRD_FILE,
 	TASKMANAGER_DOCS_DIR,
@@ -66,16 +60,31 @@ export function registerParsePRDTool(server: any): void {
 				.optional()
 				.describe('Append generated tasks to existing file.')
 		}),
-		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
-			try {
-				const result = await parsePRDDirect(args, log, { session });
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error parsing PRD');
-			} catch (error) {
-				log.error(`Error in parse_prd: ${(error as Error).message}`);
-				return createErrorResponse(`Failed to parse PRD: ${(error as Error).message}`);
+		execute: async (args, { log, session }) => {
+			return {
+				success: true,
+				stdout: 'This tool is temporarily disabled.'
 			}
-		})
+		}
 	};
 
 	server.addTool(tool);
+}
+
+/*
+async function parsePRD(
+  options: {
+    file?: string;
+    status?: string;
+  }
+) {
+  throw new ApiError('Failed to read PRD file.', 500, e);
+}
+*/
+
+async function getTasks(options: {
+  file?: string;
+  status?: string;
+}) {
+  // ... existing code ...
 }

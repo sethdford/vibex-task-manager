@@ -3,13 +3,13 @@
  * Direct function implementation for updating a single task by ID with new information
  */
 
+import { AnyLogger, createLogger } from '../logger.js';
 import { updateTaskById } from '../../../../scripts/modules/task-manager.js';
 import {
 	enableSilentMode,
 	disableSilentMode,
 	isSilentMode
 } from '../../../../scripts/modules/utils.js';
-import { createLogWrapper } from '../../tools/utils.js';
 
 // Type definitions for direct function interfaces
 interface Logger {
@@ -68,24 +68,24 @@ interface CoreUpdateTaskResult {
  */
 export async function updateTaskByIdDirect(
 	args: UpdateTaskByIdArgs,
-	log: Logger,
+	log: AnyLogger,
 	context: Context = {}
 ): Promise<ApiResult<UpdateTaskByIdResult>> {
 	const { session } = context;
 	// Destructure expected args, including projectRoot
 	const { tasksJsonPath, id, prompt, research, projectRoot } = args;
 
-	const logWrapper = createLogWrapper(log);
+	const logger = createLogger(log);
 
 	try {
-		logWrapper.info(
+		logger.info(
 			`Updating task by ID via direct function. ID: ${id}, ProjectRoot: ${projectRoot}`
 		);
 
 		// Check if tasksJsonPath was provided
 		if (!tasksJsonPath) {
 			const errorMessage = 'tasksJsonPath is required but was not provided.';
-			logWrapper.error(errorMessage);
+			logger.error(errorMessage);
 			return {
 				success: false,
 				error: { code: 'MISSING_ARGUMENT', message: errorMessage }
@@ -95,7 +95,7 @@ export async function updateTaskByIdDirect(
 		// Check required parameters (id and prompt)
 		if (!id) {
 			const errorMessage = 'No task ID specified. Please provide a task ID to update.';
-			logWrapper.error(errorMessage);
+			logger.error(errorMessage);
 			return {
 				success: false,
 				error: { code: 'MISSING_TASK_ID', message: errorMessage }
@@ -104,7 +104,7 @@ export async function updateTaskByIdDirect(
 
 		if (!prompt) {
 			const errorMessage = 'No prompt specified. Please provide a prompt with new information for the task update.';
-			logWrapper.error(errorMessage);
+			logger.error(errorMessage);
 			return {
 				success: false,
 				error: { code: 'MISSING_PROMPT', message: errorMessage }
@@ -122,7 +122,7 @@ export async function updateTaskByIdDirect(
 				const parsedId = parseInt(id, 10);
 				if (isNaN(parsedId)) {
 					const errorMessage = `Invalid task ID: ${id}. Task ID must be a positive integer or subtask ID (e.g., "5.2").`;
-					logWrapper.error(errorMessage);
+					logger.error(errorMessage);
 					return {
 						success: false,
 						error: { code: 'INVALID_TASK_ID', message: errorMessage }
@@ -140,7 +140,7 @@ export async function updateTaskByIdDirect(
 		// Get research flag
 		const useResearch = research === true;
 
-		logWrapper.info(
+		logger.info(
 			`Updating task with ID ${taskId} with prompt "${prompt}" and research: ${useResearch}`
 		);
 
@@ -151,17 +151,15 @@ export async function updateTaskByIdDirect(
 
 		try {
 			// Execute core updateTaskById function with proper parameters
-			const coreResult: CoreUpdateTaskResult = await updateTaskById(
+			const coreResult: CoreUpdateTaskResult | null = await updateTaskById(
 				tasksPath,
 				taskId,
 				prompt,
 				useResearch,
 				{
-					mcpLog: logWrapper,
+					mcpLog: logger,
 					session,
-					projectRoot,
-					commandName: 'update-task',
-					outputType: 'mcp'
+					projectRoot
 				},
 				'json'
 			);
@@ -170,7 +168,7 @@ export async function updateTaskByIdDirect(
 			if (!coreResult || coreResult.updatedTask === null) {
 				// Core function logs the reason, just return success with info
 				const message = `Task ${taskId} was not updated (likely already completed).`;
-				logWrapper.info(message);
+				logger.info(message);
 				return {
 					success: true,
 					data: {
@@ -184,7 +182,7 @@ export async function updateTaskByIdDirect(
 
 			// Task was updated successfully
 			const successMessage = `Successfully updated task with ID ${taskId} based on the prompt`;
-			logWrapper.success?.(successMessage);
+			logger.success?.(successMessage);
 			return {
 				success: true,
 				data: {
@@ -199,7 +197,7 @@ export async function updateTaskByIdDirect(
 			};
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-			logWrapper.error(`Error updating task by ID: ${errorMessage}`);
+			logger.error(`Error updating task by ID: ${errorMessage}`);
 			return {
 				success: false,
 				error: {
@@ -213,8 +211,8 @@ export async function updateTaskByIdDirect(
 			}
 		}
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-		logWrapper.error(`Setup error in updateTaskByIdDirect: ${errorMessage}`);
+		const errorMessage = error instanceof Error ? error.message : 'Unknown setup error';
+		logger.error(`Setup error in updateTaskByIdDirect: ${errorMessage}`);
 		if (isSilentMode()) disableSilentMode();
 		return {
 			success: false,

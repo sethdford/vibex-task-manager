@@ -1,105 +1,37 @@
 /**
- * add-dependency.js
- * Direct function implementation for adding a dependency to a task
- */
-
-import { Logger } from '../../../../src/types/index.js';
-import { addDependency } from '../../../../scripts/modules/dependency-manager.js';
-import {
-	enableSilentMode,
-	disableSilentMode
-} from '../../../../scripts/modules/utils.js';
-
-/**
- * Direct function wrapper for addDependency with error handling.
+ * add-dependency.ts
  *
- * @param {Object} args - Command arguments
- * @param {string} args.tasksJsonPath - Explicit path to the tasks.json file.
- * @param {string|number} args.id - Task ID to add dependency to
- * @param {string|number} args.dependsOn - Task ID that will become a dependency
- * @param {Object} log - Logger object
- * @returns {Promise<Object>} - Result object with success status and data/error information
+ * Direcy function for add-dependency
  */
-export async function addDependencyDirect(args: any, log: Logger) {
-	// Destructure expected args
+import { addDependency } from '../../../../scripts/modules/dependency-manager.js';
+import { AnyLogger, createLogger } from '../logger.js';
+
+interface AddDependencyArgs {
+	tasksJsonPath: string;
+	id: string;
+	dependsOn: string;
+}
+
+export async function addDependencyDirect(args: AddDependencyArgs, log: AnyLogger) {
 	const { tasksJsonPath, id, dependsOn } = args;
+	const wrappedLogger = createLogger(log);
+
 	try {
-		log.info(`Adding dependency with args: ${JSON.stringify(args)}`);
-
-		// Check if tasksJsonPath was provided
-		if (!tasksJsonPath) {
-			log.error('addDependencyDirect called without tasksJsonPath');
-			return {
-				success: false,
-				error: {
-					code: 'MISSING_ARGUMENT',
-					message: 'tasksJsonPath is required'
-				}
-			};
-		}
-
-		// Validate required parameters
-		if (!id) {
-			return {
-				success: false,
-				error: {
-					code: 'INPUT_VALIDATION_ERROR',
-					message: 'Task ID (id) is required'
-				}
-			};
-		}
-
-		if (!dependsOn) {
-			return {
-				success: false,
-				error: {
-					code: 'INPUT_VALIDATION_ERROR',
-					message: 'Dependency ID (dependsOn) is required'
-				}
-			};
-		}
-
-		// Use provided path
-		const tasksPath = tasksJsonPath;
-
-		// Format IDs for the core function
-		const taskId =
-			id && id.includes && id.includes('.') ? id : parseInt(id, 10);
-		const dependencyId =
-			dependsOn && dependsOn.includes && dependsOn.includes('.')
-				? dependsOn
-				: parseInt(dependsOn, 10);
-
-		log.info(
-			`Adding dependency: task ${taskId} will depend on ${dependencyId}`
-		);
-
-		// Enable silent mode to prevent console logs from interfering with JSON response
-		enableSilentMode();
-
-		// Call the core function using the provided path
-		await addDependency(tasksPath, taskId, dependencyId);
-
-		// Restore normal logging
-		disableSilentMode();
+		// addDependency performs a side effect and throws on error
+		await addDependency(tasksJsonPath, id, dependsOn);
 
 		return {
 			success: true,
 			data: {
-				message: `Successfully added dependency: Task ${taskId} now depends on ${dependencyId}`,
-				taskId: taskId,
-				dependencyId: dependencyId
+				message: `Successfully added dependency from task ${id} to ${dependsOn}.`
 			}
 		};
 	} catch (error) {
-		// Make sure to restore normal logging even if there's an error
-		disableSilentMode();
-
-		log.error(`Error in addDependencyDirect: ${(error as Error).message}`);
+		wrappedLogger.error(`Error in addDependencyDirect: ${(error as Error).message}`);
 		return {
 			success: false,
 			error: {
-				code: 'CORE_FUNCTION_ERROR',
+				code: 'UNEXPECTED_ERROR',
 				message: (error as Error).message
 			}
 		};

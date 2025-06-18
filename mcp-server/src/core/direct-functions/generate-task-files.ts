@@ -3,12 +3,17 @@
  * Direct function implementation for generating task files from tasks.json
  */
 
-import { Logger } from '../../../../src/types/index.js';
+import { AnyLogger, createLogger } from '../logger.js';
 import { generateTaskFiles } from '../../../../scripts/modules/task-manager.js';
 import {
 	enableSilentMode,
 	disableSilentMode
 } from '../../../../scripts/modules/utils.js';
+
+interface GenerateTaskFilesArgs {
+	tasksJsonPath: string;
+	outputDir: string;
+}
 
 /**
  * Direct function wrapper for generateTaskFiles with error handling.
@@ -17,16 +22,19 @@ import {
  * @param {Object} log - Logger object.
  * @returns {Promise<Object>} - Result object with success status and data/error information.
  */
-export async function generateTaskFilesDirect(args: any, log: Logger) {
-	// Destructure expected args
+export async function generateTaskFilesDirect(
+	args: GenerateTaskFilesArgs,
+	log: AnyLogger
+) {
 	const { tasksJsonPath, outputDir } = args;
+	const logger = createLogger(log);
 	try {
-		log.info(`Generating task files with args: ${JSON.stringify(args)}`);
+		logger.info(`Generating task files with args: ${JSON.stringify(args)}`);
 
 		// Check if paths were provided
 		if (!tasksJsonPath) {
 			const errorMessage = 'tasksJsonPath is required but was not provided.';
-			log.error(errorMessage);
+			logger.error(errorMessage);
 			return {
 				success: false,
 				error: { code: 'MISSING_ARGUMENT', message: errorMessage }
@@ -34,7 +42,7 @@ export async function generateTaskFilesDirect(args: any, log: Logger) {
 		}
 		if (!outputDir) {
 			const errorMessage = 'outputDir is required but was not provided.';
-			log.error(errorMessage);
+			logger.error(errorMessage);
 			return {
 				success: false,
 				error: { code: 'MISSING_ARGUMENT', message: errorMessage }
@@ -45,7 +53,9 @@ export async function generateTaskFilesDirect(args: any, log: Logger) {
 		const tasksPath = tasksJsonPath;
 		const resolvedOutputDir = outputDir;
 
-		log.info(`Generating task files from ${tasksPath} to ${resolvedOutputDir}`);
+		logger.info(
+			`Generating task files from ${tasksPath} to ${resolvedOutputDir}`
+		);
 
 		// Execute core generateTaskFiles function in a separate try/catch
 		try {
@@ -61,10 +71,10 @@ export async function generateTaskFilesDirect(args: any, log: Logger) {
 			// Make sure to restore normal logging even if there's an error
 			disableSilentMode();
 
-			log.error(`Error in generateTaskFiles: ${genError.message}`);
+			logger.error(`Error in generateTaskFiles: ${(genError as Error).message}`);
 			return {
 				success: false,
-				error: { code: 'GENERATE_FILES_ERROR', message: genError.message }
+				error: { code: 'GENERATE_FILES_ERROR', message: (genError as Error).message }
 			};
 		}
 
@@ -83,7 +93,7 @@ export async function generateTaskFilesDirect(args: any, log: Logger) {
 		// Make sure to restore normal logging if an outer error occurs
 		disableSilentMode();
 
-		log.error(`Error generating task files: ${(error as Error).message}`);
+		logger.error(`Error generating task files: ${(error as Error).message}`);
 		return {
 			success: false,
 			error: {

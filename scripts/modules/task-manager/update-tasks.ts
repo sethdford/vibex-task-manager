@@ -86,7 +86,7 @@ function parseUpdatedTasksFromText(text, expectedCount, logFn, isMCP) {
 	// --- NEW Step 1: Try extracting between [] first ---
 	const firstBracketIndex = cleanedResponse.indexOf('[');
 	const lastBracketIndex = cleanedResponse.lastIndexOf(']');
-	let potentialJsonFromArray = null;
+	let potentialJsonFromArray: string | null = null;
 
 	if (firstBracketIndex !== -1 && lastBracketIndex > firstBracketIndex) {
 		potentialJsonFromArray = cleanedResponse.substring(
@@ -94,8 +94,8 @@ function parseUpdatedTasksFromText(text, expectedCount, logFn, isMCP) {
 			lastBracketIndex + 1
 		);
 		// Basic check to ensure it's not just "[]" or malformed
-		if (potentialJsonFromArray.length <= 2) {
-			potentialJsonFromArray = null; // Ignore empty array
+			if (potentialJsonFromArray && potentialJsonFromArray.length <= 2) {
+		potentialJsonFromArray = null; // Ignore empty array
 		}
 	}
 
@@ -164,7 +164,7 @@ function parseUpdatedTasksFromText(text, expectedCount, logFn, isMCP) {
 	try {
 		parsedTasks = JSON.parse(cleanedResponse);
 	} catch (parseError) {
-		report('error', `Failed to parse JSON array: ${parseError.message}`);
+		report('error', `Failed to parse JSON array: ${(parseError as Error).message}`);
 		report(
 			'error',
 			`Extraction method used: ${parseMethodUsed}` // Log which method failed
@@ -178,7 +178,7 @@ function parseUpdatedTasksFromText(text, expectedCount, logFn, isMCP) {
 			`Original Raw Response (first 500 chars): ${originalResponseForDebug.substring(0, 500)}`
 		);
 		throw new Error(
-			`Failed to parse JSON response array: ${parseError.message}`
+			`Failed to parse JSON response array: ${(parseError as Error).message}`
 		);
 	}
 
@@ -372,7 +372,7 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 		let aiServiceResponse = null;
 
 		if (!isMCP && outputFormat === 'text') {
-			loadingIndicator = startLoadingIndicator('Updating tasks with AI...\n');
+			let loadingIndicator: any = null; loadingIndicator = startLoadingIndicator('Updating tasks with AI...\n');
 		}
 
 		try {
@@ -380,7 +380,7 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 			const serviceRole = useResearch ? 'research' : 'main';
 
 			// Call the unified AI service
-			aiServiceResponse = await generateTextService({
+			let aiServiceResponse: any = null; aiServiceResponse = await generateTextService({
 				role: serviceRole,
 				session: session,
 				projectRoot: projectRoot,
@@ -463,9 +463,10 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 			};
 		} catch (error) {
 			if (loadingIndicator) stopLoadingIndicator(loadingIndicator);
-			if (isMCP) report('error', `Error during AI service call: ${error.message}`);
-			else report('error', `Error during AI service call: ${error.message}`);
-			if (error.message.includes('API key')) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			if (isMCP) report('error', `Error during AI service call: ${errorMessage}`);
+			else report('error', `Error during AI service call: ${errorMessage}`);
+			if (errorMessage.includes('API key')) {
 				if (isMCP)
 					report('error',
 						'Please ensure API keys are configured correctly in .env or mcp.json.'
@@ -482,10 +483,11 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 		}
 	} catch (error) {
 		// --- General Error Handling (Unchanged) ---
-		if (isMCP) report('error', `Error updating tasks: ${error.message}`);
-		else report('error', `Error updating tasks: ${error.message}`);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		if (isMCP) report('error', `Error updating tasks: ${errorMessage}`);
+		else report('error', `Error updating tasks: ${errorMessage}`);
 		if (outputFormat === 'text') {
-			console.error(chalk.red(`Error: ${error.message}`));
+			console.error(chalk.red(`Error: ${errorMessage}`));
 			if (getDebugFlag(projectRoot)) {
 				console.error(error);
 			}

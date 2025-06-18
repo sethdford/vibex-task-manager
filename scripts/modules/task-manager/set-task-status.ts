@@ -55,7 +55,7 @@ async function setTaskStatus(tasksPath: string, taskIdInput: string, newStatus: 
 
 		// Handle multiple task IDs (comma-separated)
 		const taskIds = taskIdInput.split(',').map((id) => id.trim());
-		const updatedTasks = [];
+		const updatedTasks: string[] = [];
 
 		// Update each task
 		for (const id of taskIds) {
@@ -104,11 +104,11 @@ async function setTaskStatus(tasksPath: string, taskIdInput: string, newStatus: 
 			}))
 		};
 	} catch (error) {
-		log('error', `Error setting task status: ${error.message}`);
+		log('error', `Error setting task status: ${(error as Error).message}`);
 
 		// Only show error UI in CLI mode
 		if (!options?.mcpLog) {
-			console.error(chalk.red(`Error: ${error.message}`));
+			console.error(chalk.red(`Error: ${(error as Error).message}`));
 
 			// Pass session to getDebugFlag
 			if (getDebugFlag(options?.session)) {

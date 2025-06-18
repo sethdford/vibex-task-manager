@@ -2,7 +2,7 @@
  * Direct function wrapper for validateDependenciesCommand
  */
 
-import { Logger } from '../../../../src/types/index.js';
+import { AnyLogger, createLogger } from '../logger.js';
 import { validateDependenciesCommand } from '../../../../scripts/modules/dependency-manager.js';
 import {
 	enableSilentMode,
@@ -17,12 +17,16 @@ import fs from 'fs';
  * @param {Object} log - Logger object
  * @returns {Promise<{success: boolean, data?: Object, error?: {code: string, message: string}}>}
  */
-export async function validateDependenciesDirect(args: any, log: Logger) {
+export async function validateDependenciesDirect(
+	args: { tasksJsonPath: string },
+	log: AnyLogger
+) {
 	// Destructure the explicit tasksJsonPath
 	const { tasksJsonPath } = args;
+	const logger = createLogger(log);
 
 	if (!tasksJsonPath) {
-		log.error('validateDependenciesDirect called without tasksJsonPath');
+		logger.error('validateDependenciesDirect called without tasksJsonPath');
 		return {
 			success: false,
 			error: {
@@ -33,13 +37,14 @@ export async function validateDependenciesDirect(args: any, log: Logger) {
 	}
 
 	try {
-		log.info(`Validating dependencies in tasks: ${tasksJsonPath}`);
+		logger.info(`Validating dependencies in tasks: ${tasksJsonPath}`);
 
 		// Use the provided tasksJsonPath
 		const tasksPath = tasksJsonPath;
 
 		// Verify the file exists
 		if (!fs.existsSync(tasksPath)) {
+			logger.error(`Tasks file not found at ${tasksPath}`);
 			return {
 				success: false,
 				error: {
@@ -69,7 +74,7 @@ export async function validateDependenciesDirect(args: any, log: Logger) {
 		// Make sure to restore normal logging even if there's an error
 		disableSilentMode();
 
-		log.error(`Error validating dependencies: ${(error as Error).message}`);
+		logger.error(`Error validating dependencies: ${(error as Error).message}`);
 		return {
 			success: false,
 			error: {

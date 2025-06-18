@@ -108,9 +108,9 @@ function resolveEnvVariable(key: string, session: SessionEnv | null = null, proj
 					// console.log(`DEBUG: Found key ${key} in ${envPath}`); // Optional debug log
 					return parsedEnv[key];
 				}
-			} catch (error) {
-				// Log error but don't crash, just proceed as if key wasn't found in file
-				log('warn', `Could not read or parse ${envPath}: ${error.message}`);
+					} catch (error) {
+			// Log error but don't crash, just proceed as if key wasn't found in file
+			log('warn', `Could not read or parse ${envPath}: ${(error as Error).message}`);
 			}
 		}
 	}
@@ -275,7 +275,7 @@ function readJSON(filepath: string): any | null {
 		const rawData = fs.readFileSync(filepath, 'utf8');
 		return JSON.parse(rawData);
 	} catch (error) {
-		log('error', `Error reading JSON file ${filepath}:`, error.message);
+		log('error', `Error reading JSON file ${filepath}:`, (error as Error).message);
 		if (isDebug) {
 			// Use dynamic debug flag
 			// Use log utility for debug output too
@@ -309,7 +309,7 @@ function writeJSON(filepath: string, data: any): void {
 		}
 		fs.writeFileSync(filepath, JSON.stringify(data, null, 2), 'utf8');
 	} catch (error) {
-		log('error', `Error writing JSON file ${filepath}:`, error.message);
+		log('error', `Error writing JSON file ${filepath}:`, (error as Error).message);
 		if (isDebug) {
 			// Use dynamic debug flag
 			// Use log utility for debug output too
@@ -509,7 +509,7 @@ function findTaskById(
 		return { task: subtask || null, originalSubtaskCount: null };
 	}
 
-	let taskResult = null;
+	let taskResult: any = null;
 	const originalSubtaskCount = null;
 
 	// Find the main task
@@ -580,7 +580,7 @@ function findCycles(
 	recursionStack.add(subtaskId);
 	path.push(subtaskId);
 
-	const cyclesToBreak = [];
+	const cyclesToBreak: string[] = [];
 
 	// Get all dependencies of the current subtask
 	const dependencies = dependencyMap.get(subtaskId) || [];
@@ -642,7 +642,7 @@ const toKebabCase = (str: string): string => {
  * @returns List of flags that should be converted
  */
 function detectCamelCaseFlags(args: string[]): Array<{ original: string; kebabCase: string }> {
-	const camelCaseFlags = [];
+	const camelCaseFlags: Array<{original: string, kebabCase: string}> = [];
 	for (const arg of args) {
 		if (arg.startsWith('--')) {
 			const flagName = arg.split('=')[0].slice(2); // Remove -- and anything after =

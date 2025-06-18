@@ -9,6 +9,7 @@ import fs from 'fs';
 import { contextManager } from '../core/context-manager.js';
 import { fileURLToPath } from 'url';
 import { z } from 'zod';
+import { UnifiedLogger, AnyLogger, createLogger } from '../core/logger.js';
 
 // Import path utilities to ensure consistent path resolution
 import {
@@ -18,16 +19,13 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 
-// Type definitions
-export interface Logger {
-	info: (message: string, ...args: any[]) => void;
-	warn: (message: string, ...args: any[]) => void;
-	error: (message: string, ...args: any[]) => void;
-	debug: (message: string, ...args: any[]) => void;
-}
+// Re-exporting the unified logger types for consistent use across tools.
+// 'Logger' is the canonical, safe logger.
+// 'InputLogger' is the flexible type for any logger-like object passed into the tools.
+export type { UnifiedLogger as Logger, AnyLogger as InputLogger };
 
 export interface MCPContext {
-	log: Logger;
+	log: AnyLogger; // MCP context provides a raw logger that needs to be wrapped.
 	session?: any;
 }
 
@@ -70,44 +68,25 @@ let cachedVersionInfo: VersionInfo | null = null;
  * Get version information from package.json
  */
 function getVersionInfo(): VersionInfo {
-	// Return cached version if available
-	if (cachedVersionInfo) {
-		return cachedVersionInfo;
-	}
-
+	if (cachedVersionInfo) return cachedVersionInfo;
 	try {
-		// Navigate to the project root from the tools directory
-		const packageJsonPath = path.join(
-			path.dirname(__filename),
-			'../../../package.json'
-		);
+		const packageJsonPath = path.join(path.dirname(__filename), '../../../package.json');
 		if (fs.existsSync(packageJsonPath)) {
 			const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-			cachedVersionInfo = {
-				version: packageJson.version,
-				name: packageJson.name
-			};
+			cachedVersionInfo = { version: packageJson.version, name: packageJson.name };
 			return cachedVersionInfo;
 		}
-		cachedVersionInfo = {
-			version: 'unknown',
-			name: 'vibex-task-manager-ai'
-		};
-		return cachedVersionInfo;
 	} catch (error) {
-		// Fallback version info if package.json can't be read
-		cachedVersionInfo = {
-			version: 'unknown',
-			name: 'vibex-task-manager-ai'
-		};
-		return cachedVersionInfo;
+		// Fallback if reading fails
 	}
+	cachedVersionInfo = { version: 'unknown', name: 'vibex-task-manager-ai' };
+	return cachedVersionInfo;
 }
 
 /**
  * Get normalized project root path
  */
-function getProjectRoot(projectRootRaw: string | undefined, log: Logger): string {
+function getProjectRoot(projectRootRaw: string | undefined, log: UnifiedLogger): string {
 	// PRECEDENCE ORDER:
 	// 1. Environment variable override (VIBEX_TASK_MANAGER_PROJECT_ROOT)
 	// 2. Explicitly provided projectRoot in args
@@ -171,7 +150,7 @@ function getProjectRoot(projectRootRaw: string | undefined, log: Logger): string
  */
 export function normalizeProjectRoot<T extends { projectRoot?: string }>(
 	args: T,
-	log: Logger
+	log: UnifiedLogger
 ): T & { projectRoot: string } {
 	const projectRoot = getProjectRoot(args.projectRoot, log);
 	contextManager.updateProjectRoot(projectRoot); // Update context
@@ -185,7 +164,10 @@ export function withNormalizedProjectRoot<T extends { projectRoot?: string }>(
 	handler: MCPToolHandler<T & { projectRoot: string }>
 ): MCPToolHandler<T> {
 	return async (args: T, context: MCPContext) => {
-		const normalizedArgs = normalizeProjectRoot(args, context.log);
+		const wrappedLogger = createLogger(context.log);
+		const normalizedArgs = normalizeProjectRoot(args, wrappedLogger);
+		// The handler receives the original context with the raw logger.
+		// It is the responsibility of the tool's `execute` implementation to create a wrapped logger if needed.
 		return handler(normalizedArgs, context);
 	};
 }
@@ -223,14 +205,15 @@ export function createSuccessResponse(
  */
 export function handleApiResult(
 	result: CommandResult,
-	log: Logger,
+	log: AnyLogger,
 	errorPrefix: string = 'Error'
 ): MCPToolResult {
+	const wrappedLogger = createLogger(log);
 	if (result.success) {
 		return createSuccessResponse(result.data || result.stdout);
 	} else {
 		const errorMessage = result.error || result.stderr || 'Unknown error occurred';
-		log.error(`${errorPrefix}: ${errorMessage}`);
+		wrappedLogger.error(`${errorPrefix}: ${errorMessage}`);
 		return createErrorResponse(`${errorPrefix}: ${errorMessage}`);
 	}
 }
@@ -290,13 +273,8 @@ export function safeParseJSON<T = any>(json: string): T | null {
 /**
  * Create a wrapper for logger that preserves the logger interface
  */
-export function createLogWrapper(logger: Logger): Logger {
-	return {
-		info: (message: string, ...args: any[]) => logger.info(message, ...args),
-		warn: (message: string, ...args: any[]) => logger.warn(message, ...args),
-		error: (message: string, ...args: any[]) => logger.error(message, ...args),
-		debug: (message: string, ...args: any[]) => logger.debug ? logger.debug(message, ...args) : logger.info(`[DEBUG] ${message}`, ...args)
-	};
+export function createLogWrapper(logger: AnyLogger): UnifiedLogger {
+	return createLogger(logger);
 }
 
 /**

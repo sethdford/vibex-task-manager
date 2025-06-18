@@ -2,12 +2,18 @@
  * Direct function wrapper for removeDependency
  */
 
-import { Logger } from '../../../../src/types/index.js';
+import { AnyLogger, createLogger } from '../logger.js';
 import { removeDependency } from '../../../../scripts/modules/dependency-manager.js';
 import {
 	enableSilentMode,
 	disableSilentMode
 } from '../../../../scripts/modules/utils.js';
+
+interface RemoveDependencyArgs {
+	tasksJsonPath: string;
+	id: string | number;
+	dependsOn: string | number;
+}
 
 /**
  * Remove a dependency from a task
@@ -18,15 +24,18 @@ import {
  * @param {Object} log - Logger object
  * @returns {Promise<{success: boolean, data?: Object, error?: {code: string, message: string}}>}
  */
-export async function removeDependencyDirect(args: any, log: Logger) {
-	// Destructure expected args
+export async function removeDependencyDirect(
+	args: RemoveDependencyArgs,
+	log: AnyLogger
+) {
 	const { tasksJsonPath, id, dependsOn } = args;
+	const logger = createLogger(log);
 	try {
-		log.info(`Removing dependency with args: ${JSON.stringify(args)}`);
+		logger.info(`Removing dependency with args: ${JSON.stringify(args)}`);
 
 		// Check if tasksJsonPath was provided
 		if (!tasksJsonPath) {
-			log.error('removeDependencyDirect called without tasksJsonPath');
+			logger.error('removeDependencyDirect called without tasksJsonPath');
 			return {
 				success: false,
 				error: {
@@ -62,13 +71,13 @@ export async function removeDependencyDirect(args: any, log: Logger) {
 
 		// Format IDs for the core function
 		const taskId =
-			id && id.includes && id.includes('.') ? id : parseInt(id, 10);
+			typeof id === 'string' && id.includes('.') ? id : parseInt(String(id), 10);
 		const dependencyId =
-			dependsOn && dependsOn.includes && dependsOn.includes('.')
+			typeof dependsOn === 'string' && dependsOn.includes('.')
 				? dependsOn
-				: parseInt(dependsOn, 10);
+				: parseInt(String(dependsOn), 10);
 
-		log.info(
+		logger.info(
 			`Removing dependency: task ${taskId} no longer depends on ${dependencyId}`
 		);
 
@@ -93,7 +102,7 @@ export async function removeDependencyDirect(args: any, log: Logger) {
 		// Make sure to restore normal logging even if there's an error
 		disableSilentMode();
 
-		log.error(`Error in removeDependencyDirect: ${(error as Error).message}`);
+		logger.error(`Error in removeDependencyDirect: ${(error as Error).message}`);
 		return {
 			success: false,
 			error: {

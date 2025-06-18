@@ -13,6 +13,7 @@ import {
 } from './utils.js';
 import { removeDependencyDirect } from '../core/vibex-task-manager-core.js';
 import { findTasksPath } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the removeDependency tool with the MCP server
@@ -37,20 +38,20 @@ export function registerRemoveDependencyTool(server: any): void {
 				.describe('The directory of the project. Must be an absolute path.')
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(
-					`Removing dependency for task ${args.id} from ${args.dependsOn} with args: ${JSON.stringify(args)}`
+				wrappedLogger.info(
+					`Removing dependency from task ${args.id}, dependency ${args.dependsOn}`
 				);
 
-				// Use args.projectRoot directly (guaranteed by withNormalizedProjectRoot)
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -58,7 +59,7 @@ export function registerRemoveDependencyTool(server: any): void {
 
 				const result = await removeDependencyDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
+						tasksJsonPath,
 						id: args.id,
 						dependsOn: args.dependsOn
 					},
@@ -66,14 +67,20 @@ export function registerRemoveDependencyTool(server: any): void {
 				);
 
 				if (result.success) {
-					log.info(`Successfully removed dependency: ${result.data.message}`);
+					wrappedLogger.info(
+						`Successfully removed dependency: ${result.data?.message}`
+					);
 				} else {
-					log.error(`Failed to remove dependency: ${result.error}`);
+					wrappedLogger.error(`Failed to remove dependency: ${result.error}`);
 				}
 
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error removing dependency');
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Error removing dependency'
+				);
 			} catch (error) {
-				log.error(`Error in removeDependency tool: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in remove-dependency tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
 			}
 		})

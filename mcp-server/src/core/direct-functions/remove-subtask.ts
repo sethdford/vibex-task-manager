@@ -2,12 +2,19 @@
  * Direct function wrapper for removeSubtask
  */
 
-import { Logger } from '../../../../src/types/index.js';
+import { AnyLogger, createLogger } from '../logger.js';
 import { removeSubtask } from '../../../../scripts/modules/task-manager.js';
 import {
 	enableSilentMode,
 	disableSilentMode
 } from '../../../../scripts/modules/utils.js';
+
+interface RemoveSubtaskArgs {
+	tasksJsonPath: string;
+	id: string;
+	convert?: boolean;
+	skipGenerate?: boolean;
+}
 
 /**
  * Remove a subtask from its parent task
@@ -19,18 +26,21 @@ import {
  * @param {Object} log - Logger object
  * @returns {Promise<{success: boolean, data?: Object, error?: {code: string, message: string}}>}
  */
-export async function removeSubtaskDirect(args: any, log: Logger) {
-	// Destructure expected args
+export async function removeSubtaskDirect(
+	args: RemoveSubtaskArgs,
+	log: AnyLogger
+) {
 	const { tasksJsonPath, id, convert, skipGenerate } = args;
+	const logger = createLogger(log);
 	try {
 		// Enable silent mode to prevent console logs from interfering with JSON response
 		enableSilentMode();
 
-		log.info(`Removing subtask with args: ${JSON.stringify(args)}`);
+		logger.info(`Removing subtask with args: ${JSON.stringify(args)}`);
 
 		// Check if tasksJsonPath was provided
 		if (!tasksJsonPath) {
-			log.error('removeSubtaskDirect called without tasksJsonPath');
+			logger.error('removeSubtaskDirect called without tasksJsonPath');
 			disableSilentMode(); // Disable before returning
 			return {
 				success: false,
@@ -43,6 +53,9 @@ export async function removeSubtaskDirect(args: any, log: Logger) {
 
 		if (!id) {
 			disableSilentMode(); // Disable before returning
+			logger.error(
+				'Subtask ID is required and must be in format "parentId.subtaskId"'
+			);
 			return {
 				success: false,
 				error: {
@@ -56,6 +69,9 @@ export async function removeSubtaskDirect(args: any, log: Logger) {
 		// Validate subtask ID format
 		if (!id.includes('.')) {
 			disableSilentMode(); // Disable before returning
+			logger.error(
+				`Invalid subtask ID format: ${id}. Expected format: "parentId.subtaskId"`
+			);
 			return {
 				success: false,
 				error: {
@@ -74,7 +90,7 @@ export async function removeSubtaskDirect(args: any, log: Logger) {
 		// Determine if we should generate files
 		const generateFiles = !skipGenerate;
 
-		log.info(
+		logger.info(
 			`Removing subtask ${id} (convertToTask: ${convertToTask}, generateFiles: ${generateFiles})`
 		);
 
@@ -111,7 +127,7 @@ export async function removeSubtaskDirect(args: any, log: Logger) {
 		// Ensure silent mode is disabled even if an outer error occurs
 		disableSilentMode();
 
-		log.error(`Error in removeSubtaskDirect: ${(error as Error).message}`);
+		logger.error(`Error in removeSubtaskDirect: ${(error as Error).message}`);
 		return {
 			success: false,
 			error: {

@@ -117,7 +117,7 @@ export async function updateTasksDirect(
 	enableSilentMode(); // Enable silent mode
 	try {
 		// Call the core updateTasks function
-		const result: UpdateTasksCoreResult = await updateTasks(
+		const result: UpdateTasksCoreResult | undefined = await updateTasks(
 			tasksJsonPath,
 			from,
 			prompt,

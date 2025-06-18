@@ -3,6 +3,7 @@ import path from 'path';
 import { log, readJSON, writeJSON } from '../utils.js';
 import { isTaskDependentOn } from '../task-manager.js';
 import generateTaskFiles from './generate-task-files.js';
+import { Subtask } from './types.js';
 
 /**
  * Add a subtask to a parent task
@@ -17,7 +18,7 @@ async function addSubtask(
 	tasksPath,
 	parentId,
 	existingTaskId = null,
-	newSubtaskData = null,
+	newSubtaskData: Partial<Subtask> = {},
 	generateFiles = true
 ) {
 	try {
@@ -145,8 +146,8 @@ async function addSubtask(
 
 		return newSubtask;
 	} catch (error) {
-		log('error', `Error adding subtask: ${error.message}`);
-		throw error;
+		log('error', `Error adding subtask: ${(error as Error).message}`);
+		return { success: false, message: (error as Error).message };
 	}
 }
 

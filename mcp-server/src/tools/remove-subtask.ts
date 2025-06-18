@@ -11,12 +11,14 @@ import {
 	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
-	withNormalizedProjectRoot
+	withNormalizedProjectRoot,
+	createSuccessResponse
 } from './utils.js';
 import {
 	removeSubtaskDirect } from '../core/vibex-task-manager-core.js';
 import {
 	findTasksPath } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the removeSubtask tool with the MCP server
@@ -53,19 +55,19 @@ export function registerRemoveSubtaskTool(server: any): void {
 				.string()
 				.describe('The directory of the project. Must be an absolute path.')
 		}),
-		execute: withNormalizedProjectRoot(async (args, { log }) => {
+		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			try {
-				log.info(`Removing subtask with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(`Removing subtask with args: ${JSON.stringify(args)}`);
 
-				// Use args.projectRoot directly (guaranteed by withNormalizedProjectRoot)
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -73,23 +75,26 @@ export function registerRemoveSubtaskTool(server: any): void {
 
 				const result = await removeSubtaskDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
-						id: args.id,
-						convert: args.convert,
-						skipGenerate: args.skipGenerate
+						...args,
+						tasksJsonPath
 					},
 					log
 				);
 
 				if (result.success) {
-					log.info(`Subtask removed successfully: ${result.data.message}`);
+					const message = result.data?.message || 'Subtask operation successful';
+					wrappedLogger.info(message);
+					return createSuccessResponse(message);
 				} else {
-					log.error(`Failed to remove subtask: ${result.error}`);
+					const errorMessage =
+						result.error?.message || 'Unknown error removing subtask';
+					wrappedLogger.error(
+						`Failed to remove subtask: ${errorMessage}`
+					);
+					return createErrorResponse(errorMessage);
 				}
-
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error removing subtask');
 			} catch (error) {
-				log.error(`Error in removeSubtask tool: ${(error as Error).message}`);
+				wrappedLogger.error(`Error in remove-subtask tool: ${(error as Error).message}`);
 				return createErrorResponse((error as Error).message);
 			}
 		})

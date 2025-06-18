@@ -10,6 +10,8 @@ import { aggregateTelemetry } from '../utils.js';
 import chalk from 'chalk';
 import boxen from 'boxen';
 import type { TelemetryData as SrcTelemetryData } from '../../../src/types/index.js';
+import type { Ora } from 'ora';
+import { Task, Subtask } from './types.js';
 
 // Define interfaces for proper typing
 interface ExpandAllTasksContext {
@@ -82,10 +84,10 @@ async function expandAllTasks(
 	let expandedCount = 0;
 	let failedCount = 0;
 	let tasksToExpandCount = 0;
-	const allTelemetryData = []; // Still collect individual data first
+	const allTelemetryData: SrcTelemetryData[] = []; // Still collect individual data first
 
 	if (!isMCPCall && outputFormat === 'text') {
-		loadingIndicator = startLoadingIndicator(
+		let loadingIndicator: any = null; loadingIndicator = startLoadingIndicator(
 			'Analyzing tasks for expansion...'
 		);
 	}
@@ -129,7 +131,7 @@ async function expandAllTasks(
 		// Iterate over the already filtered tasks
 		for (const task of tasksToExpand) {
 			// Start indicator for individual task expansion in CLI mode
-			let taskIndicator = null;
+			let taskIndicator: Ora | null = null;
 			if (!isMCPCall && outputFormat === 'text') {
 				taskIndicator = startLoadingIndicator(`Expanding task ${task.id}...`);
 			}
@@ -159,9 +161,9 @@ async function expandAllTasks(
 			} catch (error) {
 				failedCount++;
 				if (taskIndicator) {
-					stopLoadingIndicator(taskIndicator);
+					taskIndicator.fail('Failed');
 				}
-				logger.error(`Failed to expand task ${task.id}: ${error.message}`);
+				log('error', `Failed to expand task ${task.id}: ${(error as Error).message}`);
 				// Continue to the next task
 			}
 		}
@@ -173,7 +175,7 @@ async function expandAllTasks(
 
 		// Aggregate the collected telemetry data
 		const aggregatedTelemetryData = aggregateTelemetry(
-			allTelemetryData,
+			allTelemetryData as any,
 			'expand-all-tasks'
 		);
 
@@ -212,7 +214,7 @@ async function expandAllTasks(
 	} catch (error) {
 		if (loadingIndicator)
 			stopLoadingIndicator(loadingIndicator);
-		logger.error(`Error during expand all operation: ${error.message}`);
+		log('error', `Error during expand all operation: ${(error as Error).message}`);
 		if (!isMCPCall && getDebugFlag(null)) {
 			console.error(error); // Log full stack in debug CLI mode
 		}

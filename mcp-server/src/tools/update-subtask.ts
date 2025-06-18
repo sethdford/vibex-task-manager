@@ -17,6 +17,7 @@ import {
 	updateSubtaskByIdDirect } from '../core/vibex-task-manager-core.js';
 import {
 	findTasksPath } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the update-subtask tool with the MCP server
@@ -45,18 +46,19 @@ export function registerUpdateSubtaskTool(server: any): void {
 				.describe('The directory of the project. Must be an absolute path.')
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			const toolName = 'update_subtask';
 			try {
-				log.info(`Updating subtask with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(`Updating subtask with args: ${JSON.stringify(args)}`);
 
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
 				} catch (error) {
-					log.error(`${toolName}: Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`${toolName}: Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -64,29 +66,23 @@ export function registerUpdateSubtaskTool(server: any): void {
 
 				const result = await updateSubtaskByIdDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
-						id: args.id,
-						prompt: args.prompt,
-						research: args.research,
-						projectRoot: args.projectRoot
+						...args,
+						tasksJsonPath
 					},
-					log,
-					{ session }
+					log
 				);
 
 				if (result.success) {
-					log.info(`Successfully updated subtask with ID ${args.id}`);
+					wrappedLogger.info(`Successfully updated subtask with ID ${args.id}`);
 				} else {
-					log.error(
+					wrappedLogger.error(
 						`Failed to update subtask: ${result.error?.message || 'Unknown error'}`
 					);
 				}
 
 				return handleApiResult(apiResultToCommandResult(result), log, 'Error updating subtask');
 			} catch (error) {
-				log.error(
-					`Critical error in ${toolName} tool execute: ${(error as Error).message}`
-				);
+				wrappedLogger.error(`Critical error in ${toolName} tool execute: ${(error as Error).message}`);
 				return createErrorResponse(
 					`Internal tool error (${toolName}): ${(error as Error).message}`
 				);

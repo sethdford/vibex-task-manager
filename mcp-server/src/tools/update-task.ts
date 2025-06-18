@@ -13,6 +13,7 @@ import {
 } from './utils.js';
 import { updateTaskByIdDirect } from '../core/vibex-task-manager-core.js';
 import { findTasksPath } from '../core/utils/path-utils.js';
+import { createLogger } from '../core/logger.js';
 
 /**
  * Register the update-task tool with the MCP server
@@ -43,21 +44,20 @@ export function registerUpdateTaskTool(server: any): void {
 				.describe('The directory of the project. Must be an absolute path.')
 		}),
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
+			const wrappedLogger = createLogger(log);
 			const toolName = 'update_task';
 			try {
-				log.info(
-					`Executing ${toolName} tool with args: ${JSON.stringify(args)}`
-				);
+				wrappedLogger.info(`Updating task with args: ${JSON.stringify(args)}`);
 
 				let tasksJsonPath;
 				try {
 					tasksJsonPath = findTasksPath(
 						{ projectRoot: args.projectRoot, file: args.file },
-						log
+						wrappedLogger
 					);
-					log.info(`${toolName}: Resolved tasks path: ${tasksJsonPath}`);
+					wrappedLogger.info(`${toolName}: Resolved tasks path: ${tasksJsonPath}`);
 				} catch (error) {
-					log.error(`${toolName}: Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(`${toolName}: Error finding tasks.json: ${(error as Error).message}`);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -66,25 +66,20 @@ export function registerUpdateTaskTool(server: any): void {
 				// 3. Call Direct Function - Include projectRoot
 				const result = await updateTaskByIdDirect(
 					{
-						tasksJsonPath: tasksJsonPath,
-						id: args.id,
-						prompt: args.prompt,
-						research: args.research,
-						projectRoot: args.projectRoot
+						...args,
+						tasksJsonPath
 					},
 					log,
 					{ session }
 				);
 
 				// 4. Handle Result
-				log.info(
+				wrappedLogger.info(
 					`${toolName}: Direct function result: success=${result.success}`
 				);
 				return handleApiResult(apiResultToCommandResult(result), log, 'Error updating task');
 			} catch (error) {
-				log.error(
-					`Critical error in ${toolName} tool execute: ${(error as Error).message}`
-				);
+				wrappedLogger.error(`Critical error in ${toolName} tool execute: ${(error as Error).message}`);
 				return createErrorResponse(
 					`Internal tool error (${toolName}): ${(error as Error).message}`
 				);

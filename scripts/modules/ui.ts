@@ -171,8 +171,8 @@ function createProgressBar(percent, length = 30, statusBreakdown = null) {
 		? Math.min(
 				100,
 				percent +
-					(statusBreakdown.deferred || 0) +
-					(statusBreakdown.cancelled || 0)
+					((statusBreakdown as any).deferred || 0) +
+					((statusBreakdown as any).cancelled || 0)
 			)
 		: percent;
 
@@ -340,7 +340,7 @@ function getStatusWithColor(status, forTable = false) {
  */
 function formatDependenciesWithStatus(
 	dependencies,
-	allTasks,
+		allTasks,
 	forConsole = false,
 	complexityReport = null // Add complexityReport parameter
 ) {
@@ -844,7 +844,7 @@ async function displayNextTask(tasksPath, complexityReportPath = null) {
 	const complexityReport = readComplexityReport(complexityReportPath);
 
 	// Find the next task
-	const nextTask = findNextTask(data.tasks, complexityReport);
+	const nextTask = findNextTask(data.tasks, complexityReport || null);
 
 	if (!nextTask) {
 		console.log(
@@ -1142,7 +1142,7 @@ async function displayTaskById(
 		console.log(
 			boxen(
 				chalk.white.bold(
-					`Subtask: #${task.parentTask.id}.${task.id} - ${task.title}`
+					`Subtask: #${task.parentTask?.id}.${task.id} - ${task.title}`
 				),
 				{
 					padding: { top: 0, bottom: 0, left: 1, right: 1 },
@@ -1617,7 +1617,7 @@ async function displayComplexityReport(reportPath) {
 	try {
 		report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
 	} catch (error) {
-		log('error', `Error reading complexity report: ${error.message}`);
+		log('error', `Error reading complexity report: ${(error as Error).message}`);
 		return;
 	}
 

@@ -3,14 +3,21 @@
  * Direct function implementation for appending information to a specific subtask
  */
 
-import { Logger } from '../../../../src/types/index.js';
+import { AnyLogger, createLogger } from '../logger.js';
 import { updateSubtaskById } from '../../../../scripts/modules/task-manager.js';
 import {
 	enableSilentMode,
 	disableSilentMode,
 	isSilentMode
 } from '../../../../scripts/modules/utils.js';
-import { createLogWrapper } from '../../tools/utils.js';
+
+interface UpdateSubtaskByIdArgs {
+	tasksJsonPath: string;
+	id: string;
+	prompt: string;
+	research?: boolean;
+	projectRoot?: string;
+}
 
 /**
  * Direct function wrapper for updateSubtaskById with error handling.
@@ -25,22 +32,26 @@ import { createLogWrapper } from '../../tools/utils.js';
  * @param {Object} context - Context object containing session data.
  * @returns {Promise<Object>} - Result object with success status and data/error information.
  */
-export async function updateSubtaskByIdDirect(args: any, log: Logger, context: any = {}) {
+export async function updateSubtaskByIdDirect(
+	args: UpdateSubtaskByIdArgs,
+	log: AnyLogger,
+	context: any = {}
+) {
 	const { session } = context;
 	// Destructure expected args, including projectRoot
 	const { tasksJsonPath, id, prompt, research, projectRoot } = args;
 
-	const logWrapper = createLogWrapper(log);
+	const logger = createLogger(log);
 
 	try {
-		logWrapper.info(
+		logger.info(
 			`Updating subtask by ID via direct function. ID: ${id}, ProjectRoot: ${projectRoot}`
 		);
 
 		// Check if tasksJsonPath was provided
 		if (!tasksJsonPath) {
 			const errorMessage = 'tasksJsonPath is required but was not provided.';
-			logWrapper.error(errorMessage);
+			logger.error(errorMessage);
 			return {
 				success: false,
 				error: { code: 'MISSING_ARGUMENT', message: errorMessage }
@@ -51,7 +62,7 @@ export async function updateSubtaskByIdDirect(args: any, log: Logger, context: a
 		if (!id || typeof id !== 'string' || !id.includes('.')) {
 			const errorMessage =
 				'Invalid subtask ID format. Must be in format "parentId.subtaskId" (e.g., "5.2").';
-			logWrapper.error(errorMessage);
+			logger.error(errorMessage);
 			return {
 				success: false,
 				error: { code: 'INVALID_SUBTASK_ID', message: errorMessage }
@@ -61,7 +72,7 @@ export async function updateSubtaskByIdDirect(args: any, log: Logger, context: a
 		if (!prompt) {
 			const errorMessage =
 				'No prompt specified. Please provide the information to append.';
-			logWrapper.error(errorMessage);
+			logger.error(errorMessage);
 			return {
 				success: false,
 				error: { code: 'MISSING_PROMPT', message: errorMessage }
@@ -72,7 +83,7 @@ export async function updateSubtaskByIdDirect(args: any, log: Logger, context: a
 		const subtaskId = id;
 		if (typeof subtaskId !== 'string' && typeof subtaskId !== 'number') {
 			const errorMessage = `Invalid subtask ID type: ${typeof subtaskId}. Subtask ID must be a string or number.`;
-			log.error(errorMessage);
+			logger.error(errorMessage);
 			return {
 				success: false,
 				error: { code: 'INVALID_SUBTASK_ID_TYPE', message: errorMessage }
@@ -82,7 +93,7 @@ export async function updateSubtaskByIdDirect(args: any, log: Logger, context: a
 		const subtaskIdStr = String(subtaskId);
 		if (!subtaskIdStr.includes('.')) {
 			const errorMessage = `Invalid subtask ID format: ${subtaskIdStr}. Subtask ID must be in format "parentId.subtaskId" (e.g., "5.2").`;
-			log.error(errorMessage);
+			logger.error(errorMessage);
 			return {
 				success: false,
 				error: { code: 'INVALID_SUBTASK_ID_FORMAT', message: errorMessage }
@@ -93,7 +104,7 @@ export async function updateSubtaskByIdDirect(args: any, log: Logger, context: a
 		const tasksPath = tasksJsonPath;
 		const useResearch = research === true;
 
-		log.info(
+		logger.info(
 			`Updating subtask with ID ${subtaskIdStr} with prompt "${prompt}" and research: ${useResearch}`
 		);
 
@@ -104,24 +115,22 @@ export async function updateSubtaskByIdDirect(args: any, log: Logger, context: a
 
 		try {
 			// Execute core updateSubtaskById function
-			const coreResult = await updateSubtaskById(
+			const coreResult: any = await updateSubtaskById(
 				tasksPath,
 				subtaskIdStr,
 				prompt,
 				useResearch,
 				{
-					mcpLog: logWrapper,
+					mcpLog: logger as any,
 					session,
-					projectRoot,
-					commandName: 'update-subtask',
-					outputType: 'mcp'
+					projectRoot
 				},
 				'json'
 			);
 
 			if (!coreResult || coreResult.updatedSubtask === null) {
 				const message = `Subtask ${id} or its parent task not found.`;
-				logWrapper.error(message);
+				logger.error(message);
 				return {
 					success: false,
 					error: { code: 'SUBTASK_NOT_FOUND', message: message }
@@ -130,7 +139,7 @@ export async function updateSubtaskByIdDirect(args: any, log: Logger, context: a
 
 			// Subtask updated successfully
 			const successMessage = `Successfully updated subtask with ID ${subtaskIdStr}`;
-			logWrapper.success(successMessage);
+			logger.success(successMessage);
 			return {
 				success: true,
 				data: {
@@ -144,7 +153,7 @@ export async function updateSubtaskByIdDirect(args: any, log: Logger, context: a
 				}
 			};
 		} catch (error) {
-			logWrapper.error(`Error updating subtask by ID: ${(error as Error).message}`);
+			logger.error(`Error updating subtask by ID: ${(error as Error).message}`);
 			return {
 				success: false,
 				error: {
@@ -158,7 +167,7 @@ export async function updateSubtaskByIdDirect(args: any, log: Logger, context: a
 			}
 		}
 	} catch (error) {
-		logWrapper.error(
+		logger.error(
 			`Setup error in updateSubtaskByIdDirect: ${(error as Error).message}`
 		);
 		if (isSilentMode()) disableSilentMode();
