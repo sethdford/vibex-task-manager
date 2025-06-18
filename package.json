@@ -55,21 +55,22 @@
 		"boxen": "^8.0.1",
 		"chalk": "^5.4.1",
 		"cli-table3": "^0.6.5",
-		"commander": "^11.1.0",
+		"commander": "^12.0.0",
+		"conf": "^12.0.0",
 		"cors": "^2.8.5",
 		"dotenv": "^16.3.1",
 		"express": "^4.21.2",
 		"fastmcp": "^2.2.2",
-		"figlet": "^1.8.0",
+		"figlet": "^1.7.0",
 		"fuse.js": "^7.1.0",
 		"gradient-string": "^3.0.0",
 		"helmet": "^8.1.0",
-		"inquirer": "^12.5.0",
+		"inquirer": "^9.2.20",
 		"jsonwebtoken": "^9.0.2",
 		"lru-cache": "^10.2.0",
-		"ora": "^8.2.0",
+		"ora": "^8.0.1",
 		"uuid": "^11.1.0",
-		"zod": "^3.23.8"
+		"zod": "^3.22.4"
 	},
 	"engines": {
 		"node": ">=18.0.0"
@@ -107,11 +108,11 @@
 		"@swc/core": "^1.12.1",
 		"@swc/jest": "^0.2.38",
 		"@types/chalk": "^0.4.31",
-		"@types/figlet": "^1.7.0",
+		"@types/figlet": "^1.5.8",
 		"@types/fs-extra": "^11.0.4",
-		"@types/inquirer": "^9.0.8",
-		"@types/jest": "^29.5.14",
-		"@types/node": "^24.0.1",
+		"@types/inquirer": "^9.0.7",
+		"@types/jest": "^29.5.12",
+		"@types/node": "^20.12.7",
 		"@typescript-eslint/eslint-plugin": "^8.34.0",
 		"@typescript-eslint/parser": "^8.34.0",
 		"execa": "^8.0.1",
@@ -127,6 +128,7 @@
 		"tsx": "^4.16.2",
 		"type-fest": "^4.41.0",
 		"typescript": "^5.8.3",
-		"typescript-eslint": "^8.34.1"
+		"typescript-eslint": "^8.34.1",
+		"aws-sdk-client-mock": "^3.0.1"
 	}
 }

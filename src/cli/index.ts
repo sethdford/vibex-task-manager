@@ -22,6 +22,7 @@ import {
   ConfigurationError,
   AIServiceError,
 } from '../types/core.js';
+import inquirer from 'inquirer';
 
 // Version from package.json
 import { readFileSync } from 'fs';
@@ -432,6 +433,8 @@ class VibexCLI {
     try {
       await fs.access(taskManagerDir);
       console.log(chalk.yellow('Project already initialized.'));
+      console.log(chalk.dim('To re-initialize, remove the .taskmanager directory.'));
+      console.log(chalk.dim('To change configuration, run "vibex-task-manager config setup".'));
       return;
     } catch {
       // Not initialized, continue
@@ -439,7 +442,7 @@ class VibexCLI {
 
     console.log(chalk.blue('Initializing Vibex Task Manager project...'));
 
-    // Copy template files
+    // 1. Copy template files
     try {
       // Find the package root
       const packageRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
@@ -481,17 +484,12 @@ class VibexCLI {
         process.exit(1);
     }
 
-    // Initialize services
-    await this.initializeServices();
-
-    // Setup configuration
-    if (!options.skipSetup) {
-      console.log(chalk.blue('\nStarting interactive setup...'));
-      await this.handleConfigSetup(options);
-    }
-
-    console.log(chalk.green('✓ Project initialized successfully!'));
-    console.log(chalk.dim('Run "vibex-task-manager config show" to view configuration'));
+    // 2. Guide user to next steps
+    console.log(chalk.green('\n✓ Project initialized successfully!'));
+    console.log(chalk.blue('\nNext Steps:'));
+    console.log('1. Configure your AWS credentials for Bedrock.');
+    console.log('2. Run "vibex-task-manager config setup" for an interactive setup guide.');
+    console.log('3. Run "vibex-task-manager config test" to verify your connection.');
   }
 
   private async handleConfigShow(options: any): Promise<void> {
@@ -520,63 +518,89 @@ class VibexCLI {
 
   private async handleConfigSetup(options: any): Promise<void> {
     await this.initializeServices();
-
     const existingConfig = await this.configService!.getConfig();
 
-    // Check if we should auto-detect
-    if (!options.mainModel && !options.researchModel && !options.fallbackModel) {
-      console.log(chalk.blue('Detecting available AWS Bedrock models...'));
-      
-      const autoDetect = await BedrockAutoDetect.quickSetup({
-        region: options.region || process.env.AWS_REGION || 'us-east-1',
-        profile: options.profile || process.env.AWS_PROFILE,
-      });
+    console.log(chalk.blue('Welcome to the Vibex Task Manager interactive setup!'));
+    console.log(chalk.dim('This will guide you through configuring your connection to AWS Bedrock.'));
 
-      if (autoDetect.hasCredentials && autoDetect.availableModels.length > 0) {
-        console.log(chalk.green(`✓ Found ${autoDetect.availableModels.length} available Claude models`));
-        console.log(chalk.dim(`Available models: ${autoDetect.availableModels.join(', ')}`));
-        
-        // Use auto-detected models if user didn't specify
-        options.mainModel = options.mainModel || autoDetect.mainModel;
-        options.researchModel = options.researchModel || autoDetect.researchModel;
-        options.fallbackModel = options.fallbackModel || autoDetect.fallbackModel;
-        options.region = options.region || autoDetect.region;
-      } else if (!autoDetect.hasCredentials) {
-        console.log(chalk.yellow('⚠ AWS credentials not configured'));
-        console.log(chalk.dim('Using default model configuration...'));
-      } else {
-        console.log(chalk.yellow('⚠ No Claude models found in your region'));
-        console.log(chalk.dim('Using default model configuration...'));
-      }
-    }
-
-    console.log(chalk.blue('\nAvailable Claude Models:'));
-    const models = BedrockClient.getAvailableModels();
-    models.forEach((model, index) => {
-      console.log(`${index + 1}. ${chalk.green(model.id)} - ${model.name}`);
-      console.log(`   Context: ${model.contextWindow.toLocaleString()} tokens`);
-      console.log(`   Cost: $${model.inputCostPer1K}/1K input, $${model.outputCostPer1K}/1K output`);
-      console.log();
+    // --- Auto-Detect Models ---
+    console.log(chalk.blue('\nDetecting available AWS Bedrock models...'));
+    const autoDetect = await BedrockAutoDetect.quickSetup({
+      region: options.region || (existingConfig as any).aws?.region || process.env.AWS_REGION || 'us-east-1',
+      profile: options.profile || (existingConfig as any).aws?.profile || process.env.AWS_PROFILE,
     });
 
+    let availableModelChoices: { name: string; value: string }[] = [];
+    if (autoDetect.hasCredentials && autoDetect.availableModels.length > 0) {
+      console.log(chalk.green(`✓ Found ${autoDetect.availableModels.length} available Claude models.`));
+      availableModelChoices = BedrockClient.getAvailableModels()
+        .filter(m => autoDetect.availableModels.includes(m.id))
+        .map(m => ({ name: `${m.name} (${m.id})`, value: m.id }));
+    } else if (!autoDetect.hasCredentials) {
+      console.log(chalk.yellow('⚠ AWS credentials not found or invalid.'));
+      console.log(chalk.dim('You can still manually enter model IDs, but auto-detection is disabled.'));
+      availableModelChoices = BedrockClient.getAvailableModels()
+        .map(m => ({ name: `${m.name} (${m.id})`, value: m.id }));
+    } else {
+      console.log(chalk.yellow('⚠ No automatically-detected Claude models found in your region.'));
+      console.log(chalk.dim('This might be a permissions issue. You can still select a model manually.'));
+      availableModelChoices = BedrockClient.getAvailableModels()
+        .map(m => ({ name: `${m.name} (${m.id})`, value: m.id }));
+    }
+
+    // --- Interactive Prompts ---
+    const questions: any = [
+      {
+        type: 'list',
+        name: 'mainModel',
+        message: 'Select your primary (main) model for most tasks:',
+        choices: availableModelChoices,
+        default: existingConfig.models?.main?.modelId,
+      },
+      {
+        type: 'list',
+        name: 'researchModel',
+        message: 'Select a powerful (research) model for complex analysis:',
+        choices: availableModelChoices,
+        default: existingConfig.models?.research?.modelId,
+      },
+      {
+        type: 'list',
+        name: 'fallbackModel',
+        message: 'Select a fast, cheap (fallback) model:',
+        choices: availableModelChoices,
+        default: existingConfig.models?.fallback?.modelId,
+      },
+      {
+        type: 'input',
+        name: 'region',
+        message: 'Enter the AWS region for Bedrock:',
+        default: (existingConfig as any).aws?.region || autoDetect.region || 'us-east-1',
+      },
+      {
+        type: 'input',
+        name: 'profile',
+        message: 'Enter your AWS profile name (or leave blank for default):',
+        default: (existingConfig as any).aws?.profile || '',
+      }
+    ];
+
+    console.log(chalk.blue('\nPlease answer the following questions:'));
+    const answers = await inquirer.prompt(questions);
+
     const setupOptions = {
-      mainModel: options.mainModel || existingConfig.models?.main?.modelId || 'claude-3-haiku-20240307',
-      researchModel: options.researchModel || existingConfig.models?.research?.modelId || 'claude-3-opus-20240229',
-      fallbackModel: options.fallbackModel || existingConfig.models?.fallback?.modelId || 'claude-3-haiku-20240307',
-      region: options.region || (existingConfig as any).aws?.region || 'us-east-1',
-      profile: options.profile || (existingConfig as any).aws?.profile,
+      mainModel: answers.mainModel,
+      researchModel: answers.researchModel,
+      fallbackModel: answers.fallbackModel,
+      region: answers.region,
+      profile: answers.profile || undefined, // a blank string should be undefined
     };
 
-    console.log(chalk.blue('Setting up configuration with:'));
-    console.log(`Main Model: ${chalk.green(setupOptions.mainModel)}`);
-    console.log(`Research Model: ${chalk.green(setupOptions.researchModel)}`);
-    console.log(`Fallback Model: ${chalk.green(setupOptions.fallbackModel)}`);
-    console.log(`Region: ${chalk.green(setupOptions.region)}`);
-
-    const config = await this.configService!.setupConfiguration(setupOptions);
+    console.log(chalk.blue('\nSaving new configuration...'));
+    await this.configService!.setupConfiguration(setupOptions);
     
     console.log(chalk.green('✓ Configuration saved successfully!'));
-    console.log(chalk.yellow('Note: Ensure your AWS credentials are configured for Bedrock access.'));
+    console.log(chalk.dim('\nRun "vibex-task-manager config test" to verify your connection.'));
   }
 
   private async handleConfigTest(options: any): Promise<void> {
