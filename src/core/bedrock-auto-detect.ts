@@ -63,24 +63,30 @@ export class BedrockAutoDetect {
         region: this.config.region,
       };
 
-      // Set up credentials
-      if (this.config.accessKeyId && this.config.secretAccessKey) {
-        clientConfig.credentials = {
-          accessKeyId: this.config.accessKeyId,
-          secretAccessKey: this.config.secretAccessKey,
-          sessionToken: this.config.sessionToken,
-        };
-      } else if (this.config.profile) {
-        clientConfig.credentials = fromIni({ profile: this.config.profile });
-      } else {
-        // Try environment variables
-        clientConfig.credentials = fromEnv();
+      // Set up credentials using a robust chain
+      const credentialProvider = () => {
+        if (this.config.accessKeyId && this.config.secretAccessKey) {
+          return Promise.resolve({
+            accessKeyId: this.config.accessKeyId,
+            secretAccessKey: this.config.secretAccessKey,
+            sessionToken: this.config.sessionToken,
+          });
+        }
+        // This will check env vars, and then the profile from ~/.aws/credentials
+        return fromIni({ profile: this.config.profile })();
+      };
+
+      clientConfig.credentials = await credentialProvider();
+
+      // A simple check to see if credentials exist
+      if (!clientConfig.credentials?.accessKeyId) {
+        throw new Error('AWS credentials could not be found.');
       }
 
       this.client = new AWSBedrockClient(clientConfig);
       return this.client;
     } catch (error) {
-      console.debug('Failed to initialize Bedrock client:', error);
+      // console.debug('Failed to initialize Bedrock client:', error);
       return null;
     }
   }

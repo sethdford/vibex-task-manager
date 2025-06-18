@@ -61,9 +61,28 @@ export function registerParsePRDTool(server: any): void {
 				.describe('Append generated tasks to existing file.')
 		}),
 		execute: async (args, { log, session }) => {
-			return {
-				success: true,
-				stdout: 'This tool is temporarily disabled.'
+			try {
+				// This needs to be implemented based on core services
+				// For now, we'll return a message.
+				// const result = await parsePRDDirect(args.input, args.projectRoot);
+				const message = `Parsing PRD not yet fully implemented in this version. Input: ${args.input}, Project Root: ${args.projectRoot}`;
+				session.log({
+					type: 'info',
+					message
+				});
+				return {
+					success: true,
+					stdout: message,
+				};
+			} catch (e: any) {
+				session.log({
+					type: 'error',
+					message: `Failed to parse PRD: ${e.message}`
+				});
+				return {
+					success: false,
+					stderr: `Failed to parse PRD: ${e.message}`
+				};
 			}
 		}
 	};
