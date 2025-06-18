@@ -66,7 +66,15 @@ class VibexCLI {
     }
     
     if (!this.taskService) {
-      this.taskService = await TaskService.create(this.projectRoot, this.configService);
+      const config = await this.configService.getConfig();
+      const bedrockClient = new BedrockClient({
+        region: config.models.main.region,
+        profile: config.models.main.profile,
+        accessKeyId: config.models.main.accessKeyId,
+        secretAccessKey: config.models.main.secretAccessKey,
+        sessionToken: config.models.main.sessionToken,
+      });
+      this.taskService = new TaskService(this.projectRoot, bedrockClient, this.configService);
     }
   }
 

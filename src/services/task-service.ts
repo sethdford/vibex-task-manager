@@ -34,38 +34,18 @@ import {
 import { ConfigService } from './config-service.js';
 
 export class TaskService implements ITaskService {
-  	private bedrockClient!: BedrockClient;
+  private bedrockClient: BedrockClient;
   private configService: ConfigService;
   private projectRoot: string;
   private tasksFilePath: string;
   private cache: Map<string, { data: unknown; timestamp: number }> = new Map();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-  private constructor(projectRoot: string, configService?: ConfigService) {
+  constructor(projectRoot: string, bedrockClient: BedrockClient, configService?: ConfigService) {
     this.projectRoot = projectRoot;
+    this.bedrockClient = bedrockClient;
     this.configService = configService || new ConfigService(projectRoot);
     this.tasksFilePath = path.join(projectRoot, '.taskmanager', 'tasks', 'tasks.json');
-  }
-
-  public static async create(projectRoot: string, configService?: ConfigService): Promise<TaskService> {
-    const service = new TaskService(projectRoot, configService);
-    await service.initializeBedrockClient();
-    return service;
-  }
-
-  private async initializeBedrockClient(): Promise<void> {
-    try {
-      const config = await this.configService.getConfig();
-      this.bedrockClient = new BedrockClient({
-        region: config.models.main.region,
-        profile: config.models.main.profile,
-        accessKeyId: config.models.main.accessKeyId,
-        secretAccessKey: config.models.main.secretAccessKey,
-        sessionToken: config.models.main.sessionToken,
-      });
-    } catch (error) {
-      throw new AIServiceError('Failed to initialize Bedrock client', undefined, error as Error);
-    }
   }
 
   // ============================================================================
