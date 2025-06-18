@@ -25,15 +25,15 @@ export class ConfigService implements IConfigService {
 
   constructor(projectRoot: string) {
     this.projectRoot = projectRoot;
-    this.configFilePath = path.join(projectRoot, '.vibex', 'config.json');
-    this.globalConfigPath = path.join(os.homedir(), '.vibex', 'global-config.json');
+    this.configFilePath = path.join(projectRoot, '.taskmanager', 'config.json');
+    this.globalConfigPath = path.join(os.homedir(), '.taskmanager', 'global-config.json');
   }
 
   /**
    * Get current configuration with fallbacks
    */
-  async getConfig(): Promise<Config> {
-    if (this.cache) {
+  async getConfig(forceRefresh = false): Promise<Config> {
+    if (this.cache && !forceRefresh) {
       return this.cache;
     }
 
@@ -143,7 +143,7 @@ export class ConfigService implements IConfigService {
         debug: false,
         defaultSubtasks: 5,
         defaultPriority: 'medium',
-        dataDirectory: '.vibex',
+        dataDirectory: '.taskmanager',
         autoSave: true,
         autoBackup: true,
         maxBackups: 10,

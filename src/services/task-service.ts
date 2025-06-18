@@ -44,7 +44,7 @@ export class TaskService implements ITaskService {
   constructor(projectRoot: string, configService?: ConfigService) {
     this.projectRoot = projectRoot;
     this.configService = configService || new ConfigService(projectRoot);
-    this.tasksFilePath = path.join(projectRoot, '.vibex', 'tasks.json');
+    this.tasksFilePath = path.join(projectRoot, '.taskmanager', 'tasks', 'tasks.json');
     
     // Initialize Bedrock client with current config
     this.initializeBedrockClient();
@@ -127,6 +127,7 @@ export class TaskService implements ITaskService {
     const newTask: Task = {
       ...input,
       id: maxId + 1,
+      status: input.status || 'pending',
       created: now,
       updated: now,
     };

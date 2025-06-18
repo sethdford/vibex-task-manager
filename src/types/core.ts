@@ -525,3 +525,12 @@ export const ValidationSchemas = {
   TaskRecommendation: TaskRecommendationSchema,
   NextTaskResult: NextTaskResultSchema,
 } as const;
+
+export const ProjectSettingsSchema = z.object({
+  projectName: z.string().optional(),
+  defaultSubtasks: z.number().optional(),
+  defaultPriority: PrioritySchema.optional(),
+  dataDirectory: z.string().default('.taskmanager'),
+  autoSave: z.boolean().optional(),
+  autoBackup: z.boolean().optional(),
+});
