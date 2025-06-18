@@ -44,5 +44,11 @@
     "docsDir": ".taskmanager/docs",
     "reportsDir": ".taskmanager/reports",
     "templatesDir": ".taskmanager/templates"
+  },
+  "defaults": {
+    "taskPriority": "medium",
+    "taskStatus": "pending",
+    "maxSubtasks": 10,
+    "complexityThreshold": 7
   }
 } 
