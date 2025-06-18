@@ -433,22 +433,27 @@ class VibexCLI {
 
     // Copy template files
     try {
-      let templateDir = '';
-      const __dirname = path.dirname(fileURLToPath(import.meta.url));
+      // Find the package root
+      const packageRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
       
-      const prodPath = path.join(__dirname, '../../../../assets/taskmanager-template');
-      const devPath = path.join(process.cwd(), 'assets/taskmanager-template');
+      let templateDir = '';
+      const possibleTemplatePaths = [
+          path.join(packageRoot, 'assets', 'taskmanager-template'),
+          path.join(process.cwd(), 'assets', 'taskmanager-template') // for local dev
+      ];
 
-      try {
-        await fs.access(prodPath);
-        templateDir = prodPath;
-      } catch (e) {
-        try {
-          await fs.access(devPath);
-          templateDir = devPath;
-        } catch (e2) {
-          throw new Error(`Template directory not found. Looked in ${prodPath} and ${devPath}`);
-        }
+      for (const p of possibleTemplatePaths) {
+          try {
+              await fs.access(p);
+              templateDir = p;
+              break;
+          } catch (e) {
+              // ignore
+          }
+      }
+
+      if (!templateDir) {
+          throw new Error(`Template directory not found. Looked in ${possibleTemplatePaths.join(' and ')}`);
       }
       
       console.log(chalk.dim(`Using template from: ${templateDir}`));
