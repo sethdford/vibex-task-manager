@@ -250,6 +250,9 @@ async function _unifiedServiceRunner(serviceType, params) {
                             new Error(`API key for provider '${providerName}' (role: ${currentRole}) is not set.`);
                     continue; // Skip to the next role in the sequence
                 }
+            } else {
+                // For Bedrock, log that we're using AWS credentials
+                log('debug', `Using AWS credentials for Bedrock provider (role: ${currentRole})`);
             }
             // Get base URL if configured (optional for most providers)
             baseURL = getBaseUrlForRole(currentRole, effectiveProjectRoot);

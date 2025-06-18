@@ -288,12 +288,18 @@ async function _unifiedServiceRunner(serviceType: keyof Provider, params: any): 
 			continue;
 		}
 
-		if (!isApiKeySet(providerName, session, effectiveProjectRoot)) {
-			log(
-				'warn',
-				`Skipping attempt for role '${attempt.role}' (${providerName}) due to missing API key.`
-			);
-			continue;
+		// For Bedrock, we don't check API keys but rely on AWS credential resolution
+		if (providerName?.toLowerCase() !== 'bedrock') {
+			if (!isApiKeySet(providerName, session, effectiveProjectRoot)) {
+				log(
+					'warn',
+					`Skipping attempt for role '${attempt.role}' (${providerName}) due to missing API key.`
+				);
+				continue;
+			}
+		} else {
+			// For Bedrock, log that we're using AWS credentials
+			log('debug', `Using AWS credentials for Bedrock provider (role: ${attempt.role})`);
 		}
 
 		try {
