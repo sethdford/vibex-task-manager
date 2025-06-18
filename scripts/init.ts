@@ -353,6 +353,73 @@ function copyTemplateFile(templateName: string, targetPath: string, replacements
 	log('info', `Created file: ${targetPath}`);
 }
 
+// Function to copy the complete .taskmanager template structure
+function copyTaskmanagerTemplate(targetDir: string, options: InitOptions): void {
+	const templateDir = path.join(__dirname, '..', 'assets', 'taskmanager-template');
+	
+	if (!fs.existsSync(templateDir)) {
+		log('warn', 'Template directory not found, creating basic structure only');
+		return;
+	}
+
+	const replacements = {
+		projectName: options.name || 'Your Project Name',
+		projectDescription: options.description || 'A project managed with Vibex Task Manager',
+		year: new Date().getFullYear(),
+		created: new Date().toISOString()
+	};
+
+	// Recursively copy template files
+	copyDirectoryRecursive(templateDir, targetDir, replacements);
+}
+
+// Helper function to recursively copy directories
+function copyDirectoryRecursive(sourceDir: string, targetDir: string, replacements: Record<string, any> = {}): void {
+	const items = fs.readdirSync(sourceDir, { withFileTypes: true });
+
+	for (const item of items) {
+		const sourcePath = path.join(sourceDir, item.name);
+		const targetPath = path.join(targetDir, item.name);
+
+		if (item.isDirectory()) {
+			// Create directory if it doesn't exist
+			if (!fs.existsSync(targetPath)) {
+				fs.mkdirSync(targetPath, { recursive: true });
+				log('info', `Created directory: ${targetPath}`);
+			}
+			// Recursively copy contents
+			copyDirectoryRecursive(sourcePath, targetPath, replacements);
+		} else if (item.isFile()) {
+			// Copy file with replacements
+			copyTemplateFileWithReplacements(sourcePath, targetPath, replacements);
+		}
+	}
+}
+
+// Enhanced file copy function with replacements
+function copyTemplateFileWithReplacements(sourcePath: string, targetPath: string, replacements: Record<string, any> = {}): void {
+	if (fs.existsSync(targetPath)) {
+		log('info', `File already exists, skipping: ${targetPath}`);
+		return;
+	}
+
+	let content = fs.readFileSync(sourcePath, 'utf8');
+
+	// Replace placeholders with actual values
+	Object.entries(replacements).forEach(([key, value]) => {
+		const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+		content = content.replace(regex, String(value));
+	});
+
+	// Replace "Your Project Name" with actual project name in all files
+	if (replacements.projectName && replacements.projectName !== 'Your Project Name') {
+		content = content.replace(/Your Project Name/g, replacements.projectName);
+	}
+
+	fs.writeFileSync(targetPath, content);
+	log('info', `Created file: ${targetPath}`);
+}
+
 // Main function to initialize a new project (No longer needs isInteractive logic)
 async function initializeProject(options: InitOptions = {}): Promise<{ dryRun?: boolean } | void> {
 	// Receives options as argument
@@ -490,6 +557,9 @@ function createProjectStructure(addAliases: boolean, dryRun: boolean, options: I
 	ensureDirectoryExists(path.join(targetDir, TASKMANAGER_DOCS_DIR));
 	ensureDirectoryExists(path.join(targetDir, TASKMANAGER_REPORTS_DIR));
 	ensureDirectoryExists(path.join(targetDir, TASKMANAGER_TEMPLATES_DIR));
+
+	// Copy the complete .taskmanager template structure
+	copyTaskmanagerTemplate(targetDir, options);
 
 	// Setup MCP configuration for integration with Cursor
 	setupMCPConfiguration(targetDir);

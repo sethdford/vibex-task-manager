@@ -1,0 +1,17 @@
+{
+  "id": null,
+  "title": "",
+  "description": "",
+  "status": "pending",
+  "priority": "medium",
+  "complexity": null,
+  "estimatedHours": null,
+  "dependencies": [],
+  "subtasks": [],
+  "tags": [],
+  "created": null,
+  "updated": null,
+  "details": "",
+  "testStrategy": "",
+  "acceptanceCriteria": []
+} 

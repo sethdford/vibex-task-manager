@@ -1,0 +1,39 @@
+{
+  "projectName": "Your Project Name",
+  "version": "1.0.0",
+  "created": "2024-01-01T00:00:00.000Z",
+  "aiProvider": "bedrock",
+  "models": {
+    "main": "claude-3-5-sonnet-20241022",
+    "research": "claude-3-opus-20240229", 
+    "fallback": "claude-3-haiku-20240307"
+  },
+  "aws": {
+    "region": "us-east-1",
+    "profile": null
+  },
+  "features": {
+    "aiTaskGeneration": true,
+    "complexityAnalysis": true,
+    "researchMode": true,
+    "autoExpansion": false
+  },
+  "ui": {
+    "theme": "default",
+    "showProgress": true,
+    "showDependencies": true,
+    "defaultView": "table"
+  },
+  "paths": {
+    "tasksFile": ".taskmanager/tasks/tasks.json",
+    "docsDir": ".taskmanager/docs",
+    "reportsDir": ".taskmanager/reports",
+    "templatesDir": ".taskmanager/templates"
+  },
+  "defaults": {
+    "taskPriority": "medium",
+    "taskStatus": "pending",
+    "maxSubtasks": 10,
+    "complexityThreshold": 7
+  }
+} 

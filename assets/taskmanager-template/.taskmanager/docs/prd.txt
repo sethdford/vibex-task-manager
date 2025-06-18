@@ -1,0 +1,33 @@
+# Sample Project - Replace with Your Project
+
+## Overview
+This is a sample Product Requirements Document. Replace this content with your actual project details to generate meaningful tasks.
+
+## Goals
+- Learn how to use Vibex Task Manager effectively
+- Set up a proper development workflow
+- Create a foundation for future projects
+
+## Features
+- Task management system integration
+- AI-powered task generation and analysis
+- Progress tracking and reporting
+- Integration with development tools
+
+## Technical Requirements
+- Node.js environment
+- AWS Bedrock access for AI features
+- Git repository for version control
+- IDE with Cursor integration (optional but recommended)
+
+## Success Criteria
+- Successfully set up and configure Vibex Task Manager
+- Generate and manage tasks effectively
+- Complete the getting started workflow
+- Understand how to use AI features for project planning
+
+## Next Steps
+1. Replace this content with your actual project requirements
+2. Run: `vibex-task-manager parse-prd --input=.taskmanager/docs/prd.txt`
+3. Review and refine the generated tasks
+4. Begin working on your project tasks 
