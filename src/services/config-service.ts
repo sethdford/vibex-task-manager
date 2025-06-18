@@ -120,7 +120,7 @@ export class ConfigService implements IConfigService {
     return {
       models: {
         main: {
-          modelId: 'claude-3-5-sonnet-20241022',
+          modelId: 'claude-3-haiku-20240307',
           maxTokens: 4096,
           temperature: 0.3,
           region: 'us-east-1',
