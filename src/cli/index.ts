@@ -1284,16 +1284,7 @@ class VibexCLI {
 }
 
 // Main execution
-const url = new URL(import.meta.url);
-const currentFile = url.pathname;
-// A simplified check for direct execution, though can have edge cases.
-// In practice, for a CLI tool, you often don't need this check when the
-// entry point is clearly defined in package.json's bin.
-// The check is more for when a file can be both a module and a script.
-// For robustness, we assume if it's not imported, it's being run directly.
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const cli = new VibexCLI();
-  cli.run();
-}
+const cli = new VibexCLI();
+cli.run();
 
 export default VibexCLI;
