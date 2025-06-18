@@ -355,12 +355,28 @@ function copyTemplateFile(templateName: string, targetPath: string, replacements
 
 // Function to copy the complete .taskmanager template structure
 function copyTaskmanagerTemplate(targetDir: string, options: InitOptions): void {
-	const templateDir = path.join(__dirname, '..', 'assets', 'taskmanager-template');
+	// Try multiple possible paths for the template directory
+	const possiblePaths = [
+		path.join(__dirname, '..', 'assets', 'taskmanager-template'), // Development
+		path.join(__dirname, '..', '..', 'assets', 'taskmanager-template'), // Installed via npm
+		path.join(__dirname, '..', '..', '..', 'assets', 'taskmanager-template'), // Alternative npm structure
+	];
 	
-	if (!fs.existsSync(templateDir)) {
-		log('warn', 'Template directory not found, creating basic structure only');
+	let templateDir: string | null = null;
+	for (const possiblePath of possiblePaths) {
+		if (fs.existsSync(possiblePath)) {
+			templateDir = possiblePath;
+			break;
+		}
+	}
+	
+	if (!templateDir) {
+		log('warn', 'Template directory not found at any expected location, creating basic structure only');
+		log('debug', `Searched paths: ${possiblePaths.join(', ')}`);
 		return;
 	}
+	
+	log('info', `Using template directory: ${templateDir}`);
 
 	const replacements = {
 		projectName: options.name || 'Your Project Name',
