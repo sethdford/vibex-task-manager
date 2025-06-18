@@ -418,11 +418,11 @@ class VibexCLI {
   // ============================================================================
 
   private async handleInit(options: any): Promise<void> {
-    const vibexDir = path.join(this.projectRoot, '.vibex');
+    const taskManagerDir = path.join(this.projectRoot, '.taskmanager');
     
     // Check if already initialized
     try {
-      await fs.access(vibexDir);
+      await fs.access(taskManagerDir);
       console.log(chalk.yellow('Project already initialized.'));
       return;
     } catch {
@@ -431,8 +431,42 @@ class VibexCLI {
 
     console.log(chalk.blue('Initializing Vibex Task Manager project...'));
 
-    // Create directory structure
-    await fs.mkdir(vibexDir, { recursive: true });
+    // Copy template files
+    try {
+      let templateDir = '';
+      const __dirname = path.dirname(fileURLToPath(import.meta.url));
+      
+      const prodPath = path.join(__dirname, '../../../../assets/taskmanager-template');
+      const devPath = path.join(process.cwd(), 'assets/taskmanager-template');
+
+      try {
+        await fs.access(prodPath);
+        templateDir = prodPath;
+      } catch (e) {
+        try {
+          await fs.access(devPath);
+          templateDir = devPath;
+        } catch (e2) {
+          throw new Error(`Template directory not found. Looked in ${prodPath} and ${devPath}`);
+        }
+      }
+      
+      console.log(chalk.dim(`Using template from: ${templateDir}`));
+      
+      const entries = await fs.readdir(templateDir, { withFileTypes: true });
+      for (const entry of entries) {
+          const srcPath = path.join(templateDir, entry.name);
+          const destPath = path.join(this.projectRoot, entry.name);
+          if (entry.name !== '.DS_Store') {
+            await fs.cp(srcPath, destPath, { recursive: true });
+          }
+      }
+      console.log(chalk.green('✓ Project structure created from template.'));
+
+    } catch (error) {
+        console.error(chalk.red('Failed to copy project template.'), error);
+        process.exit(1);
+    }
 
     // Initialize services
     await this.initializeServices();
