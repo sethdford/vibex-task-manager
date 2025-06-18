@@ -9,7 +9,7 @@ import {
   InvokeModelWithResponseStreamCommand,
   BedrockRuntimeClientConfig,
 } from '@aws-sdk/client-bedrock-runtime';
-import { fromIni, fromEnv } from '@aws-sdk/credential-providers';
+import { fromIni } from '@aws-sdk/credential-providers';
 import { z } from 'zod';
 
 // Claude model definitions
@@ -209,16 +209,15 @@ export class BedrockClient {
     };
 
     // Set up credentials
+    let credentials;
     if (this.config.accessKeyId && this.config.secretAccessKey) {
-      clientConfig.credentials = {
+      credentials = {
         accessKeyId: this.config.accessKeyId,
         secretAccessKey: this.config.secretAccessKey,
         sessionToken: this.config.sessionToken,
       };
-    } else if (this.config.profile) {
-      clientConfig.credentials = fromIni({ profile: this.config.profile });
     } else {
-      clientConfig.credentials = fromEnv();
+      credentials = fromIni({ profile: this.config.profile });
     }
 
     if (this.config.endpoint) {
