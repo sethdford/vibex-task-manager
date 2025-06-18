@@ -223,6 +223,39 @@ export class TaskService implements ITaskService {
     return true;
   }
 
+  async createTaskFromPrompt(prompt: string, options: Partial<TaskCreateInput>): Promise<Task> {
+    const systemPrompt = this.buildTaskCreationPrompt();
+    const modelConfig = await this.configService.getModelConfig('main');
+    
+    const response = await this.bedrockClient.generateText({
+      model: modelConfig.modelId as ClaudeModelId,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: prompt }],
+      maxTokens: 4096,
+    });
+
+    let taskData: any;
+    try {
+      taskData = JSON.parse(response.text);
+    } catch (e) {
+      throw new AIServiceError('Failed to parse AI response for task creation.', JSON.stringify({ prompt, response: response.text }));
+    }
+
+    const taskInput: TaskCreateInput = {
+      title: taskData.title,
+      description: taskData.description,
+      priority: options.priority || taskData.priority || 'medium',
+      status: 'pending',
+      dependencies: options.dependencies || [],
+      subtasks: [],
+      tags: taskData.tags || [],
+      estimatedHours: taskData.estimatedHours,
+      complexity: taskData.complexity,
+    };
+
+    return this.createTask(taskInput);
+  }
+
   // ============================================================================
   // Status Management
   // ============================================================================
@@ -1096,67 +1129,40 @@ Consider factors like:
   }
 
   private buildTaskExpansionPrompt(task: Task, maxSubtasks: number, detailLevel: string): string {
-    return `Break down this task into ${maxSubtasks} clear, actionable subtasks:
+    return `Based on the following task, expand it into approximately ${maxSubtasks} subtasks. The detail level should be ${detailLevel}.
+Task: ${JSON.stringify(task, null, 2)}
+Respond with a JSON array of subtask objects, each with a 'title' and 'description'.`;
+  }
 
-Title: ${task.title}
-Description: ${task.description}
-${task.details ? `Details: ${task.details}` : ''}
-Priority: ${task.priority}
+  private buildTaskCreationPrompt(): string {
+    return `You are an expert task creation assistant. Based on the user's prompt, generate a JSON object representing a single task.
+The JSON object should have the following properties:
+- title: string (required)
+- description: string (required)
+- priority: 'low' | 'medium' | 'high' (optional, defaults to 'medium')
+- tags: string[] (optional)
+- estimatedHours: number (optional)
+- complexity: number (1-10, optional)
 
-Detail Level: ${detailLevel}
-
-Requirements:
-- Create ${maxSubtasks} specific, implementable subtasks
-- Each subtask should be independently completable
-- Subtasks should be logically ordered
-- Include testing and validation steps where appropriate
-- Estimate hours for each subtask
-- Assign appropriate priority levels
-- Ensure all subtasks together complete the main task
-
-For ${detailLevel} level:
-${detailLevel === 'basic' ? '- Focus on high-level steps' : ''}
-${detailLevel === 'detailed' ? '- Include implementation specifics and edge cases' : ''}
-${detailLevel === 'comprehensive' ? '- Include all technical details, testing, documentation, and deployment steps' : ''}`;
+Example prompt: "Create a login page"
+Example response:
+{
+  "title": "Create User Login Page",
+  "description": "Develop a front-end login page with fields for username and password, and a submit button. It should also include a link for password reset.",
+  "priority": "high",
+  "tags": ["frontend", "auth"],
+  "estimatedHours": 8,
+  "complexity": 5
+}`;
   }
 
   private buildPRDAnalysisPrompt(prdContent: string): string {
-    return `Analyze this Product Requirements Document and extract actionable development tasks:
-
+    return `Analyze the following Product Requirements Document (PRD) and generate a project summary and a list of tasks.
 PRD Content:
+---
 ${prdContent}
-
-Please provide:
-1. Project overview and key objectives
-2. List of main features to be implemented
-3. Technical requirements and constraints
-4. Acceptance criteria for each feature
-5. Overall project complexity assessment (1-10)
-6. Estimated project duration
-
-Then generate specific development tasks that cover:
-- Architecture and planning tasks
-- Feature implementation tasks
-- Testing and QA tasks
-- Documentation tasks
-- Deployment and DevOps tasks
-
-For each task, include:
-- Clear, actionable title
-- Detailed description
-- Implementation details
-- Testing strategy
-- Priority level (low/medium/high)
-- Estimated hours
-- Complexity score (1-10)
-- Relevant tags
-- Potential subtasks for complex features
-
-Ensure tasks are:
-- Specific and measurable
-- Properly sequenced with logical dependencies
-- Sized appropriately (not too large or too small)
-- Complete coverage of all PRD requirements`;
+---
+Respond with a JSON object with 'projectName', 'overview', 'estimatedComplexity', 'estimatedDuration', and a 'tasks' array. Each task object should have 'title', 'description', 'priority', 'complexity', and 'estimatedHours'.`;
   }
 
   private getFromCache(key: string): unknown | null {

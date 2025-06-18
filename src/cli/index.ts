@@ -758,102 +758,35 @@ class VibexCLI {
   private async handleAdd(options: any): Promise<void> {
     await this.initializeServices();
 
-    // Import the actual add-task module (default export)
-    const addTask = (await import('../../scripts/modules/task-manager/add-task.js')).default;
-    
-    const tasksPath = path.join(this.projectRoot, '.taskmanager', 'tasks', 'tasks.json');
-    
-    let result: any;
+    let task: Task;
 
     if (options.aiPrompt) {
-      // Use AI to generate task
       console.log(chalk.blue('Generating task with AI...'));
-      
-      const dependencies = options.dependsOn ? options.dependsOn.split(',').map(Number) : [];
-      const context = {
-        projectRoot: this.projectRoot,
-        commandName: 'add-task',
-        outputType: 'cli'
-      };
-      
-      // Call the actual add-task module with AI prompt
-      result = await addTask(
-        tasksPath,
-        options.aiPrompt, // prompt
-        dependencies,
-        options.priority || 'medium',
-        context,
-        'text', // outputFormat
-        null, // manualTaskData
-        false // useResearch - could be made configurable
-      );
-      
-      console.log(chalk.green(`✓ Task created: #${result.newTaskId}`));
-      
-      // Show the created task
-      const listTasks = (await import('../../scripts/modules/task-manager/list-tasks.js')).default;
-      const tasksData = await listTasks(tasksPath, 'all', null, false, 'json');
-      const createdTask = tasksData.tasks.find((t: any) => t.id === result.newTaskId);
-      if (createdTask) {
-        this.displayTaskDetails(createdTask as Task);
-      }
-      
-      if (options.expand && result.newTaskId) {
-        console.log(chalk.blue('Expanding task into subtasks...'));
-        const expandTask = (await import('../../scripts/modules/task-manager/expand-task.js')).default;
-        await expandTask(tasksPath, result.newTaskId, 5, false, '', context);
-        
-        // Show updated task with subtasks
-        const updatedTasksData = await listTasks(tasksPath, 'all', null, false, 'json');
-        const expandedTask = updatedTasksData.tasks.find((t: any) => t.id === result.newTaskId);
-        if (expandedTask) {
-          console.log(chalk.blue('\nExpanded task with subtasks:'));
-          this.displayTaskDetails(expandedTask as Task);
-        }
-      }
+      task = await this.taskService!.createTaskFromPrompt(options.aiPrompt, {
+        priority: options.priority || 'medium',
+        dependencies: options.dependsOn ? options.dependsOn.split(',').map(Number) : [],
+      });
+      console.log(chalk.green(`✓ AI-generated task created: #${task.id}`));
     } else {
-      // Manual task creation
       if (!options.title || !options.description) {
         console.error(chalk.red('Error: Title and description are required for manual task creation.'));
-        console.error(chalk.dim('Use --ai-prompt to generate a task with AI, or provide both --title and --description.'));
+        console.error(chalk.dim('Use --ai-prompt to generate a task with AI, or provide --title and --description.'));
         process.exit(1);
       }
-
-      const dependencies = options.dependsOn ? options.dependsOn.split(',').map(Number) : [];
-      const context = {
-        projectRoot: this.projectRoot,
-        commandName: 'add-task',
-        outputType: 'cli'
-      };
-      
-      const manualTaskData = {
+      task = await this.taskService!.createTask({
         title: options.title,
         description: options.description,
         priority: options.priority || 'medium',
-        dependencies
-      };
-      
-      // Call add-task module with manual data
-      result = await addTask(
-        tasksPath,
-        '', // no prompt for manual creation
-        dependencies,
-        options.priority || 'medium',
-        context,
-        'text', // outputFormat
-        manualTaskData, // manualTaskData
-        false // useResearch
-      );
-      
-      console.log(chalk.green(`✓ Task created: #${result.newTaskId}`));
-      
-      // Show the created task
-      const listTasks = (await import('../../scripts/modules/task-manager/list-tasks.js')).default;
-      const tasksData = await listTasks(tasksPath, 'all', null, false, 'json');
-      const createdTask = tasksData.tasks.find((t: any) => t.id === result.newTaskId);
-      if (createdTask) {
-        this.displayTaskDetails(createdTask as Task);
-      }
+        dependencies: options.dependsOn ? options.dependsOn.split(',').map(Number) : [],
+      });
+      console.log(chalk.green(`✓ Task created: #${task.id}`));
+    }
+
+    this.displayTaskDetails(task);
+
+    if (options.expand && task.id) {
+      console.log(chalk.blue('Expanding task into subtasks...'));
+      await this.handleExpand(task.id, { numSubtasks: 5, detailLevel: 'detailed' });
     }
   }
 
