@@ -1246,78 +1246,54 @@ Respond with a JSON object with 'projectName', 'overview', 'estimatedComplexity'
 
   private clearCache(): void {
     this.cache.clear();
+    console.log('Task cache cleared');
   }
 
   // ============================================================================
-  // SPARC Methodology Operations
+  // SPARC Methodology
   // ============================================================================
-
-  async enableSparcMethodology(taskId: number): Promise<Task> {
-    const task = await this.getTask(taskId);
-    const updatedTask = await this.sparcService.enableSparcMethodology(task);
-    return await this.updateTask(taskId, { sparc: updatedTask.sparc });
+  
+  async enableSparc(taskId: number): Promise<{task: Task, message: string}> {
+    const task = await this.sparcService.enableSparc(taskId, (id) => this.getTask(id), (id, updates) => this.updateTask(id, updates));
+    return {task, message: `SPARC enabled for task #${taskId}. Current phase: ${task.sparc?.currentPhase}`};
   }
 
-  async disableSparcMethodology(taskId: number): Promise<Task> {
-    const task = await this.getTask(taskId);
-    const updatedTask = await this.sparcService.disableSparcMethodology(task);
-    return await this.updateTask(taskId, { sparc: updatedTask.sparc });
+  async disableSparc(taskId: number): Promise<{task: Task, message: string}> {
+    const task = await this.sparcService.disableSparc(taskId, (id) => this.getTask(id), (id, updates) => this.updateTask(id, updates));
+    return {task, message: `SPARC disabled for task #${taskId}.`};
   }
 
-  async advanceSparcPhase(taskId: number, phase: SparcStatus): Promise<Task> {
-    const task = await this.getTask(taskId);
-    const updatedTask = await this.sparcService.advanceSparcPhase(task, phase);
-    return await this.updateTask(taskId, { sparc: updatedTask.sparc });
+  async advanceSparcPhase(taskId: number, phase: SparcStatus): Promise<{task: Task, message: string}> {
+    const task = await this.sparcService.advancePhase(taskId, phase, (id) => this.getTask(id), (id, updates) => this.updateTask(id, updates));
+    return {task, message: `Task #${taskId} advanced to ${phase}.`};
   }
 
-  async updateSparcPhase(taskId: number, phase: SparcStatus, updates: Record<string, unknown>): Promise<Task> {
-    const task = await this.getTask(taskId);
-    if (!task.sparc?.enabled) {
-      throw new Error('SPARC methodology is not enabled for this task');
+  async getSparcProgress(taskId: number): Promise<any> {
+    return this.sparcService.getProgress(taskId, (id) => this.getTask(id));
+  }
+  
+  async generateSparcRequirements(taskId: number): Promise<any> {
+    return this.sparcService.generateRequirements(taskId, (id) => this.getTask(id), (id, updates) => this.updateTask(id, updates));
+  }
+
+  async generateSparcPseudocode(taskId: number): Promise<any> {
+    return this.sparcService.generatePseudocode(taskId, (id) => this.getTask(id), (id, updates) => this.updateTask(id, updates));
+  }
+
+  async generateSparcArchitecture(taskId: number): Promise<any> {
+    return this.sparcService.generateArchitecture(taskId, (id) => this.getTask(id), (id, updates) => this.updateTask(id, updates));
+  }
+
+  async generateSparcTests(taskId: number): Promise<any> {
+    return this.sparcService.generateTests(taskId, (id) => this.getTask(id), (id, updates) => this.updateTask(id, updates));
+  }
+  
+  async validateSparcCompletion(taskId: number): Promise<{success: boolean, message: string, report?: any}> {
+    const validationResult = await this.sparcService.validateCompletion(taskId, (id) => this.getTask(id), (id, updates) => this.updateTask(id, updates));
+    if (validationResult.success) {
+      return { success: true, message: `SPARC validation successful for task #${taskId}.`, report: validationResult.report };
     }
-
-    const updatedSparc = {
-      ...task.sparc,
-      phases: {
-        ...task.sparc.phases,
-        [phase]: {
-          ...task.sparc.phases[phase as keyof typeof task.sparc.phases],
-          ...updates,
-        },
-      },
-    };
-
-    return await this.updateTask(taskId, { sparc: updatedSparc });
-  }
-
-  async getSparcProgress(taskId: number): Promise<{ currentPhase: SparcStatus; progress: number; phases: Record<string, unknown> }> {
-    const task = await this.getTask(taskId);
-    return this.sparcService.getSparcProgress(task);
-  }
-
-  async generateSparcRequirements(taskId: number): Promise<string[]> {
-    const task = await this.getTask(taskId);
-    return await this.sparcService.generateSparcRequirements(task);
-  }
-
-  async generateSparcPseudocode(taskId: number): Promise<{ coordination: string; taskFlow: string }> {
-    const task = await this.getTask(taskId);
-    return await this.sparcService.generateSparcPseudocode(task);
-  }
-
-  async generateSparcArchitecture(taskId: number): Promise<{ structure: string; roles: Array<{ role: string; responsibilities: string[] }> }> {
-    const task = await this.getTask(taskId);
-    return await this.sparcService.generateSparcArchitecture(task);
-  }
-
-  async generateSparcTests(taskId: number): Promise<string[]> {
-    const task = await this.getTask(taskId);
-    return await this.sparcService.generateSparcTests(task);
-  }
-
-  async validateSparcCompletion(taskId: number): Promise<{ isValid: boolean; issues: string[]; testResults: Array<{ testName: string; status: 'pass' | 'fail' | 'skipped' }> }> {
-    const task = await this.getTask(taskId);
-    return await this.sparcService.validateSparcCompletion(task);
+    return { success: false, message: `SPARC validation failed for task #${taskId}.`, report: validationResult.report };
   }
 }
 

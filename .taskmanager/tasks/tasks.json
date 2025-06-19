@@ -294,12 +294,276 @@
           "methodology": "sparc"
         }
       }
+    },
+    {
+      "id": 10,
+      "title": "SPARC Methodology Test Task",
+      "description": "Testing the SPARC methodology integration with AI-powered task management",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T13:05:24.929Z",
+      "updated": "2025-06-19T13:06:25.930Z",
+      "tags": [],
+      "sparc": {
+        "enabled": true,
+        "currentPhase": "completion",
+        "phases": {
+          "specification": {
+            "status": "done",
+            "requirements": [],
+            "testCriteria": [],
+            "completedAt": "2025-06-19T13:05:37.601Z"
+          },
+          "pseudocode": {
+            "status": "done",
+            "completedAt": "2025-06-19T13:05:50.430Z"
+          },
+          "architecture": {
+            "status": "done",
+            "agentRoles": [],
+            "completedAt": "2025-06-19T13:06:10.300Z"
+          },
+          "refinement": {
+            "status": "done",
+            "testCases": [],
+            "completedAt": "2025-06-19T13:06:25.930Z"
+          },
+          "completion": {
+            "status": "in-progress",
+            "buildValidation": false,
+            "testResults": []
+          }
+        },
+        "metadata": {
+          "startedAt": "2025-06-19T13:05:24.931Z",
+          "totalPhases": 5,
+          "completedPhases": 5,
+          "methodology": "sparc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Final E2E SPARC Test",
+      "description": "A definitive task to test the full SPARC workflow via the CLI.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T13:13:03.747Z",
+      "updated": "2025-06-19T13:35:48.279Z",
+      "tags": [],
+      "sparc": {
+        "enabled": true,
+        "currentPhase": "completion",
+        "phases": {
+          "specification": {
+            "status": "done",
+            "requirements": [
+              "Requirement 1: The system shall execute the complete SPARC workflow from initialization to completion via the command-line interface.",
+              "Requirement 2: The build swarm must successfully authenticate with all required services and APIs using appropriate credentials.",
+              "Requirement 3: The system shall validate input parameters and configuration settings before beginning the E2E test execution.",
+              "Requirement 4: The build swarm must maintain a persistent log of all operations performed during the E2E test for debugging and audit purposes.",
+              "Requirement 5: The system shall handle and appropriately report all error conditions encountered during the E2E test execution.",
+              "Requirement 6: The E2E test must verify all integration points between SPARC components and external systems.",
+              "Requirement 7: The system shall complete the full SPARC workflow within the established performance benchmarks (not exceeding 120% of baseline execution time).",
+              "Requirement 8: The build swarm must validate data integrity at each stage of the SPARC workflow.",
+              "Requirement 9: The system shall implement proper cleanup procedures after test completion, regardless of test outcome.",
+              "Requirement 10: The E2E test must verify that all security controls are properly implemented and functioning.",
+              "Requirement 11: The system shall generate a comprehensive test report detailing the results of each workflow stage.",
+              "Requirement 12: The build swarm must validate that all required dependencies are present and properly configured before test execution.",
+              "Requirement 13: The system shall verify that all expected output artifacts are generated with correct format and content.",
+              "Requirement 14: The E2E test must include verification of proper error handling for at least three failure scenarios.",
+              "Requirement 15: The system shall validate that all configuration changes persist appropriately across the workflow stages.",
+              "Requirement 16: The build swarm must execute the test in an isolated environment that mimics production conditions.",
+              "Requirement 17: The system shall verify proper resource allocation and deallocation throughout the workflow execution.",
+              "Requirement 18: The E2E test must validate that all user permissions and access controls function as expected.",
+              "Requirement 19: The system shall confirm that all required notifications and alerts are properly triggered during the workflow.",
+              "Requirement 20: The build swarm must verify compatibility with all supported operating systems and environments."
+            ],
+            "testCriteria": [],
+            "completedAt": "2025-06-19T13:13:32.923Z"
+          },
+          "pseudocode": {
+            "status": "done",
+            "agentCoordination": "Agents communicate through a distributed event bus with guaranteed message delivery. Each agent subscribes to specific event types and publishes results back to the bus. A Coordinator agent manages the overall workflow, tracking task state and handling agent assignment. Agents use a capability-based discovery mechanism to advertise their skills and availability. The system employs a heartbeat protocol to detect agent failures and implements automatic task reassignment when failures occur. All inter-agent communication is encrypted and authenticated using asymmetric keys.",
+            "taskFlow": "1. Client submits E2E test task to SPARC CLI\n2. CLI validates input parameters and formats task request\n3. Coordinator agent receives task and decomposes into subtasks\n4. Coordinator queries agent registry for available agents with required capabilities\n5. Coordinator assigns subtasks to appropriate agents based on load balancing algorithm\n6. Agents acknowledge task receipt and update status to 'PROCESSING'\n7. Agents execute assigned subtasks in parallel where possible\n8. Agents report progress at configurable intervals\n9. If agent fails (detected by missed heartbeats):\n   a. Coordinator marks subtask as failed\n   b. Coordinator reassigns subtask to alternate agent\n   c. System logs failure for later analysis\n10. As agents complete subtasks, results are aggregated by Coordinator\n11. Coordinator validates combined results for consistency\n12. If validation passes, final result is formatted and returned to CLI\n13. If validation fails, Coordinator initiates error recovery protocol:\n    a. Analyze inconsistencies to identify problematic subtasks\n    b. Selectively rerun failed components with increased logging\n    c. If recovery succeeds, continue workflow\n    d. If recovery fails after 3 attempts, escalate to human operator\n14. CLI presents results to user with detailed execution metrics\n15. System stores test execution history for future reference",
+            "completedAt": "2025-06-19T13:14:00.587Z"
+          },
+          "architecture": {
+            "status": "done",
+            "swarmStructure": "A hierarchical SPARC swarm with a Test Orchestrator at the top level, coordinating specialized agents that handle different aspects of the E2E testing workflow. The structure enables parallel execution of test components while maintaining centralized control and comprehensive logging.",
+            "agentRoles": [
+              {
+                "role": "Test Orchestrator Agent",
+                "responsibilities": [
+                  "Initialize and coordinate the complete E2E test workflow",
+                  "Validate overall test requirements and preconditions",
+                  "Track progress of all test stages",
+                  "Aggregate results from specialized agents",
+                  "Generate comprehensive test reports",
+                  "Implement proper test cleanup procedures"
+                ],
+                "dependencies": [
+                  "Environment Setup Agent",
+                  "Authentication Agent",
+                  "Workflow Execution Agent",
+                  "Validation Agent",
+                  "Logging Agent",
+                  "Error Handling Agent"
+                ]
+              },
+              {
+                "role": "Environment Setup Agent",
+                "responsibilities": [
+                  "Prepare isolated test environment mimicking production",
+                  "Validate all required dependencies are present",
+                  "Configure the test environment for proper execution",
+                  "Verify compatibility with supported operating systems",
+                  "Allocate necessary resources for test execution"
+                ],
+                "dependencies": [
+                  "Logging Agent"
+                ]
+              },
+              {
+                "role": "Authentication Agent",
+                "responsibilities": [
+                  "Handle authentication with all required services and APIs",
+                  "Manage and secure credentials throughout the test",
+                  "Validate user permissions and access controls",
+                  "Verify security controls implementation",
+                  "Test authentication failure scenarios"
+                ],
+                "dependencies": [
+                  "Logging Agent",
+                  "Error Handling Agent"
+                ]
+              },
+              {
+                "role": "Workflow Execution Agent",
+                "responsibilities": [
+                  "Execute each stage of the SPARC workflow via CLI",
+                  "Track performance metrics against established benchmarks",
+                  "Manage transitions between workflow stages",
+                  "Verify persistence of configuration changes across stages",
+                  "Trigger required notifications and alerts during workflow"
+                ],
+                "dependencies": [
+                  "Authentication Agent",
+                  "Logging Agent",
+                  "Error Handling Agent"
+                ]
+              },
+              {
+                "role": "Validation Agent",
+                "responsibilities": [
+                  "Validate input parameters and configuration settings",
+                  "Verify data integrity at each workflow stage",
+                  "Validate integration points between SPARC components and external systems",
+                  "Verify expected output artifacts are generated correctly",
+                  "Confirm proper resource allocation and deallocation"
+                ],
+                "dependencies": [
+                  "Logging Agent",
+                  "Error Handling Agent"
+                ]
+              },
+              {
+                "role": "Logging Agent",
+                "responsibilities": [
+                  "Maintain persistent logs of all operations",
+                  "Capture detailed execution information for debugging",
+                  "Record performance metrics throughout the workflow",
+                  "Document authentication attempts and results",
+                  "Create audit trail for compliance purposes"
+                ],
+                "dependencies": []
+              },
+              {
+                "role": "Error Handling Agent",
+                "responsibilities": [
+                  "Detect and report error conditions during execution",
+                  "Test failure scenarios to verify proper error handling",
+                  "Implement recovery procedures when possible",
+                  "Categorize errors by severity and type",
+                  "Ensure graceful degradation during failure conditions"
+                ],
+                "dependencies": [
+                  "Logging Agent"
+                ]
+              },
+              {
+                "role": "Security Verification Agent",
+                "responsibilities": [
+                  "Verify all security controls are properly implemented",
+                  "Test access control mechanisms",
+                  "Validate secure data handling throughout the workflow",
+                  "Verify encryption of sensitive information",
+                  "Check for security vulnerabilities in the workflow"
+                ],
+                "dependencies": [
+                  "Authentication Agent",
+                  "Logging Agent",
+                  "Error Handling Agent"
+                ]
+              }
+            ],
+            "completedAt": "2025-06-19T13:34:30.630Z"
+          },
+          "refinement": {
+            "status": "done",
+            "testCases": [
+              "Test Case 1: Verify basic CLI initialization - Ensure the SPARC CLI starts up correctly with default configuration and displays the expected welcome message.",
+              "Test Case 2: Test agent creation - Create a new agent with specific capabilities and verify it appears in the agent registry.",
+              "Test Case 3: Validate agent communication - Test that two agents can successfully exchange messages through the communication bus.",
+              "Test Case 4: Verify task decomposition - Submit a complex task and verify it is properly decomposed into subtasks.",
+              "Test Case 5: Test parallel task execution - Verify multiple agents can work on different subtasks simultaneously.",
+              "Test Case 6: Validate result aggregation - Ensure results from multiple subtasks are correctly combined into a final output.",
+              "Test Case 7: Test error handling for agent failure - Simulate an agent crash and verify the system recovers appropriately.",
+              "Test Case 8: Verify timeout handling - Test system behavior when an agent takes too long to respond.",
+              "Test Case 9: Test resource allocation - Verify the system correctly allocates computational resources based on task priority.",
+              "Test Case 10: Validate configuration persistence - Change system configuration, restart the CLI, and verify settings are preserved.",
+              "Test Case 11: Test large-scale agent coordination - Create 50+ agents and verify they can coordinate effectively on a complex task.",
+              "Test Case 12: Verify memory management - Run a memory-intensive task and ensure the system manages memory efficiently without leaks.",
+              "Test Case 13: Test API integration - Verify SPARC can correctly interface with external APIs and process returned data.",
+              "Test Case 14: Validate input validation - Test system response to malformed or invalid input commands.",
+              "Test Case 15: Test permission handling - Verify agents can only access resources they have permission for.",
+              "Test Case 16: Verify logging functionality - Ensure all significant events are properly logged with appropriate detail.",
+              "Test Case 17: Test system recovery from data corruption - Corrupt a data file and verify the system can recover or gracefully fail.",
+              "Test Case 18: Validate CLI command completion - Test that tab completion works for all available commands.",
+              "Test Case 19: Test agent specialization - Verify that specialized agents perform better at their designated tasks than general agents.",
+              "Test Case 20: Verify cross-platform compatibility - Test the CLI on different operating systems to ensure consistent behavior.",
+              "Test Case 21: Test performance under load - Submit multiple complex tasks simultaneously and measure system responsiveness.",
+              "Test Case 22: Validate offline operation capabilities - Test system functionality when network connectivity is limited or unavailable.",
+              "Test Case 23: Test upgrade path - Verify that upgrading from a previous version preserves all settings and agent configurations.",
+              "Test Case 24: Verify security controls - Test that sensitive data is properly encrypted and protected.",
+              "Test Case 25: Test internationalization support - Verify the system handles non-ASCII characters and different languages correctly."
+            ],
+            "completedAt": "2025-06-19T13:34:59.151Z"
+          },
+          "completion": {
+            "status": "done",
+            "buildValidation": false,
+            "testResults": [],
+            "completedAt": "2025-06-19T13:35:48.278Z"
+          }
+        },
+        "metadata": {
+          "startedAt": "2025-06-19T13:13:09.884Z",
+          "totalPhases": 5,
+          "completedPhases": 5,
+          "methodology": "sparc"
+        }
+      }
     }
   ],
   "metadata": {
     "version": "1.0.0",
     "created": "2025-06-19T12:05:46.865Z",
-    "updated": "2025-06-19T12:52:57.966Z",
-    "totalTasks": 9
+    "updated": "2025-06-19T13:35:48.279Z",
+    "totalTasks": 11
   }
 }

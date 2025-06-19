@@ -59,7 +59,7 @@ export const SparcMethodologySchema = z.object({
       agentRoles: z.array(z.object({
         role: z.string(),
         responsibilities: z.array(z.string()),
-        dependencies: z.array(z.string()),
+        dependencies: z.array(z.string()).optional(),
       })).default([]),
       completedAt: z.string().datetime().optional(),
     }),
@@ -558,16 +558,15 @@ export interface ITaskService {
   generateTasksFromPRD(prdContent: string): Promise<PRDAnalysis>;
 
   // SPARC Methodology operations
-  enableSparcMethodology(taskId: number): Promise<Task>;
-  disableSparcMethodology(taskId: number): Promise<Task>;
-  advanceSparcPhase(taskId: number, phase: SparcStatus): Promise<Task>;
-  updateSparcPhase(taskId: number, phase: SparcStatus, updates: Record<string, unknown>): Promise<Task>;
-  getSparcProgress(taskId: number): Promise<{ currentPhase: SparcStatus; progress: number; phases: Record<string, unknown> }>;
-  generateSparcRequirements(taskId: number): Promise<string[]>;
-  generateSparcPseudocode(taskId: number): Promise<{ coordination: string; taskFlow: string }>;
-  generateSparcArchitecture(taskId: number): Promise<{ structure: string; roles: Array<{ role: string; responsibilities: string[] }> }>;
-  generateSparcTests(taskId: number): Promise<string[]>;
-  validateSparcCompletion(taskId: number): Promise<{ isValid: boolean; issues: string[]; testResults: Array<{ testName: string; status: 'pass' | 'fail' | 'skipped' }> }>;
+  enableSparc(taskId: number): Promise<{task: Task, message: string}>;
+  disableSparc(taskId: number): Promise<{task: Task, message: string}>;
+  advanceSparcPhase(taskId: number, phase: SparcStatus): Promise<{task: Task, message: string}>;
+  getSparcProgress(taskId: number): Promise<any>;
+  generateSparcRequirements(taskId: number): Promise<any>;
+  generateSparcPseudocode(taskId: number): Promise<any>;
+  generateSparcArchitecture(taskId: number): Promise<any>;
+  generateSparcTests(taskId: number): Promise<any>;
+  validateSparcCompletion(taskId: number): Promise<{success: boolean, message: string, report?: any}>;
 
   // Bulk operations
   moveTask(taskId: number, newPosition: number): Promise<Task[]>;

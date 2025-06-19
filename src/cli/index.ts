@@ -23,6 +23,7 @@ import {
   AIServiceError,
 } from '../types/core.js';
 import inquirer from 'inquirer';
+import { z } from 'zod';
 
 // Version from package.json
 import { readFileSync } from 'fs';
@@ -438,177 +439,141 @@ class VibexCLI {
   }
 
   private setupSparcCommands(): void {
-    this.program
+    const sparcCommand = this.program
       .command('sparc')
-      .description('SPARC methodology operations')
+      .description('SPARC methodology operations');
+
+    sparcCommand
       .command('enable <taskId>')
       .description('Enable SPARC methodology for a task')
       .action(async (taskId: string) => {
         try {
-          const task = await this.taskService!.enableSparcMethodology(parseInt(taskId));
-          console.log(`✓ SPARC methodology enabled for task #${taskId}`);
-          console.log(`Current phase: ${task.sparc?.currentPhase || 'specification'}`);
+          await this.initializeServices();
+          const result = await this.taskService!.enableSparc(parseInt(taskId));
+          console.log(chalk.green(result.message));
         } catch (error) {
-          console.error('Error enabling SPARC methodology:', (error as Error).message);
-          process.exit(1);
+          this.handleError(error);
         }
       });
 
-    this.program
-      .command('sparc')
+    sparcCommand
       .command('disable <taskId>')
       .description('Disable SPARC methodology for a task')
       .action(async (taskId: string) => {
         try {
-          const task = await this.taskService!.disableSparcMethodology(parseInt(taskId));
-          console.log(`✓ SPARC methodology disabled for task #${taskId}`);
+          await this.initializeServices();
+          const result = await this.taskService!.disableSparc(parseInt(taskId));
+          console.log(chalk.green(result.message));
         } catch (error) {
-          console.error('Error disabling SPARC methodology:', (error as Error).message);
-          process.exit(1);
+          this.handleError(error);
         }
       });
 
-    this.program
-      .command('sparc')
+    sparcCommand
       .command('progress <taskId>')
       .description('Show SPARC progress for a task')
       .action(async (taskId: string) => {
         try {
+          await this.initializeServices();
           const progress = await this.taskService!.getSparcProgress(parseInt(taskId));
-          console.log(`\nSPARC Progress for Task #${taskId}:`);
-          console.log(`Current Phase: ${progress.currentPhase}`);
-          console.log(`Progress: ${progress.progress.toFixed(1)}%`);
-          
-          const phases = progress.phases as any;
-          console.log('\nPhase Status:');
-          Object.entries(phases).forEach(([phase, data]: [string, any]) => {
-            const status = data.status || 'pending';
-            const icon = status === 'done' ? '✓' : status === 'in-progress' ? '►' : '○';
-            console.log(`  ${icon} ${phase}: ${status}`);
-          });
+          console.log(chalk.yellow('SPARC Progress:'));
+          console.log(progress);
         } catch (error) {
-          console.error('Error getting SPARC progress:', (error as Error).message);
-          process.exit(1);
+          this.handleError(error);
         }
       });
 
-    this.program
-      .command('sparc')
+    sparcCommand
       .command('advance <taskId> <phase>')
       .description('Advance to a specific SPARC phase')
       .action(async (taskId: string, phase: string) => {
         try {
-          const validPhases = ['specification', 'pseudocode', 'architecture', 'refinement', 'completion'];
-          if (!validPhases.includes(phase)) {
-            console.error(`Invalid phase. Use one of: ${validPhases.join(', ')}`);
-            process.exit(1);
-          }
-          
-          const task = await this.taskService!.advanceSparcPhase(parseInt(taskId), phase as any);
-          console.log(`✓ Advanced task #${taskId} to ${phase} phase`);
+          await this.initializeServices();
+          const SparcStatusSchema = z.enum(['specification', 'pseudocode', 'architecture', 'refinement', 'completion']);
+          const validatedPhase = SparcStatusSchema.parse(phase);
+          const result = await this.taskService!.advanceSparcPhase(parseInt(taskId), validatedPhase);
+          console.log(chalk.green(result.message));
         } catch (error) {
-          console.error('Error advancing SPARC phase:', (error as Error).message);
-          process.exit(1);
+          this.handleError(error);
         }
       });
-
-    this.program
-      .command('sparc')
+      
+    sparcCommand
       .command('generate-requirements <taskId>')
       .description('Generate SPARC requirements using AI')
       .action(async (taskId: string) => {
         try {
-          const requirements = await this.taskService!.generateSparcRequirements(parseInt(taskId));
-          console.log(`\nGenerated Requirements for Task #${taskId}:`);
-          requirements.forEach((req, index) => {
-            console.log(`${index + 1}. ${req}`);
-          });
+          await this.initializeServices();
+          console.log(chalk.blue('Generating SPARC requirements...'));
+          const result = await this.taskService!.generateSparcRequirements(parseInt(taskId));
+          console.log(chalk.green('SPARC requirements generated successfully.'));
+          console.log(result);
         } catch (error) {
-          console.error('Error generating requirements:', (error as Error).message);
-          process.exit(1);
+          this.handleError(error);
         }
       });
 
-    this.program
-      .command('sparc')
+    sparcCommand
       .command('generate-pseudocode <taskId>')
       .description('Generate SPARC pseudocode using AI')
       .action(async (taskId: string) => {
         try {
+          await this.initializeServices();
+          console.log(chalk.blue('Generating SPARC pseudocode...'));
           const result = await this.taskService!.generateSparcPseudocode(parseInt(taskId));
-          console.log(`\nGenerated Pseudocode for Task #${taskId}:`);
-          console.log('\nAgent Coordination:');
-          console.log(result.coordination);
-          console.log('\nTask Flow:');
-          console.log(result.taskFlow);
+          console.log(chalk.green('SPARC pseudocode generated successfully.'));
+          console.log(result);
         } catch (error) {
-          console.error('Error generating pseudocode:', (error as Error).message);
-          process.exit(1);
+          this.handleError(error);
         }
       });
 
-    this.program
-      .command('sparc')
+    sparcCommand
       .command('generate-architecture <taskId>')
       .description('Generate SPARC architecture using AI')
       .action(async (taskId: string) => {
         try {
+          await this.initializeServices();
+          console.log(chalk.blue('Generating SPARC architecture...'));
           const result = await this.taskService!.generateSparcArchitecture(parseInt(taskId));
-          console.log(`\nGenerated Architecture for Task #${taskId}:`);
-          console.log('\nSwarm Structure:');
-          console.log(result.structure);
-          console.log('\nAgent Roles:');
-          result.roles.forEach((role, index) => {
-            console.log(`${index + 1}. ${role.role}:`);
-            role.responsibilities.forEach(resp => {
-              console.log(`   - ${resp}`);
-            });
-          });
+          console.log(chalk.green('SPARC architecture generated successfully.'));
+          console.log(result);
         } catch (error) {
-          console.error('Error generating architecture:', (error as Error).message);
-          process.exit(1);
+          this.handleError(error);
         }
       });
 
-    this.program
-      .command('sparc')
+    sparcCommand
       .command('generate-tests <taskId>')
       .description('Generate SPARC test cases using AI')
       .action(async (taskId: string) => {
         try {
-          const tests = await this.taskService!.generateSparcTests(parseInt(taskId));
-          console.log(`\nGenerated Test Cases for Task #${taskId}:`);
-          tests.forEach((test, index) => {
-            console.log(`${index + 1}. ${test}`);
-          });
+          await this.initializeServices();
+          console.log(chalk.blue('Generating SPARC test cases...'));
+          const result = await this.taskService!.generateSparcTests(parseInt(taskId));
+          console.log(chalk.green('SPARC test cases generated successfully.'));
+          console.log(result);
         } catch (error) {
-          console.error('Error generating tests:', (error as Error).message);
-          process.exit(1);
+          this.handleError(error);
         }
       });
-
-    this.program
-      .command('sparc')
+      
+    sparcCommand
       .command('validate <taskId>')
       .description('Validate SPARC completion')
       .action(async (taskId: string) => {
         try {
+          await this.initializeServices();
           const result = await this.taskService!.validateSparcCompletion(parseInt(taskId));
-          console.log(`\nSPARC Validation for Task #${taskId}:`);
-          console.log(`Status: ${result.isValid ? '✓ Valid' : '✗ Invalid'}`);
-          
-          if (result.issues.length > 0) {
-            console.log('\nIssues:');
-            result.issues.forEach(issue => {
-              console.log(`  - ${issue}`);
-            });
+          if (result.success) {
+            console.log(chalk.green(result.message));
+            if (result.report) {
+              console.log(chalk.yellow('Validation Report:'));
+              console.log(result.report);
+            }
+          } else {
+            console.log(chalk.red(result.message));
           }
-          
-          console.log('\nTest Results:');
-          result.testResults.forEach(test => {
-            const icon = test.status === 'pass' ? '✓' : test.status === 'fail' ? '✗' : '○';
-            console.log(`  ${icon} ${test.testName}: ${test.status}`);
-          });
         } catch (error) {
           console.error('Error validating SPARC completion:', (error as Error).message);
           process.exit(1);

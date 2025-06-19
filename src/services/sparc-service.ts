@@ -10,6 +10,10 @@ import { getBedrockModel, getBestModelForTaskCapability } from '../core/bedrock-
 import { ConfigService } from './config-service.js';
 import { z } from 'zod';
 
+type TaskGetter = (id: number) => Promise<Task>;
+type TaskUpdater = (task: Task) => Promise<Task>;
+type TaskPartialUpdater = (id: number, updates: Partial<Task>) => Promise<Task>;
+
 export class SparcService {
   private bedrockClient: BedrockClient;
   private configService: ConfigService;
@@ -22,67 +26,55 @@ export class SparcService {
   /**
    * Enable SPARC methodology for a task
    */
-  async enableSparcMethodology(task: Task): Promise<Task> {
+  async enableSparc(taskId: number, getTask: TaskGetter, updateTask: TaskPartialUpdater): Promise<Task> {
     const sparc: SparcMethodology = {
       enabled: true,
       currentPhase: 'specification',
       phases: {
         specification: {
-          status: 'pending',
+          status: 'in-progress',
           requirements: [],
-          swarmDefinition: undefined,
-          testCriteria: [],
         },
         pseudocode: {
           status: 'pending',
-          agentCoordination: undefined,
-          taskFlow: undefined,
-          coordinationPattern: undefined,
         },
         architecture: {
           status: 'pending',
-          swarmStructure: undefined,
-          agentRoles: [],
         },
         refinement: {
           status: 'pending',
-          tddApproach: undefined,
-          testCases: [],
-          deploymentPlan: undefined,
         },
         completion: {
           status: 'pending',
-          buildValidation: false,
-          testResults: [],
-          validationReport: undefined,
         },
       },
       metadata: {
         startedAt: new Date().toISOString(),
-        totalPhases: 5,
-        completedPhases: 0,
-        methodology: 'sparc',
       },
     };
 
-    return {
-      ...task,
-      sparc,
-    };
+    return updateTask(taskId, { sparc });
   }
 
   /**
    * Disable SPARC methodology for a task
    */
-  async disableSparcMethodology(task: Task): Promise<Task> {
-    const { sparc, ...taskWithoutSparc } = task;
-    return taskWithoutSparc;
+  async disableSparc(taskId: number, getTask: TaskGetter, updateTask: TaskPartialUpdater): Promise<Task> {
+    const task = await getTask(taskId);
+    const { sparc, ...rest } = task; // Effectively removes sparc
+    
+    // This is a bit of a workaround for the type system.
+    // We create a new object without sparc and then update.
+    const updates: Partial<Task> = { ...rest, sparc: undefined };
+    // since we are removing, we need to set it to undefined.
+    return updateTask(taskId, {sparc: undefined});
   }
 
   /**
    * Advance to a specific SPARC phase
    */
-  async advanceSparcPhase(task: Task, targetPhase: SparcStatus): Promise<Task> {
+  async advancePhase(taskId: number, targetPhase: SparcStatus, getTask: TaskGetter, updateTask: TaskPartialUpdater): Promise<Task> {
+    const task = await getTask(taskId);
     if (!task.sparc?.enabled) {
       throw new Error('SPARC methodology is not enabled for this task');
     }
@@ -95,9 +87,12 @@ export class SparcService {
       throw new Error(`Cannot move backwards in SPARC phases. Current: ${task.sparc.currentPhase}, Target: ${targetPhase}`);
     }
 
+    const updatedSparc = { ...task.sparc };
+    
     // Mark current phase as done
-    if (task.sparc.currentPhase) {
-      const currentPhase = task.sparc.phases[task.sparc.currentPhase as keyof typeof task.sparc.phases];
+    if (updatedSparc.currentPhase) {
+      const currentPhaseName = updatedSparc.currentPhase;
+      const currentPhase = updatedSparc.phases[currentPhaseName];
       if (currentPhase) {
         currentPhase.status = 'done';
         currentPhase.completedAt = new Date().toISOString();
@@ -105,32 +100,43 @@ export class SparcService {
     }
 
     // Update current phase and mark target phase as in-progress
-    const updatedSparc = {
-      ...task.sparc,
-      currentPhase: targetPhase,
-      phases: {
-        ...task.sparc.phases,
-        [targetPhase]: {
-          ...task.sparc.phases[targetPhase as keyof typeof task.sparc.phases],
-          status: 'in-progress',
-        },
-      },
-      metadata: {
-        ...task.sparc.metadata,
-        completedPhases: targetPhaseIndex + 1,
-      },
-    };
+    updatedSparc.currentPhase = targetPhase;
+    const targetPhaseObj = updatedSparc.phases[targetPhase];
+    if(targetPhaseObj){
+      targetPhaseObj.status = 'in-progress';
+    } else {
+        // if the phase doesn't exist, create it
+        (updatedSparc.phases as any)[targetPhase] = { status: 'in-progress' };
+    }
+    
+    if (updatedSparc.metadata) {
+      updatedSparc.metadata.completedPhases = targetPhaseIndex + 1;
+    }
+
+    return updateTask(taskId, { sparc: updatedSparc });
+  }
+
+  async getProgress(taskId: number, getTask: TaskGetter): Promise<any> {
+    const task = await getTask(taskId);
+    if (!task.sparc) {
+      throw new Error('SPARC is not enabled for this task');
+    }
+    const phaseOrder = ['specification', 'pseudocode', 'architecture', 'refinement', 'completion'];
+    const completedPhases = Object.values(task.sparc.phases).filter(p => p.status === 'done').length;
+    const progress = (completedPhases / phaseOrder.length) * 100;
 
     return {
-      ...task,
-      sparc: updatedSparc,
+      currentPhase: task.sparc.currentPhase,
+      progress: progress,
+      phases: task.sparc.phases,
     };
   }
 
   /**
    * Generate SPARC requirements using AI
    */
-  async generateSparcRequirements(task: Task): Promise<string[]> {
+  async generateRequirements(taskId: number, getTask: TaskGetter, updateTask: TaskPartialUpdater): Promise<any> {
+    const task = await getTask(taskId);
     const model = await this.getModelForOperation('canAnalyzeComplexity');
     const prompt = this.buildSparcRequirementsPrompt(task);
     
@@ -142,13 +148,23 @@ export class SparcService {
     });
 
     const parsed = this.parseJsonResponse(response.text, z.object({ requirements: z.array(z.string()) }));
-    return parsed?.requirements || this.extractRequirementsFromText(response.text);
+    const requirements = parsed?.requirements || this.extractRequirementsFromText(response.text);
+
+    const updatedSparc = { ...task.sparc! };
+    updatedSparc.phases.specification.requirements = requirements;
+    updatedSparc.phases.specification.status = 'done';
+    updatedSparc.phases.specification.completedAt = new Date().toISOString();
+    
+    await updateTask(taskId, { sparc: updatedSparc });
+    
+    return { requirements };
   }
 
   /**
    * Generate SPARC pseudocode using AI
    */
-  async generateSparcPseudocode(task: Task): Promise<{ coordination: string; taskFlow: string }> {
+  async generatePseudocode(taskId: number, getTask: TaskGetter, updateTask: TaskPartialUpdater): Promise<any> {
+    const task = await getTask(taskId);
     const model = await this.getModelForOperation('canAnalyzeComplexity');
     const prompt = this.buildSparcPseudocodePrompt(task);
     
@@ -159,27 +175,26 @@ export class SparcService {
       temperature: 0.3,
     });
 
-    console.log('Raw AI Response for Pseudocode:', response.text);
-
     const parsed = this.parseJsonResponse(response.text, z.object({ agentCoordination: z.string(), taskFlow: z.string() }));
     
     if (parsed) {
-      return {
-        coordination: parsed.agentCoordination,
-        taskFlow: parsed.taskFlow,
-      };
+      const updatedSparc = { ...task.sparc! };
+      updatedSparc.phases.pseudocode.agentCoordination = parsed.agentCoordination;
+      updatedSparc.phases.pseudocode.taskFlow = parsed.taskFlow;
+      updatedSparc.phases.pseudocode.status = 'done';
+      updatedSparc.phases.pseudocode.completedAt = new Date().toISOString();
+      await updateTask(taskId, { sparc: updatedSparc });
+      return parsed;
     }
     
-    return {
-      coordination: 'Error parsing AI response',
-      taskFlow: 'Error parsing AI response',
-    };
+    throw new Error('Failed to parse pseudocode from AI response');
   }
 
   /**
    * Generate SPARC architecture using AI
    */
-  async generateSparcArchitecture(task: Task): Promise<{ structure: string; roles: Array<{ role: string; responsibilities: string[] }> }> {
+  async generateArchitecture(taskId: number, getTask: TaskGetter, updateTask: TaskPartialUpdater): Promise<any> {
+    const task = await getTask(taskId);
     const model = await this.getModelForOperation('canAnalyzeComplexity');
     const prompt = this.buildSparcArchitecturePrompt(task);
     
@@ -190,35 +205,35 @@ export class SparcService {
       temperature: 0.3,
     });
 
-    console.log('Raw AI Response for Architecture:', response.text);
-
     const schema = z.object({
       swarmStructure: z.string().optional(),
       agentRoles: z.array(z.object({
         role: z.string(),
         responsibilities: z.array(z.string()),
+        dependencies: z.array(z.string()),
       })).optional(),
     });
 
     const parsed = this.parseJsonResponse(response.text, schema);
 
     if (parsed) {
-      return {
-        structure: parsed.swarmStructure || '',
-        roles: parsed.agentRoles?.map(r => ({ role: r.role || '', responsibilities: r.responsibilities || [] })) || [],
-      };
+      const updatedSparc = { ...task.sparc! };
+      updatedSparc.phases.architecture.swarmStructure = parsed.swarmStructure;
+      updatedSparc.phases.architecture.agentRoles = parsed.agentRoles;
+      updatedSparc.phases.architecture.status = 'done';
+      updatedSparc.phases.architecture.completedAt = new Date().toISOString();
+      await updateTask(taskId, { sparc: updatedSparc });
+      return parsed;
     }
     
-    return {
-      structure: 'Error parsing AI response',
-      roles: [],
-    };
+    throw new Error('Failed to parse architecture from AI response');
   }
 
   /**
    * Generate SPARC test cases using AI
    */
-  async generateSparcTests(task: Task): Promise<string[]> {
+  async generateTests(taskId: number, getTask: TaskGetter, updateTask: TaskPartialUpdater): Promise<any> {
+    const task = await getTask(taskId);
     const model = await this.getModelForOperation('canAnalyzeComplexity');
     const prompt = this.buildSparcTestsPrompt(task);
     
@@ -230,60 +245,65 @@ export class SparcService {
     });
 
     const parsed = this.parseJsonResponse(response.text, z.object({ testCases: z.array(z.string()) }));
-    return parsed?.testCases || this.extractTestCasesFromText(response.text);
+    const testCases = parsed?.testCases || this.extractTestCasesFromText(response.text);
+
+    const updatedSparc = { ...task.sparc! };
+    updatedSparc.phases.refinement.testCases = testCases;
+    updatedSparc.phases.refinement.status = 'done';
+    updatedSparc.phases.refinement.completedAt = new Date().toISOString();
+    
+    await updateTask(taskId, { sparc: updatedSparc });
+
+    return { testCases };
   }
 
   /**
    * Validate SPARC completion
    */
-  async validateSparcCompletion(task: Task): Promise<{ isValid: boolean; issues: string[]; testResults: Array<{ testName: string; status: 'pass' | 'fail' | 'skipped' }> }> {
+  async validateCompletion(taskId: number, getTask: TaskGetter, updateTask: TaskPartialUpdater): Promise<{ success: boolean; report: any }> {
+    let task = await getTask(taskId);
     if (!task.sparc?.enabled) {
       return {
-        isValid: false,
-        issues: ['SPARC methodology is not enabled'],
-        testResults: [],
+        success: false,
+        report: { issues: ['SPARC methodology is not enabled'], testResults: [] },
       };
+    }
+    
+    // Mark the completion phase as done, since we are validating it.
+    const updatedSparc = { ...task.sparc };
+    if (updatedSparc.phases.completion) {
+      updatedSparc.phases.completion.status = 'done';
+      updatedSparc.phases.completion.completedAt = new Date().toISOString();
+      task = await updateTask(taskId, { sparc: updatedSparc });
     }
 
     const issues: string[] = [];
-    const testResults: Array<{ testName: string; status: 'pass' | 'fail' | 'skipped' }> = [];
-
-    // Check if all phases are completed
-    const phases = task.sparc.phases;
-    for (const [phaseName, phase] of Object.entries(phases)) {
-      if (phase.status !== 'done') {
-        issues.push(`Phase ${phaseName} is not completed (status: ${phase.status})`);
-        testResults.push({
-          testName: `${phaseName} completion`,
-          status: 'fail',
-        });
-      } else {
-        testResults.push({
-          testName: `${phaseName} completion`,
-          status: 'pass',
-        });
-      }
-    }
-
-    // Check build validation
-    if (phases.completion.buildValidation) {
-      testResults.push({
-        testName: 'Build validation',
-        status: 'pass',
-      });
-    } else {
-      issues.push('Build validation failed');
-      testResults.push({
-        testName: 'Build validation',
-        status: 'fail',
-      });
-    }
-
-    return {
-      isValid: issues.length === 0,
-      issues,
-      testResults,
+    const report: any = {
+      phases: {},
+      issues: [],
+      overallStatus: 'incomplete',
     };
+
+    const phaseOrder = ['specification', 'pseudocode', 'architecture', 'refinement', 'completion'];
+    for (const phaseName of phaseOrder) {
+      const phase = task.sparc.phases[phaseName as keyof typeof task.sparc.phases];
+      if (phase?.status !== 'done') {
+        issues.push(`Phase '${phaseName}' is not complete. Current status: ${phase?.status}`);
+      }
+      report.phases[phaseName] = {
+        status: phase?.status,
+        completedAt: phase?.completedAt,
+      };
+    }
+    
+    report.issues = issues;
+
+    if (issues.length === 0) {
+      report.overallStatus = 'complete';
+      return { success: true, report };
+    } else {
+      return { success: false, report };
+    }
   }
 
   /**
@@ -371,29 +391,35 @@ Focus on:
   }
 
   private buildSparcArchitecturePrompt(task: Task): string {
-    return `Generate SPARC methodology architecture for the following task. Your response MUST be a valid JSON object with two keys: "swarmStructure" and "agentRoles".
-
-Task: ${task.title}
+    return `
+<Task>
+Analyze the task below and generate a SPARC architecture plan.
+Title: ${task.title}
 Description: ${task.description}
-${task.details ? `Details: ${task.details}` : ''}
+Requirements:
+${task.sparc?.phases.specification.requirements?.join('\n- ') || 'N/A'}
 
-Example Response:
+Produce a JSON object with two keys: "swarmStructure" (a string describing the high-level architecture) and "agentRoles" (an array of objects).
+Each agent role object must have:
+- "role": A string defining the agent's title.
+- "responsibilities": An array of strings describing what the agent does.
+- "dependencies": An array of strings listing the other agent roles this role depends on.
+
+Example JSON structure:
 {
-  "swarmStructure": "A hierarchical swarm with a master agent and multiple worker agents...",
+  "swarmStructure": "A hierarchical swarm with a central coordinator.",
   "agentRoles": [
     {
-      "role": "Master Agent",
-      "responsibilities": ["Task assignment", "Result aggregation"]
+      "role": "Coordinator Agent",
+      "responsibilities": ["Orchestrate the workflow", "Manage state"],
+      "dependencies": ["Worker Agent", "Logging Agent"]
     }
   ]
 }
 
-Focus on:
-- Swarm topology and organization
-- Agent roles and responsibilities
-- Data flow and communication
-- Scalability considerations
-- Fault tolerance mechanisms`;
+Return ONLY the JSON object.
+</Task>
+`;
   }
 
   private buildSparcTestsPrompt(task: Task): string {
