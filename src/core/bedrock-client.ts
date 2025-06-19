@@ -24,8 +24,8 @@ export const CLAUDE_MODELS = {
     outputCostPer1K: 0.375,
   },
   'claude-sonnet-4-20250514': {
-    id: 'anthropic.claude-sonnet-4-20250514-v1:0',
-    name: 'Claude Sonnet 4',
+    id: 'us.anthropic.claude-sonnet-4-20250514-v1:0',
+    name: 'Claude Sonnet 4 (Inference Profile)',
     maxTokens: 8192,
     contextWindow: 200000,
     inputCostPer1K: 0.015,

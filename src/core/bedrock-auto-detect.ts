@@ -242,9 +242,10 @@ export class BedrockAutoDetect {
     // Find best available models for each role
     const modelIds = availableModels.map(m => m.modelId);
 
-    // Main model: Prefer models with ON_DEMAND support first
-    // These models are immediately usable without additional access requests
-    if (modelIds.includes('claude-3-5-sonnet-20240620')) {
+    // Main model: Prefer Claude 4 via inference profile, then models with ON_DEMAND support
+    if (modelIds.includes('claude-sonnet-4-20250514')) {
+      recommendations.main = 'claude-sonnet-4-20250514';
+    } else if (modelIds.includes('claude-3-5-sonnet-20240620')) {
       recommendations.main = 'claude-3-5-sonnet-20240620';
     } else if (modelIds.includes('claude-3-haiku-20240307')) {
       recommendations.main = 'claude-3-haiku-20240307';
@@ -254,8 +255,6 @@ export class BedrockAutoDetect {
       recommendations.main = 'claude-v2-1';
     } else if (modelIds.includes('claude-v2')) {
       recommendations.main = 'claude-v2';
-    } else if (modelIds.includes('claude-sonnet-4-20250514')) {
-      recommendations.main = 'claude-sonnet-4-20250514';
     } else if (modelIds.includes('claude-3-5-sonnet-20241022')) {
       recommendations.main = 'claude-3-5-sonnet-20241022';
     } else if (sortedByPerformance.length > 0) {

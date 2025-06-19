@@ -46,8 +46,8 @@ export const BEDROCK_MODELS = {
     }
   },
   'claude-sonnet-4-20250514': {
-    id: 'anthropic.claude-sonnet-4-20250514-v1:0',
-    name: 'Claude Sonnet 4',
+    id: 'us.anthropic.claude-sonnet-4-20250514-v1:0',
+    name: 'Claude Sonnet 4 (Inference Profile)',
     provider: 'anthropic',
     maxTokens: 8192,
     contextWindow: 200000,

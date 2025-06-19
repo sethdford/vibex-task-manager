@@ -942,12 +942,63 @@
         "frontend",
         "reporting"
       ]
+    },
+    {
+      "id": 22,
+      "title": "Develop User Documentation",
+      "description": "Research, design, and develop documentation to help users understand how to use the system's main features.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T21:41:55.796Z",
+      "updated": "2025-06-19T21:41:55.796Z",
+      "tags": [
+        "documentation",
+        "user-support"
+      ]
+    },
+    {
+      "id": 23,
+      "title": "Create Performance Monitoring Dashboard",
+      "description": "Develop a dashboard for viewing key metrics related to system performance such as cpu usage, memory usage, network throughput, database queries per second etc. It should have charts, graphs and alerts.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T21:42:03.810Z",
+      "updated": "2025-06-19T21:42:03.810Z",
+      "estimatedHours": 16,
+      "complexity": 7,
+      "tags": [
+        "backend",
+        "monitoring",
+        "admin"
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Build User Profile Management REST API",
+      "description": "Design and implement a REST API for managing user profiles. It should support CRUD operations and include authentication/authorization.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T21:43:22.461Z",
+      "updated": "2025-06-19T21:43:22.461Z",
+      "estimatedHours": 40,
+      "complexity": 8,
+      "tags": [
+        "backend",
+        "api",
+        "auth"
+      ]
     }
   ],
   "metadata": {
     "version": "1.0.0",
     "created": "2025-06-19T12:05:46.865Z",
-    "updated": "2025-06-19T21:29:55.411Z",
-    "totalTasks": 21
+    "updated": "2025-06-19T21:43:22.461Z",
+    "totalTasks": 24
   }
 }
