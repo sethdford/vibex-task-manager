@@ -657,8 +657,12 @@ manualTaskData = null, useResearch = false) {
                 });
                 report('DEBUG: generateObjectService returned successfully.', 'debug');
                 if (!aiServiceResponse || !aiServiceResponse.mainResult) {
+                    report('DEBUG: Raw AI response was null or empty.', 'debug');
                     throw new Error('AI service did not return the expected object structure.');
                 }
+                // Debug: Print the raw AI response
+                report('DEBUG: Raw AI response:', 'debug');
+                report(JSON.stringify(aiServiceResponse.mainResult, null, 2), 'debug');
                 // Prefer mainResult if it looks like a valid task object, otherwise try mainResult.object
                 if (aiServiceResponse.mainResult.title &&
                     aiServiceResponse.mainResult.description) {
@@ -670,6 +674,7 @@ manualTaskData = null, useResearch = false) {
                     taskData = aiServiceResponse.mainResult.object;
                 }
                 else {
+                    report('DEBUG: AI response did not match expected structure.', 'debug');
                     throw new Error('AI service did not return a valid task object.');
                 }
                 report('Successfully generated task data from AI.', 'success');

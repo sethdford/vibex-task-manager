@@ -6,6 +6,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import BedrockClient, { ClaudeModelId } from '../core/bedrock-client.js';
+import { getBedrockModel, getBestModelForTaskCapability, BedrockModelInfo, BEDROCK_MODELS } from '../core/bedrock-models.js';
 import {
   Task,
   Subtask,
@@ -16,6 +17,7 @@ import {
   TaskQueryOptions,
   TaskQueryResult,
   TaskStatus,
+  SparcStatus,
   Priority,
   NextTaskCriteria,
   NextTaskResult,
@@ -32,20 +34,70 @@ import {
   ValidationSchemas,
 } from '../types/core.js';
 import { ConfigService } from './config-service.js';
+import { SparcService } from './sparc-service.js';
+import { z } from 'zod';
 
 export class TaskService implements ITaskService {
   private bedrockClient: BedrockClient;
   private configService: ConfigService;
+  private sparcService: SparcService;
   private projectRoot: string;
   private tasksFilePath: string;
   private cache: Map<string, { data: unknown; timestamp: number }> = new Map();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private defaultModel: ClaudeModelId;
 
   constructor(projectRoot: string, bedrockClient: BedrockClient, configService?: ConfigService) {
     this.projectRoot = projectRoot;
     this.bedrockClient = bedrockClient;
     this.configService = configService || new ConfigService(projectRoot);
+    this.sparcService = new SparcService(bedrockClient, this.configService);
     this.tasksFilePath = path.join(projectRoot, '.taskmanager', 'tasks', 'tasks.json');
+    this.initializeModel();
+  }
+
+  private async initializeModel() {
+    const config = await this.configService.getConfig();
+    this.defaultModel = (config.models?.main?.modelId as ClaudeModelId) || 'claude-instant-v1';
+  }
+
+  private async getModelForOperation(operation: 'canGenerateSubtasks' | 'canAnalyzeComplexity' | 'canParsePRD'): Promise<ClaudeModelId> {
+    const config = await this.configService.getConfig();
+    
+    // First, check if the configured main model supports this operation
+    const configuredModel = config.models?.main?.modelId as ClaudeModelId;
+    if (configuredModel) {
+      const modelInfo = getBedrockModel(configuredModel);
+      if (modelInfo.taskCapabilities?.[operation]) {
+        return configuredModel;
+      }
+    }
+    
+    // If configured model doesn't support the operation, check if any available models do
+    // For now, we'll use the configured model even if it doesn't support the operation
+    // and let the operation fail gracefully with a clear error message
+    
+    // Check if the configured model supports this operation
+    if (configuredModel) {
+      const modelInfo = getBedrockModel(configuredModel);
+      if (!modelInfo.taskCapabilities?.[operation]) {
+        // Find what models support this operation
+        const supportingModels = Object.entries(BEDROCK_MODELS)
+          .filter(([_, model]: [string, BedrockModelInfo]) => model.taskCapabilities?.[operation])
+          .map(([id, model]: [string, BedrockModelInfo]) => `${id} (${model.name})`);
+        
+        throw new AIServiceError(
+          `The configured model '${configuredModel}' does not support ${operation}. ` +
+          `This operation requires a more capable model. ` +
+          `Supported models: ${supportingModels.join(', ')}. ` +
+          `Please run 'vibex-task-manager config detect' to see available models in your AWS account.`,
+          'UnsupportedOperation'
+        );
+      }
+    }
+    
+    // Fallback to default model
+    return this.defaultModel;
   }
 
   // ============================================================================
@@ -222,6 +274,13 @@ export class TaskService implements ITaskService {
 
     let taskData: any;
     try {
+      // Debug logging to capture raw AI response
+      console.log('=== DEBUG: Raw AI Response ===');
+      console.log('Response type:', typeof response.text);
+      console.log('Response length:', response.text.length);
+      console.log('Raw response:', response.text);
+      console.log('=== END DEBUG ===');
+      
       taskData = JSON.parse(response.text);
     } catch (e) {
       throw new AIServiceError('Failed to parse AI response for task creation.', JSON.stringify({ prompt, response: response.text }));
@@ -522,92 +581,90 @@ export class TaskService implements ITaskService {
   // ============================================================================
 
   async analyzeComplexity(taskId: number): Promise<ComplexityAnalysis> {
-    const task = await this.getTask(taskId);
-    const config = await this.configService.getConfig();
+    const model = await this.getModelForOperation('canAnalyzeComplexity');
+    const modelInfo = getBedrockModel(model);
     
-    const cacheKey = `complexity:${taskId}:${task.updated}`;
-    const cached = this.getFromCache(cacheKey);
-    if (cached) {
-      return cached as ComplexityAnalysis;
+    if (!modelInfo.taskCapabilities?.canAnalyzeComplexity) {
+      throw new AIServiceError(
+        `No suitable model found for complexity analysis. Please configure a more capable model.`,
+        'UnsupportedOperation'
+      );
     }
 
+    const task = await this.getTask(taskId);
+    const prompt = this.buildComplexityAnalysisPrompt(task);
+
     try {
-      const analysisPrompt = this.buildComplexityAnalysisPrompt(task);
-      
       const result = await this.bedrockClient.generateObject({
-        model: config.models.main.modelId as ClaudeModelId,
-        messages: [{ role: 'user', content: analysisPrompt }],
-        system: 'You are an expert software engineering analyst. Analyze task complexity objectively and provide actionable insights.',
+        model,
+        messages: [{ role: 'user', content: prompt }],
         schema: ValidationSchemas.ComplexityAnalysis,
-        maxTokens: config.models.main.maxTokens,
-        temperature: config.models.main.temperature,
+        objectName: 'complexityAnalysis'
       });
 
-      const analysis: ComplexityAnalysis = {
-        ...result.object,
-        timestamp: new Date().toISOString(),
-      };
-
-      this.setCache(cacheKey, analysis);
-      return analysis;
-
+      return result.object;
     } catch (error) {
       throw new AIServiceError(
-        `Failed to analyze complexity for task ${taskId}`,
-        config.models.main.modelId,
-        error as Error
+        `Failed to analyze task complexity: ${(error as Error).message}`,
+        'AnalysisError'
       );
     }
   }
 
   async expandTask(taskId: number, options: { maxSubtasks?: number; detailLevel?: string } = {}): Promise<Subtask[]> {
+    const model = await this.getModelForOperation('canGenerateSubtasks');
+    const modelInfo = getBedrockModel(model);
+    
+    if (!modelInfo.taskCapabilities?.canGenerateSubtasks) {
+      throw new AIServiceError(
+        `No suitable model found for subtask generation. Please configure a more capable model.`,
+        'UnsupportedOperation'
+      );
+    }
+
     const task = await this.getTask(taskId);
-    const config = await this.configService.getConfig();
-    const { maxSubtasks = 5, detailLevel = 'detailed' } = options;
+    const maxSubtasks = Math.min(
+      options.maxSubtasks || 10,
+      modelInfo.taskCapabilities.maxSubtasksPerTask
+    );
+    const prompt = this.buildTaskExpansionPrompt(task, maxSubtasks, options.detailLevel || 'detailed');
 
     try {
-      const expansionPrompt = this.buildTaskExpansionPrompt(task, maxSubtasks, detailLevel);
-      
+      // Create a schema for an array of subtasks
+      const SubtaskArraySchema = z.array(z.object({
+        title: z.string().min(1).max(200),
+        description: z.string().max(2000),
+        details: z.string().optional(),
+        estimatedHours: z.number().positive().optional(),
+        priority: z.enum(['low', 'medium', 'high']).optional(),
+      }));
+
       const result = await this.bedrockClient.generateObject({
-        model: config.models.main.modelId as ClaudeModelId,
-        messages: [{ role: 'user', content: expansionPrompt }],
-        system: 'You are an expert project manager. Break down tasks into clear, actionable subtasks.',
-        schema: ValidationSchemas.AIGeneratedTask.pick({ subtasks: true }),
-        maxTokens: config.models.main.maxTokens,
-        temperature: config.models.main.temperature,
+        model,
+        messages: [{ role: 'user', content: prompt }],
+        schema: SubtaskArraySchema,
+        objectName: 'subtasks'
       });
 
-      const generatedSubtasks = result.object.subtasks || [];
-      const subtasks: Subtask[] = [];
-
-      // Convert generated subtasks to proper Subtask objects
-      for (let i = 0; i < generatedSubtasks.length; i++) {
-        const genSubtask = generatedSubtasks[i];
-        const subtask: Subtask = {
-          id: i + 1,
-          title: genSubtask.title,
-          description: genSubtask.description,
-          status: 'pending',
-          priority: genSubtask.priority || 'medium',
-          dependencies: [],
-          details: genSubtask.details,
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
-          estimatedHours: genSubtask.estimatedHours,
-        };
-        subtasks.push(subtask);
-      }
-
-      // Update the task with new subtasks
-      await this.updateTask(taskId, { subtasks });
+      // Convert the generated subtasks to proper Subtask objects
+      const subtasks: Subtask[] = result.object.map((subtask, index) => ({
+        id: index + 1,
+        title: subtask.title,
+        description: subtask.description,
+        status: 'pending',
+        priority: subtask.priority || 'medium',
+        dependencies: [],
+        details: subtask.details,
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        estimatedHours: subtask.estimatedHours,
+      }));
 
       return subtasks;
-
     } catch (error) {
       throw new AIServiceError(
-        `Failed to expand task ${taskId}`,
-        config.models.main.modelId,
-        error as Error
+        `Failed to expand task: ${(error as Error).message}`,
+        'ExpansionError'
       );
     }
   }
@@ -694,27 +751,31 @@ export class TaskService implements ITaskService {
   }
 
   async generateTasksFromPRD(prdContent: string): Promise<PRDAnalysis> {
-    const config = await this.configService.getConfig();
+    const model = await this.getModelForOperation('canParsePRD');
+    const modelInfo = getBedrockModel(model);
+    
+    if (!modelInfo.taskCapabilities?.canParsePRD) {
+      throw new AIServiceError(
+        `No suitable model found for PRD analysis. Please configure a more capable model.`,
+        'UnsupportedOperation'
+      );
+    }
+
+    const prompt = this.buildPRDAnalysisPrompt(prdContent);
 
     try {
-      const prdPrompt = this.buildPRDAnalysisPrompt(prdContent);
-      
       const result = await this.bedrockClient.generateObject({
-        model: config.models.research?.modelId as ClaudeModelId || config.models.main.modelId as ClaudeModelId,
-        messages: [{ role: 'user', content: prdPrompt }],
-        system: 'You are an expert product manager and technical analyst. Extract clear, actionable tasks from product requirements.',
+        model,
+        messages: [{ role: 'user', content: prompt }],
         schema: ValidationSchemas.PRDAnalysis,
-        maxTokens: 8000,
-        temperature: 0.1,
+        objectName: 'prdAnalysis'
       });
 
       return result.object;
-
     } catch (error) {
       throw new AIServiceError(
-        'Failed to generate tasks from PRD',
-        config.models.research?.modelId || config.models.main.modelId,
-        error as Error
+        `Failed to analyze PRD: ${(error as Error).message}`,
+        'PRDAnalysisError'
       );
     }
   }
@@ -1096,14 +1157,27 @@ Description: ${task.description}
 ${task.details ? `Details: ${task.details}` : ''}
 ${task.subtasks?.length ? `Subtasks: ${task.subtasks.length} defined` : 'No subtasks defined'}
 
-Provide a comprehensive complexity analysis including:
-- Complexity score (1-10, where 1 is trivial and 10 is extremely complex)
-- Key factors contributing to complexity
-- Detailed reasoning for the score
-- Estimated hours for completion
-- Risk level assessment
-- Specific recommendations for implementation
-- Confidence level in the analysis
+Provide a comprehensive complexity analysis in the following JSON format:
+{
+  "taskId": ${task.id},
+  "taskTitle": "${task.title}",
+  "complexityScore": <number 1-10>,
+  "factors": ["factor1", "factor2", "factor3"],
+  "reasoning": "detailed explanation",
+  "estimatedHours": <number>,
+  "riskLevel": "low" | "medium" | "high",
+  "recommendations": ["recommendation1", "recommendation2"],
+  "confidence": <number 0.0-1.0>,
+  "timestamp": "<ISO datetime>"
+}
+
+Important: 
+- riskLevel must be lowercase: "low", "medium", or "high"
+- complexityScore must be between 1-10
+- confidence must be between 0.0-1.0
+- estimatedHours must be a positive number
+- factors and recommendations must be arrays of strings
+- timestamp must be in ISO format
 
 Consider factors like:
 - Technical difficulty and skill requirements
@@ -1172,6 +1246,78 @@ Respond with a JSON object with 'projectName', 'overview', 'estimatedComplexity'
 
   private clearCache(): void {
     this.cache.clear();
+  }
+
+  // ============================================================================
+  // SPARC Methodology Operations
+  // ============================================================================
+
+  async enableSparcMethodology(taskId: number): Promise<Task> {
+    const task = await this.getTask(taskId);
+    const updatedTask = await this.sparcService.enableSparcMethodology(task);
+    return await this.updateTask(taskId, { sparc: updatedTask.sparc });
+  }
+
+  async disableSparcMethodology(taskId: number): Promise<Task> {
+    const task = await this.getTask(taskId);
+    const updatedTask = await this.sparcService.disableSparcMethodology(task);
+    return await this.updateTask(taskId, { sparc: updatedTask.sparc });
+  }
+
+  async advanceSparcPhase(taskId: number, phase: SparcStatus): Promise<Task> {
+    const task = await this.getTask(taskId);
+    const updatedTask = await this.sparcService.advanceSparcPhase(task, phase);
+    return await this.updateTask(taskId, { sparc: updatedTask.sparc });
+  }
+
+  async updateSparcPhase(taskId: number, phase: SparcStatus, updates: Record<string, unknown>): Promise<Task> {
+    const task = await this.getTask(taskId);
+    if (!task.sparc?.enabled) {
+      throw new Error('SPARC methodology is not enabled for this task');
+    }
+
+    const updatedSparc = {
+      ...task.sparc,
+      phases: {
+        ...task.sparc.phases,
+        [phase]: {
+          ...task.sparc.phases[phase as keyof typeof task.sparc.phases],
+          ...updates,
+        },
+      },
+    };
+
+    return await this.updateTask(taskId, { sparc: updatedSparc });
+  }
+
+  async getSparcProgress(taskId: number): Promise<{ currentPhase: SparcStatus; progress: number; phases: Record<string, unknown> }> {
+    const task = await this.getTask(taskId);
+    return this.sparcService.getSparcProgress(task);
+  }
+
+  async generateSparcRequirements(taskId: number): Promise<string[]> {
+    const task = await this.getTask(taskId);
+    return await this.sparcService.generateSparcRequirements(task);
+  }
+
+  async generateSparcPseudocode(taskId: number): Promise<{ coordination: string; taskFlow: string }> {
+    const task = await this.getTask(taskId);
+    return await this.sparcService.generateSparcPseudocode(task);
+  }
+
+  async generateSparcArchitecture(taskId: number): Promise<{ structure: string; roles: Array<{ role: string; responsibilities: string[] }> }> {
+    const task = await this.getTask(taskId);
+    return await this.sparcService.generateSparcArchitecture(task);
+  }
+
+  async generateSparcTests(taskId: number): Promise<string[]> {
+    const task = await this.getTask(taskId);
+    return await this.sparcService.generateSparcTests(task);
+  }
+
+  async validateSparcCompletion(taskId: number): Promise<{ isValid: boolean; issues: string[]; testResults: Array<{ testName: string; status: 'pass' | 'fail' | 'skipped' }> }> {
+    const task = await this.getTask(taskId);
+    return await this.sparcService.validateSparcCompletion(task);
   }
 }
 

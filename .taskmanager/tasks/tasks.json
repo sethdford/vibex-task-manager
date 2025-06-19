@@ -1,0 +1,305 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Test Task with Model Capabilities",
+      "description": "This is a test task to verify our new model capability system works correctly with both simple and complex models.",
+      "status": "done",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T12:05:46.867Z",
+      "updated": "2025-06-19T12:28:24.350Z",
+      "tags": []
+    },
+    {
+      "id": 2,
+      "title": "Test Task with Model Capabilities",
+      "description": "Updated description for testing update functionality with Claude 4 models",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T12:06:44.922Z",
+      "updated": "2025-06-19T12:28:38.775Z",
+      "tags": []
+    },
+    {
+      "id": 3,
+      "title": "E2E Test Task",
+      "description": "Testing end-to-end functionality with Claude 4 models",
+      "status": "in-progress",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T12:24:21.459Z",
+      "updated": "2025-06-19T12:24:41.190Z",
+      "tags": []
+    },
+    {
+      "id": 4,
+      "title": "AI-Powered Task Creation Test",
+      "description": "Testing the AI-powered task creation with Claude 4 models",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [
+        3
+      ],
+      "subtasks": [],
+      "created": "2025-06-19T12:27:52.598Z",
+      "updated": "2025-06-19T12:28:08.375Z",
+      "tags": []
+    },
+    {
+      "id": 5,
+      "title": "SPARC Methodology Test Task",
+      "description": "Testing the SPARC methodology integration with AI-powered task management",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T12:36:43.070Z",
+      "updated": "2025-06-19T12:37:56.204Z",
+      "tags": [],
+      "sparc": {
+        "enabled": true,
+        "currentPhase": "completion",
+        "phases": {
+          "specification": {
+            "status": "done",
+            "requirements": [],
+            "testCriteria": [],
+            "completedAt": "2025-06-19T12:36:58.421Z"
+          },
+          "pseudocode": {
+            "status": "done",
+            "completedAt": "2025-06-19T12:37:08.156Z"
+          },
+          "architecture": {
+            "status": "done",
+            "agentRoles": [],
+            "completedAt": "2025-06-19T12:37:35.971Z"
+          },
+          "refinement": {
+            "status": "done",
+            "testCases": [],
+            "completedAt": "2025-06-19T12:37:56.204Z"
+          },
+          "completion": {
+            "status": "in-progress",
+            "buildValidation": false,
+            "testResults": []
+          }
+        },
+        "metadata": {
+          "startedAt": "2025-06-19T12:36:43.073Z",
+          "totalPhases": 5,
+          "completedPhases": 5,
+          "methodology": "sparc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "SPARC Methodology Test Task",
+      "description": "Testing the SPARC methodology integration with AI-powered task management",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T12:38:16.660Z",
+      "updated": "2025-06-19T12:39:12.128Z",
+      "tags": [],
+      "sparc": {
+        "enabled": true,
+        "currentPhase": "completion",
+        "phases": {
+          "specification": {
+            "status": "done",
+            "requirements": [],
+            "testCriteria": [],
+            "completedAt": "2025-06-19T12:38:30.428Z"
+          },
+          "pseudocode": {
+            "status": "done",
+            "completedAt": "2025-06-19T12:38:38.161Z"
+          },
+          "architecture": {
+            "status": "done",
+            "agentRoles": [],
+            "completedAt": "2025-06-19T12:38:56.706Z"
+          },
+          "refinement": {
+            "status": "done",
+            "testCases": [],
+            "completedAt": "2025-06-19T12:39:12.128Z"
+          },
+          "completion": {
+            "status": "in-progress",
+            "buildValidation": false,
+            "testResults": []
+          }
+        },
+        "metadata": {
+          "startedAt": "2025-06-19T12:38:16.662Z",
+          "totalPhases": 5,
+          "completedPhases": 5,
+          "methodology": "sparc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "SPARC Methodology Test Task",
+      "description": "Testing the SPARC methodology integration with AI-powered task management",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T12:39:36.281Z",
+      "updated": "2025-06-19T12:40:40.471Z",
+      "tags": [],
+      "sparc": {
+        "enabled": true,
+        "currentPhase": "completion",
+        "phases": {
+          "specification": {
+            "status": "done",
+            "requirements": [],
+            "testCriteria": [],
+            "completedAt": "2025-06-19T12:39:51.337Z"
+          },
+          "pseudocode": {
+            "status": "done",
+            "completedAt": "2025-06-19T12:40:08.857Z"
+          },
+          "architecture": {
+            "status": "done",
+            "agentRoles": [],
+            "completedAt": "2025-06-19T12:40:27.695Z"
+          },
+          "refinement": {
+            "status": "done",
+            "testCases": [],
+            "completedAt": "2025-06-19T12:40:40.471Z"
+          },
+          "completion": {
+            "status": "in-progress",
+            "buildValidation": false,
+            "testResults": []
+          }
+        },
+        "metadata": {
+          "startedAt": "2025-06-19T12:39:36.284Z",
+          "totalPhases": 5,
+          "completedPhases": 5,
+          "methodology": "sparc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "SPARC Methodology Test Task",
+      "description": "Testing the SPARC methodology integration with AI-powered task management",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T12:42:05.323Z",
+      "updated": "2025-06-19T12:43:09.991Z",
+      "tags": [],
+      "sparc": {
+        "enabled": true,
+        "currentPhase": "completion",
+        "phases": {
+          "specification": {
+            "status": "done",
+            "requirements": [],
+            "testCriteria": [],
+            "completedAt": "2025-06-19T12:42:19.958Z"
+          },
+          "pseudocode": {
+            "status": "done",
+            "completedAt": "2025-06-19T12:42:30.183Z"
+          },
+          "architecture": {
+            "status": "done",
+            "agentRoles": [],
+            "completedAt": "2025-06-19T12:42:54.361Z"
+          },
+          "refinement": {
+            "status": "done",
+            "testCases": [],
+            "completedAt": "2025-06-19T12:43:09.991Z"
+          },
+          "completion": {
+            "status": "in-progress",
+            "buildValidation": false,
+            "testResults": []
+          }
+        },
+        "metadata": {
+          "startedAt": "2025-06-19T12:42:05.327Z",
+          "totalPhases": 5,
+          "completedPhases": 5,
+          "methodology": "sparc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "SPARC Methodology Test Task",
+      "description": "Testing the SPARC methodology integration with AI-powered task management",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T12:51:47.359Z",
+      "updated": "2025-06-19T12:52:57.966Z",
+      "tags": [],
+      "sparc": {
+        "enabled": true,
+        "currentPhase": "completion",
+        "phases": {
+          "specification": {
+            "status": "done",
+            "requirements": [],
+            "testCriteria": [],
+            "completedAt": "2025-06-19T12:51:59.222Z"
+          },
+          "pseudocode": {
+            "status": "done",
+            "completedAt": "2025-06-19T12:52:14.792Z"
+          },
+          "architecture": {
+            "status": "done",
+            "agentRoles": [],
+            "completedAt": "2025-06-19T12:52:40.306Z"
+          },
+          "refinement": {
+            "status": "done",
+            "testCases": [],
+            "completedAt": "2025-06-19T12:52:57.966Z"
+          },
+          "completion": {
+            "status": "in-progress",
+            "buildValidation": false,
+            "testResults": []
+          }
+        },
+        "metadata": {
+          "startedAt": "2025-06-19T12:51:47.362Z",
+          "totalPhases": 5,
+          "completedPhases": 5,
+          "methodology": "sparc"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "created": "2025-06-19T12:05:46.865Z",
+    "updated": "2025-06-19T12:52:57.966Z",
+    "totalTasks": 9
+  }
+}

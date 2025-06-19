@@ -105,6 +105,7 @@ class VibexCLI {
     this.setupAnalysisCommands();
     this.setupDependencyCommands();
     this.setupUtilityCommands();
+    this.setupSparcCommands();
   }
 
   private setupInitCommands(): void {
@@ -187,6 +188,20 @@ class VibexCLI {
       .action(async (options) => {
         try {
           await this.handleConfigDetect(options);
+        } catch (error) {
+          this.handleError(error);
+        }
+      });
+
+    configCmd
+      .command('auto-update')
+      .description('Automatically update configuration with best available models')
+      .option('--region <region>', 'AWS region to check', 'us-east-1')
+      .option('--profile <profile>', 'AWS profile to use')
+      .option('--dry-run', 'Show what would be changed without making changes')
+      .action(async (options) => {
+        try {
+          await this.handleConfigAutoUpdate(options);
         } catch (error) {
           this.handleError(error);
         }
@@ -422,6 +437,185 @@ class VibexCLI {
       });
   }
 
+  private setupSparcCommands(): void {
+    this.program
+      .command('sparc')
+      .description('SPARC methodology operations')
+      .command('enable <taskId>')
+      .description('Enable SPARC methodology for a task')
+      .action(async (taskId: string) => {
+        try {
+          const task = await this.taskService!.enableSparcMethodology(parseInt(taskId));
+          console.log(`✓ SPARC methodology enabled for task #${taskId}`);
+          console.log(`Current phase: ${task.sparc?.currentPhase || 'specification'}`);
+        } catch (error) {
+          console.error('Error enabling SPARC methodology:', (error as Error).message);
+          process.exit(1);
+        }
+      });
+
+    this.program
+      .command('sparc')
+      .command('disable <taskId>')
+      .description('Disable SPARC methodology for a task')
+      .action(async (taskId: string) => {
+        try {
+          const task = await this.taskService!.disableSparcMethodology(parseInt(taskId));
+          console.log(`✓ SPARC methodology disabled for task #${taskId}`);
+        } catch (error) {
+          console.error('Error disabling SPARC methodology:', (error as Error).message);
+          process.exit(1);
+        }
+      });
+
+    this.program
+      .command('sparc')
+      .command('progress <taskId>')
+      .description('Show SPARC progress for a task')
+      .action(async (taskId: string) => {
+        try {
+          const progress = await this.taskService!.getSparcProgress(parseInt(taskId));
+          console.log(`\nSPARC Progress for Task #${taskId}:`);
+          console.log(`Current Phase: ${progress.currentPhase}`);
+          console.log(`Progress: ${progress.progress.toFixed(1)}%`);
+          
+          const phases = progress.phases as any;
+          console.log('\nPhase Status:');
+          Object.entries(phases).forEach(([phase, data]: [string, any]) => {
+            const status = data.status || 'pending';
+            const icon = status === 'done' ? '✓' : status === 'in-progress' ? '►' : '○';
+            console.log(`  ${icon} ${phase}: ${status}`);
+          });
+        } catch (error) {
+          console.error('Error getting SPARC progress:', (error as Error).message);
+          process.exit(1);
+        }
+      });
+
+    this.program
+      .command('sparc')
+      .command('advance <taskId> <phase>')
+      .description('Advance to a specific SPARC phase')
+      .action(async (taskId: string, phase: string) => {
+        try {
+          const validPhases = ['specification', 'pseudocode', 'architecture', 'refinement', 'completion'];
+          if (!validPhases.includes(phase)) {
+            console.error(`Invalid phase. Use one of: ${validPhases.join(', ')}`);
+            process.exit(1);
+          }
+          
+          const task = await this.taskService!.advanceSparcPhase(parseInt(taskId), phase as any);
+          console.log(`✓ Advanced task #${taskId} to ${phase} phase`);
+        } catch (error) {
+          console.error('Error advancing SPARC phase:', (error as Error).message);
+          process.exit(1);
+        }
+      });
+
+    this.program
+      .command('sparc')
+      .command('generate-requirements <taskId>')
+      .description('Generate SPARC requirements using AI')
+      .action(async (taskId: string) => {
+        try {
+          const requirements = await this.taskService!.generateSparcRequirements(parseInt(taskId));
+          console.log(`\nGenerated Requirements for Task #${taskId}:`);
+          requirements.forEach((req, index) => {
+            console.log(`${index + 1}. ${req}`);
+          });
+        } catch (error) {
+          console.error('Error generating requirements:', (error as Error).message);
+          process.exit(1);
+        }
+      });
+
+    this.program
+      .command('sparc')
+      .command('generate-pseudocode <taskId>')
+      .description('Generate SPARC pseudocode using AI')
+      .action(async (taskId: string) => {
+        try {
+          const result = await this.taskService!.generateSparcPseudocode(parseInt(taskId));
+          console.log(`\nGenerated Pseudocode for Task #${taskId}:`);
+          console.log('\nAgent Coordination:');
+          console.log(result.coordination);
+          console.log('\nTask Flow:');
+          console.log(result.taskFlow);
+        } catch (error) {
+          console.error('Error generating pseudocode:', (error as Error).message);
+          process.exit(1);
+        }
+      });
+
+    this.program
+      .command('sparc')
+      .command('generate-architecture <taskId>')
+      .description('Generate SPARC architecture using AI')
+      .action(async (taskId: string) => {
+        try {
+          const result = await this.taskService!.generateSparcArchitecture(parseInt(taskId));
+          console.log(`\nGenerated Architecture for Task #${taskId}:`);
+          console.log('\nSwarm Structure:');
+          console.log(result.structure);
+          console.log('\nAgent Roles:');
+          result.roles.forEach((role, index) => {
+            console.log(`${index + 1}. ${role.role}:`);
+            role.responsibilities.forEach(resp => {
+              console.log(`   - ${resp}`);
+            });
+          });
+        } catch (error) {
+          console.error('Error generating architecture:', (error as Error).message);
+          process.exit(1);
+        }
+      });
+
+    this.program
+      .command('sparc')
+      .command('generate-tests <taskId>')
+      .description('Generate SPARC test cases using AI')
+      .action(async (taskId: string) => {
+        try {
+          const tests = await this.taskService!.generateSparcTests(parseInt(taskId));
+          console.log(`\nGenerated Test Cases for Task #${taskId}:`);
+          tests.forEach((test, index) => {
+            console.log(`${index + 1}. ${test}`);
+          });
+        } catch (error) {
+          console.error('Error generating tests:', (error as Error).message);
+          process.exit(1);
+        }
+      });
+
+    this.program
+      .command('sparc')
+      .command('validate <taskId>')
+      .description('Validate SPARC completion')
+      .action(async (taskId: string) => {
+        try {
+          const result = await this.taskService!.validateSparcCompletion(parseInt(taskId));
+          console.log(`\nSPARC Validation for Task #${taskId}:`);
+          console.log(`Status: ${result.isValid ? '✓ Valid' : '✗ Invalid'}`);
+          
+          if (result.issues.length > 0) {
+            console.log('\nIssues:');
+            result.issues.forEach(issue => {
+              console.log(`  - ${issue}`);
+            });
+          }
+          
+          console.log('\nTest Results:');
+          result.testResults.forEach(test => {
+            const icon = test.status === 'pass' ? '✓' : test.status === 'fail' ? '✗' : '○';
+            console.log(`  ${icon} ${test.testName}: ${test.status}`);
+          });
+        } catch (error) {
+          console.error('Error validating SPARC completion:', (error as Error).message);
+          process.exit(1);
+        }
+      });
+  }
+
   // ============================================================================
   // Command Handlers
   // ============================================================================
@@ -555,21 +749,21 @@ class VibexCLI {
         name: 'mainModel',
         message: 'Select your primary (main) model for most tasks:',
         choices: availableModelChoices,
-        default: existingConfig.models?.main?.modelId,
+        default: autoDetect.mainModel || existingConfig.models?.main?.modelId,
       },
       {
         type: 'list',
         name: 'researchModel',
         message: 'Select a powerful (research) model for complex analysis:',
         choices: availableModelChoices,
-        default: existingConfig.models?.research?.modelId,
+        default: autoDetect.researchModel || existingConfig.models?.research?.modelId,
       },
       {
         type: 'list',
         name: 'fallbackModel',
         message: 'Select a fast, cheap (fallback) model:',
         choices: availableModelChoices,
-        default: existingConfig.models?.fallback?.modelId,
+        default: autoDetect.fallbackModel || existingConfig.models?.fallback?.modelId,
       },
       {
         type: 'input',
@@ -673,10 +867,21 @@ class VibexCLI {
       console.log();
       
       result.available.forEach(model => {
+        const capabilities = model.modelInfo.taskCapabilities;
         console.log(`  ${chalk.green('✓')} ${chalk.bold(model.modelId)}`);
         console.log(`     ${model.modelInfo.name}`);
         console.log(`     Context: ${model.modelInfo.contextWindow.toLocaleString()} tokens`);
         console.log(`     Cost: $${model.modelInfo.inputCostPer1K}/1K input, $${model.modelInfo.outputCostPer1K}/1K output`);
+        
+        if (capabilities) {
+          const caps = [];
+          if (capabilities.canGenerateSubtasks) caps.push('Subtasks');
+          if (capabilities.canAnalyzeComplexity) caps.push('Complexity Analysis');
+          if (capabilities.canParsePRD) caps.push('PRD Parsing');
+          if (caps.length > 0) {
+            console.log(`     Capabilities: ${caps.join(', ')}`);
+          }
+        }
         console.log();
       });
     } else {
@@ -706,6 +911,97 @@ class VibexCLI {
       console.log();
       console.log(chalk.dim('To apply these recommendations, run:'));
       console.log(chalk.dim('  vibex-task-manager config setup'));
+      console.log(chalk.dim('  vibex-task-manager config auto-update'));
+    }
+  }
+
+  private async handleConfigAutoUpdate(options: any): Promise<void> {
+    console.log(chalk.blue('Auto-updating configuration with best available models...'));
+    console.log(chalk.dim(`Region: ${options.region}`));
+    if (options.profile) {
+      console.log(chalk.dim(`Profile: ${options.profile}`));
+    }
+    console.log();
+
+    const detector = new BedrockAutoDetect({
+      region: options.region,
+      profile: options.profile,
+    });
+
+    const result = await detector.detectModels();
+
+    if (!result.hasCredentials) {
+      console.log(chalk.red('✗ AWS credentials not found or invalid'));
+      return;
+    }
+
+    if (result.error) {
+      console.log(chalk.red(`✗ Error: ${result.error}`));
+      return;
+    }
+
+    if (result.available.length === 0) {
+      console.log(chalk.yellow('⚠ No Claude models found in this region'));
+      return;
+    }
+
+    // Get current configuration
+    const configService = new ConfigService(this.projectRoot);
+    const currentConfig = await configService.getConfig();
+
+    console.log(chalk.blue('Current configuration:'));
+    console.log(`  Main Model: ${currentConfig.models.main.modelId}`);
+    console.log(`  Research Model: ${currentConfig.models.research.modelId}`);
+    console.log(`  Fallback Model: ${currentConfig.models.fallback.modelId}`);
+    console.log();
+
+    // Check if any models need updating
+    const needsUpdate = 
+      (result.recommendations.main && result.recommendations.main !== currentConfig.models.main.modelId) ||
+      (result.recommendations.research && result.recommendations.research !== currentConfig.models.research.modelId) ||
+      (result.recommendations.fallback && result.recommendations.fallback !== currentConfig.models.fallback.modelId);
+
+    if (!needsUpdate) {
+      console.log(chalk.green('✓ Configuration is already up to date with best available models'));
+      return;
+    }
+
+    console.log(chalk.blue('Recommended updates:'));
+    if (result.recommendations.main && result.recommendations.main !== currentConfig.models.main.modelId) {
+      console.log(`  Main Model: ${currentConfig.models.main.modelId} → ${chalk.green(result.recommendations.main)}`);
+    }
+    if (result.recommendations.research && result.recommendations.research !== currentConfig.models.research.modelId) {
+      console.log(`  Research Model: ${currentConfig.models.research.modelId} → ${chalk.green(result.recommendations.research)}`);
+    }
+    if (result.recommendations.fallback && result.recommendations.fallback !== currentConfig.models.fallback.modelId) {
+      console.log(`  Fallback Model: ${currentConfig.models.fallback.modelId} → ${chalk.green(result.recommendations.fallback)}`);
+    }
+
+    if (options.dryRun) {
+      console.log(chalk.yellow('\n⚠ Dry run mode - no changes made'));
+      console.log(chalk.dim('Run without --dry-run to apply changes'));
+      return;
+    }
+
+    // Apply updates
+    const updates: any = {};
+    if (result.recommendations.main && result.recommendations.main !== currentConfig.models.main.modelId) {
+      updates.models = { ...updates.models, main: { ...currentConfig.models.main, modelId: result.recommendations.main } };
+    }
+    if (result.recommendations.research && result.recommendations.research !== currentConfig.models.research.modelId) {
+      updates.models = { ...updates.models, research: { ...currentConfig.models.research, modelId: result.recommendations.research } };
+    }
+    if (result.recommendations.fallback && result.recommendations.fallback !== currentConfig.models.fallback.modelId) {
+      updates.models = { ...updates.models, fallback: { ...currentConfig.models.fallback, modelId: result.recommendations.fallback } };
+    }
+
+    if (Object.keys(updates).length > 0) {
+      const updatedConfig = await configService.updateConfig(updates);
+      console.log(chalk.green('\n✓ Configuration updated successfully'));
+      console.log(chalk.blue('\nNew configuration:'));
+      console.log(`  Main Model: ${updatedConfig.models.main.modelId}`);
+      console.log(`  Research Model: ${updatedConfig.models.research.modelId}`);
+      console.log(`  Fallback Model: ${updatedConfig.models.fallback.modelId}`);
     }
   }
 
@@ -944,20 +1240,20 @@ class VibexCLI {
         console.log(JSON.stringify(analysis, null, 2));
       } else {
         console.log(chalk.green(`\nPRD Analysis: ${analysis.projectName}`));
-        console.log(`Overview: ${analysis.overview}`);
-        console.log(`Estimated Complexity: ${analysis.estimatedComplexity}/10`);
-        console.log(`Estimated Duration: ${analysis.estimatedDuration}`);
-        
-        console.log(chalk.blue(`\nGenerated ${analysis.tasks.length} tasks:`));
-        
-        analysis.tasks.forEach((task, index) => {
-          console.log(`\n${index + 1}. ${chalk.green(task.title)}`);
-          console.log(`   ${task.description}`);
-          console.log(`   Priority: ${task.priority}, Complexity: ${task.complexity}/10`);
-          if (task.estimatedHours) {
-            console.log(`   Estimated Hours: ${task.estimatedHours}`);
-          }
-        });
+         console.log(`Overview: ${analysis.overview}`);
+         console.log(`Estimated Complexity: ${analysis.estimatedComplexity}/10`);
+         console.log(`Estimated Duration: ${analysis.estimatedDuration}`);
+         
+         console.log(chalk.blue(`\nGenerated ${analysis.tasks.length} tasks:`));
+         
+         analysis.tasks.forEach((task, index) => {
+           console.log(`\n${index + 1}. ${chalk.green(task.title)}`);
+           console.log(`   ${task.description}`);
+           console.log(`   Priority: ${task.priority}, Complexity: ${task.complexity}/10`);
+           if (task.estimatedHours) {
+             console.log(`   Estimated Hours: ${task.estimatedHours}`);
+           }
+         });
       }
     } catch (error) {
       throw new Error(`Failed to read PRD file: ${error instanceof Error ? error.message : 'Unknown error'}`);

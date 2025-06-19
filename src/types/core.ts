@@ -19,10 +19,79 @@ export const TaskStatusSchema = z.enum([
   'cancelled'
 ]);
 
+// SPARC Methodology Statuses
+export const SparcStatusSchema = z.enum([
+  'specification',  // Define requirements for build/test fix swarm
+  'pseudocode',     // Design agent coordination and task flow
+  'architecture',   // Create swarm structure and agent roles
+  'refinement',     // Deploy agents with TDD approach
+  'completion'      // Validate build and all tests pass
+]);
+
 export const PrioritySchema = z.enum(['low', 'medium', 'high']);
 
 export type TaskStatus = z.infer<typeof TaskStatusSchema>;
+export type SparcStatus = z.infer<typeof SparcStatusSchema>;
 export type Priority = z.infer<typeof PrioritySchema>;
+
+// SPARC Methodology Types
+export const SparcMethodologySchema = z.object({
+  enabled: z.boolean().default(false),
+  currentPhase: SparcStatusSchema.optional(),
+  phases: z.object({
+    specification: z.object({
+      status: z.enum(['pending', 'in-progress', 'done', 'blocked']).default('pending'),
+      requirements: z.array(z.string()).default([]),
+      swarmDefinition: z.string().optional(),
+      testCriteria: z.array(z.string()).default([]),
+      completedAt: z.string().datetime().optional(),
+    }),
+    pseudocode: z.object({
+      status: z.enum(['pending', 'in-progress', 'done', 'blocked']).default('pending'),
+      agentCoordination: z.string().optional(),
+      taskFlow: z.string().optional(),
+      coordinationPattern: z.string().optional(),
+      completedAt: z.string().datetime().optional(),
+    }),
+    architecture: z.object({
+      status: z.enum(['pending', 'in-progress', 'done', 'blocked']).default('pending'),
+      swarmStructure: z.string().optional(),
+      agentRoles: z.array(z.object({
+        role: z.string(),
+        responsibilities: z.array(z.string()),
+        dependencies: z.array(z.string()),
+      })).default([]),
+      completedAt: z.string().datetime().optional(),
+    }),
+    refinement: z.object({
+      status: z.enum(['pending', 'in-progress', 'done', 'blocked']).default('pending'),
+      tddApproach: z.string().optional(),
+      testCases: z.array(z.string()).default([]),
+      deploymentPlan: z.string().optional(),
+      completedAt: z.string().datetime().optional(),
+    }),
+    completion: z.object({
+      status: z.enum(['pending', 'in-progress', 'done', 'blocked']).default('pending'),
+      buildValidation: z.boolean().default(false),
+      testResults: z.array(z.object({
+        testName: z.string(),
+        status: z.enum(['pass', 'fail', 'skipped']),
+        details: z.string().optional(),
+      })).default([]),
+      validationReport: z.string().optional(),
+      completedAt: z.string().datetime().optional(),
+    }),
+  }),
+  metadata: z.object({
+    startedAt: z.string().datetime().optional(),
+    completedAt: z.string().datetime().optional(),
+    totalPhases: z.number().default(5),
+    completedPhases: z.number().default(0),
+    methodology: z.literal('sparc').default('sparc'),
+  }),
+});
+
+export type SparcMethodology = z.infer<typeof SparcMethodologySchema>;
 
 // Core Task Schema
 export const TaskSchema = z.object({
@@ -43,6 +112,7 @@ export const TaskSchema = z.object({
   tags: z.array(z.string()).default([]),
   assignee: z.string().optional(),
   dueDate: z.string().datetime().optional(),
+  sparc: SparcMethodologySchema.optional(),
 });
 
 // Subtask Schema
@@ -486,6 +556,18 @@ export interface ITaskService {
   expandTask(taskId: number, options?: { maxSubtasks?: number; detailLevel?: string }): Promise<Subtask[]>;
   getNextTask(criteria?: NextTaskCriteria): Promise<NextTaskResult>;
   generateTasksFromPRD(prdContent: string): Promise<PRDAnalysis>;
+
+  // SPARC Methodology operations
+  enableSparcMethodology(taskId: number): Promise<Task>;
+  disableSparcMethodology(taskId: number): Promise<Task>;
+  advanceSparcPhase(taskId: number, phase: SparcStatus): Promise<Task>;
+  updateSparcPhase(taskId: number, phase: SparcStatus, updates: Record<string, unknown>): Promise<Task>;
+  getSparcProgress(taskId: number): Promise<{ currentPhase: SparcStatus; progress: number; phases: Record<string, unknown> }>;
+  generateSparcRequirements(taskId: number): Promise<string[]>;
+  generateSparcPseudocode(taskId: number): Promise<{ coordination: string; taskFlow: string }>;
+  generateSparcArchitecture(taskId: number): Promise<{ structure: string; roles: Array<{ role: string; responsibilities: string[] }> }>;
+  generateSparcTests(taskId: number): Promise<string[]>;
+  validateSparcCompletion(taskId: number): Promise<{ isValid: boolean; issues: string[]; testResults: Array<{ testName: string; status: 'pass' | 'fail' | 'skipped' }> }>;
 
   // Bulk operations
   moveTask(taskId: number, newPosition: number): Promise<Task[]>;

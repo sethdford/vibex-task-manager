@@ -180,7 +180,7 @@ export class ConfigService implements IConfigService {
         sessionToken: modelConfig.sessionToken,
       });
 
-      return await client.testConnection();
+      return await client.testConnection(modelConfig.modelId as ClaudeModelId);
     } catch (error) {
       return false;
     }
@@ -268,13 +268,9 @@ export class ConfigService implements IConfigService {
         ...updates,
       };
     } else {
-      				config.models[modelType] = {
-			temperature: 0.7,
-			region: 'us-east-1',
-			maxTokens: 4000,
-			modelId: '',
-			...config.models[modelType],
-			...updates,
+      config.models[modelType] = {
+        ...config.models[modelType],
+        ...updates,
       };
     }
 

@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 import { log, findProjectRoot, resolveEnvVariable } from './utils.js';
 import { LEGACY_CONFIG_FILE } from '../../src/constants/paths.js';
 import { findConfigPath } from '../../src/utils/path-utils.js';
+import { BedrockAutoDetect } from '../../src/core/bedrock-auto-detect.js';
+import { getBedrockModel, BedrockModelId } from '../../src/core/bedrock-models.js';
 
 // Calculate __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -725,6 +727,103 @@ function getBaseUrlForRole(
 		default:
 			return undefined;
 	}
+}
+
+/**
+ * Discover available models at runtime
+ */
+export async function discoverAvailableModels(region?: string): Promise<{
+	available: Array<{
+		modelId: BedrockModelId;
+		name: string;
+		maxTokens: number;
+		contextWindow: number;
+		inputCostPer1K: number;
+		outputCostPer1K: number;
+		taskCapabilities: {
+			canGenerateSubtasks: boolean;
+			canAnalyzeComplexity: boolean;
+			canParsePRD: boolean;
+			maxSubtasksPerTask: number;
+		};
+	}>;
+	unavailable: Array<{
+		modelId: BedrockModelId;
+		name: string;
+		reason: string;
+	}>;
+	recommendations: {
+		main: BedrockModelId | null;
+		research: BedrockModelId | null;
+		fallback: BedrockModelId | null;
+	};
+	hasCredentials: boolean;
+	error?: string;
+}> {
+	const detector = new BedrockAutoDetect({ region });
+	const result = await detector.detectModels();
+
+	const available = result.available.map(model => ({
+		modelId: model.modelId,
+		name: model.modelInfo.name,
+		maxTokens: model.modelInfo.maxTokens,
+		contextWindow: model.modelInfo.contextWindow,
+		inputCostPer1K: model.modelInfo.inputCostPer1K,
+		outputCostPer1K: model.modelInfo.outputCostPer1K,
+		taskCapabilities: model.modelInfo.taskCapabilities || {
+			canGenerateSubtasks: false,
+			canAnalyzeComplexity: false,
+			canParsePRD: false,
+			maxSubtasksPerTask: 0
+		}
+	}));
+
+	const unavailable = result.unavailable.map(model => ({
+		modelId: model.modelId,
+		name: model.modelInfo.name,
+		reason: 'Not available in current AWS region/account'
+	}));
+
+	return {
+		available,
+		unavailable,
+		recommendations: result.recommendations,
+		hasCredentials: result.hasCredentials,
+		error: result.error
+	};
+}
+
+/**
+ * Update configuration with discovered models
+ */
+export async function updateConfigWithDiscoveredModels(
+	config: Config,
+	discoveredModels: Awaited<ReturnType<typeof discoverAvailableModels>>
+): Promise<Config> {
+	const updatedConfig = { ...config };
+
+	// Update main model if current one is not available
+	if (discoveredModels.recommendations.main && 
+			!discoveredModels.available.find(m => m.modelId === config.models.main.modelId)) {
+		updatedConfig.models.main.modelId = discoveredModels.recommendations.main;
+		log('info', `Updated main model to: ${discoveredModels.recommendations.main}`);
+	}
+
+	// Update research model if current one is not available
+	if (discoveredModels.recommendations.research && 
+			!discoveredModels.available.find(m => m.modelId === config.models.research.modelId)) {
+		updatedConfig.models.research.modelId = discoveredModels.recommendations.research;
+		log('info', `Updated research model to: ${discoveredModels.recommendations.research}`);
+	}
+
+	// Update fallback model if current one is not available
+	if (discoveredModels.recommendations.fallback && 
+			!discoveredModels.available.find(m => m.modelId === config.models.fallback.modelId)) {
+		updatedConfig.models.fallback.modelId = discoveredModels.recommendations.fallback;
+		log('info', `Updated fallback model to: ${discoveredModels.recommendations.fallback}`);
+	}
+
+	return updatedConfig;
 }
 
 export {

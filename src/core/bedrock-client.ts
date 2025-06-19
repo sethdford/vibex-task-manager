@@ -26,7 +26,7 @@ export const CLAUDE_MODELS = {
   
   // Claude 3.5 Sonnet
   'claude-3-5-sonnet-20241022': {
-    id: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+    id: 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
     name: 'Claude 3.5 Sonnet',
     maxTokens: 64000,
     contextWindow: 200000,
@@ -34,7 +34,7 @@ export const CLAUDE_MODELS = {
     outputCostPer1K: 0.015,
   },
   'claude-3-5-sonnet-20240620': {
-    id: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
+    id: 'us.anthropic.claude-3-5-sonnet-20240620-v1:0',
     name: 'Claude 3.5 Sonnet (June)',
     maxTokens: 64000,
     contextWindow: 200000,
@@ -44,7 +44,7 @@ export const CLAUDE_MODELS = {
   
   // Claude 3 Opus
   'claude-3-opus-20240229': {
-    id: 'anthropic.claude-3-opus-20240229-v1:0',
+    id: 'us.anthropic.claude-3-opus-20240229-v1:0',
     name: 'Claude 3 Opus',
     maxTokens: 32000,
     contextWindow: 200000,
@@ -54,7 +54,7 @@ export const CLAUDE_MODELS = {
   
   // Claude 3 Sonnet
   'claude-3-sonnet-20240229': {
-    id: 'anthropic.claude-3-sonnet-20240229-v1:0',
+    id: 'us.anthropic.claude-3-sonnet-20240229-v1:0',
     name: 'Claude 3 Sonnet',
     maxTokens: 64000,
     contextWindow: 200000,
@@ -64,7 +64,7 @@ export const CLAUDE_MODELS = {
   
   // Claude 3 Haiku
   'claude-3-haiku-20240307': {
-    id: 'anthropic.claude-3-haiku-20240307-v1:0',
+    id: 'us.anthropic.claude-3-haiku-20240307-v1:0',
     name: 'Claude 3 Haiku',
     maxTokens: 64000,
     contextWindow: 200000,
@@ -112,7 +112,7 @@ const BedrockResponseSchema = z.object({
   })),
   model: z.string(),
   stop_reason: z.enum(['end_turn', 'max_tokens', 'stop_sequence']),
-  stop_sequence: z.string().optional(),
+  stop_sequence: z.string().nullable().optional(),
   usage: z.object({
     input_tokens: z.number(),
     output_tokens: z.number(),
@@ -461,10 +461,13 @@ Schema requirements:
   /**
    * Test connection to Bedrock
    */
-  async testConnection(): Promise<boolean> {
+  async testConnection(modelId?: ClaudeModelId): Promise<boolean> {
     try {
+      // Use provided model or fallback to a commonly available one
+      const testModel = modelId || 'claude-instant-v1';
+      
       const result = await this.generateText({
-        model: 'claude-3-haiku-20240307',
+        model: testModel,
         messages: [{ role: 'user', content: 'Hello' }],
         maxTokens: 10,
       });

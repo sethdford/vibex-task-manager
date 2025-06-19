@@ -6,6 +6,7 @@ An AI-powered task management system designed for modern development workflows. 
 
 - **🎯 Zero-Configuration AWS Integration**: Automatic model detection and setup
 - **🤖 AI-Powered Task Management**: Generate and manage tasks with Claude models
+- **🔬 SPARC Methodology**: A structured, AI-assisted workflow for complex problem-solving (**S**pecification, **P**seudocode, **A**rchitecture, **R**efinement, **C**ompletion).
 - **🔗 MCP Integration**: Seamless integration with AI-powered editors (Cursor, Claude Code, VS Code)
 - **📊 Intelligent Analysis**: Automatic task complexity assessment and recommendations
 - **🤝 Multi-Agent Coordination**: Enable multiple AI agents to work together effectively
@@ -116,10 +117,11 @@ vibex-task-manager set-status --id 5 --status done
 - **[Migration Guide](docs/reference/migration-guide.md)** - Migrating from other tools
 
 ### ⚡ **Advanced**
+- **[SPARC Methodology](docs/advanced/sparc-methodology.md)** - A structured workflow for complex tasks
 - **[Agent Coordination](docs/advanced/coordination.md)** - Multi-agent collaboration
 - **[Memory System](docs/advanced/memory-system.md)** - Context preservation and learning
 
-## 🎯 Common Use Cases
+## �� Common Use Cases
 
 ### Individual Developers
 ```bash
@@ -161,6 +163,26 @@ vibex-task-manager update-task --id 5 --append --prompt "Progress update: API en
 # Reviewer: Quality assurance workflow
 vibex-task-manager set-status --id 5 --status review
 vibex-task-manager update-task --id 5 --append --prompt "Code review complete, ready for deployment"
+```
+
+### Complex Problem-Solving with SPARC
+```bash
+# Enable SPARC for a complex task
+vibex-task-manager sparc enable 7
+
+# Generate requirements for the 'Specification' phase
+vibex-task-manager sparc generate-requirements 7
+
+# Advance to the 'Pseudocode' phase
+vibex-task-manager sparc advance 7 pseudocode
+
+# Generate pseudocode for the task
+vibex-task-manager sparc generate-pseudocode 7
+
+# ... continue through Architecture, Refinement, and Completion ...
+
+# Validate the completed SPARC workflow
+vibex-task-manager sparc validate 7
 ```
 
 ## 🚀 Why Vibex Task Manager?

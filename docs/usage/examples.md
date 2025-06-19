@@ -126,3 +126,28 @@ Please add a new task to implement user profile image uploads using Cloudinary, 
 ```
 
 (Agent runs: `vibex-task-manager add-task --prompt="Implement user profile image uploads using Cloudinary" --research`)
+
+## Using the SPARC Methodology for Complex Tasks
+
+The SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) workflow provides a structured, AI-assisted path for tackling your most complex tasks.
+
+### Starting a SPARC Workflow
+
+```
+Task 7, "Implement a real-time collaborative editing feature," is very complex. Can you enable the SPARC methodology for it so we can break it down systematically?
+```
+(Agent runs: `vibex-task-manager sparc enable 7`)
+
+### Generating SPARC Artifacts
+
+```
+Now that SPARC is enabled for task 7, let's start with the 'Specification' phase. Please generate the requirements for this feature.
+```
+(Agent runs: `vibex-task-manager sparc generate-requirements 7`)
+
+### Advancing Through Phases
+
+```
+The requirements look good. Let's move to the 'Pseudocode' phase and generate the high-level logic.
+```
+(Agent runs: `vibex-task-manager sparc advance 7 pseudocode`, then `vibex-task-manager sparc generate-pseudocode 7`)
