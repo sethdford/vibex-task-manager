@@ -901,12 +901,24 @@
       "created": "2025-06-19T17:52:54.476Z",
       "updated": "2025-06-19T17:53:12.952Z",
       "tags": []
+    },
+    {
+      "id": 19,
+      "title": "Hello World Task",
+      "description": "Create a simple file that prints 'Hello World' to the console when run.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T21:07:57.462Z",
+      "updated": "2025-06-19T21:07:57.462Z",
+      "tags": []
     }
   ],
   "metadata": {
     "version": "1.0.0",
     "created": "2025-06-19T12:05:46.865Z",
-    "updated": "2025-06-19T17:53:12.952Z",
-    "totalTasks": 18
+    "updated": "2025-06-19T21:07:57.462Z",
+    "totalTasks": 19
   }
 }

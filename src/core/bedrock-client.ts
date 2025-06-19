@@ -505,6 +505,142 @@ Schema requirements:
   }
 
   /**
+   * Test access to a specific model by making a minimal API call
+   */
+  async testModelAccess(modelId: ClaudeModelId): Promise<boolean> {
+    try {
+      const modelInfo = CLAUDE_MODELS[modelId];
+      if (!modelInfo) return false;
+
+      const request: BedrockRequest = {
+        anthropic_version: 'bedrock-2023-05-31',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Hi' }],
+      };
+
+      const command = new InvokeModelCommand({
+        modelId: modelInfo.id,
+        contentType: 'application/json',
+        accept: 'application/json',
+        body: JSON.stringify(request),
+      });
+
+      await this.client.send(command);
+      return true;
+    } catch (error) {
+      // Check if it's an access error vs other errors
+      const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
+      if (errorMessage.includes('access denied') || 
+          errorMessage.includes('don\'t have access') ||
+          errorMessage.includes('on-demand throughput isn\'t supported') ||
+          errorMessage.includes('inference profile')) {
+        return false;
+      }
+      // For other errors (like throttling), assume the model is accessible
+      return true;
+    }
+  }
+
+  /**
+   * Get accessible models by testing each one
+   */
+  async getAccessibleModels(): Promise<ClaudeModelId[]> {
+    const accessibleModels: ClaudeModelId[] = [];
+    
+    // Test each model for access
+    for (const modelId of Object.keys(CLAUDE_MODELS) as ClaudeModelId[]) {
+      const hasAccess = await this.testModelAccess(modelId);
+      if (hasAccess) {
+        accessibleModels.push(modelId);
+      }
+    }
+
+    return accessibleModels;
+  }
+
+  /**
+   * Get the best available model for a given use case
+   */
+  async getBestAvailableModel(preference: 'performance' | 'cost' | 'balanced' = 'balanced'): Promise<ClaudeModelId | null> {
+    const accessibleModels = await this.getAccessibleModels();
+    
+    if (accessibleModels.length === 0) {
+      return null;
+    }
+
+    // Sort models based on preference
+    const sortedModels = accessibleModels.sort((a, b) => {
+      const modelA = CLAUDE_MODELS[a];
+      const modelB = CLAUDE_MODELS[b];
+
+      switch (preference) {
+        case 'performance':
+          // Prefer newer models and higher max tokens
+          if (a.includes('claude-4') && !b.includes('claude-4')) return -1;
+          if (!a.includes('claude-4') && b.includes('claude-4')) return 1;
+          return modelB.maxTokens - modelA.maxTokens;
+        
+        case 'cost':
+          // Prefer lower cost models
+          return modelA.outputCostPer1K - modelB.outputCostPer1K;
+        
+        case 'balanced':
+        default:
+          // Prefer models with good performance/cost ratio
+          const ratioA = modelA.maxTokens / modelA.outputCostPer1K;
+          const ratioB = modelB.maxTokens / modelB.outputCostPer1K;
+          return ratioB - ratioA;
+      }
+    });
+
+    return sortedModels[0];
+  }
+
+  /**
+   * Generate text with automatic fallback to accessible models
+   */
+  async generateTextWithFallback(options: GenerateTextOptions): Promise<GenerationResult> {
+    // First try the requested model
+    try {
+      return await this.generateText(options);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
+      
+      // If it's an access error, try to find an alternative
+      if (errorMessage.includes('access denied') || 
+          errorMessage.includes('don\'t have access') ||
+          errorMessage.includes('on-demand throughput isn\'t supported') ||
+          errorMessage.includes('inference profile')) {
+        
+        console.log(`Model ${options.model} not accessible, trying alternatives...`);
+        
+        // Get accessible models
+        const accessibleModels = await this.getAccessibleModels();
+        
+        if (accessibleModels.length === 0) {
+          throw new BedrockClientError(
+            'No accessible Claude models found. Please check your AWS Bedrock permissions.',
+            'NO_ACCESSIBLE_MODELS'
+          );
+        }
+
+        // Try the best available model
+        const fallbackModel = await this.getBestAvailableModel('balanced');
+        if (fallbackModel) {
+          console.log(`Using fallback model: ${fallbackModel}`);
+          return await this.generateText({
+            ...options,
+            model: fallbackModel,
+          });
+        }
+      }
+      
+      // Re-throw the original error if we can't find a fallback
+      throw error;
+    }
+  }
+
+  /**
    * Retry wrapper with exponential backoff
    */
   private async withRetry<T>(

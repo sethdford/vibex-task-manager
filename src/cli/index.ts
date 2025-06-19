@@ -198,11 +198,26 @@ class VibexCLI {
       .command('auto-update')
       .description('Automatically update configuration with best available models')
       .option('--region <region>', 'AWS region to check', 'us-east-1')
+      .option('--test-access', 'Test actual model access (slower but more accurate)')
       .option('--profile <profile>', 'AWS profile to use')
       .option('--dry-run', 'Show what would be changed without making changes')
       .action(async (options) => {
         try {
           await this.handleConfigAutoUpdate(options);
+        } catch (error) {
+          this.handleError(error);
+        }
+      });
+
+    configCmd
+      .command('auto-configure')
+      .description('Automatically configure with accessible models (runtime testing)')
+      .option('--region <region>', 'AWS region to check', 'us-east-1')
+      .option('--profile <profile>', 'AWS profile to use')
+      .option('--project-name <name>', 'Project name for configuration')
+      .action(async (options) => {
+        try {
+          await this.handleConfigAutoConfigure(options);
         } catch (error) {
           this.handleError(error);
         }
@@ -886,6 +901,9 @@ class VibexCLI {
     if (options.profile) {
       console.log(chalk.dim(`Profile: ${options.profile}`));
     }
+    if (options.testAccess) {
+      console.log(chalk.dim('Testing actual model access (this may take a moment)...'));
+    }
     console.log();
 
     const detector = new BedrockAutoDetect({
@@ -893,7 +911,7 @@ class VibexCLI {
       profile: options.profile,
     });
 
-    const result = await detector.detectModels();
+    const result = await detector.detectModels(options.testAccess || false);
 
     if (!result.hasCredentials) {
       console.log(chalk.red('✗ AWS credentials not found or invalid'));
@@ -967,6 +985,85 @@ class VibexCLI {
       console.log(`  Main Model: ${updatedConfig.models.main.modelId}`);
       console.log(`  Research Model: ${updatedConfig.models.research.modelId}`);
       console.log(`  Fallback Model: ${updatedConfig.models.fallback.modelId}`);
+    }
+  }
+
+  private async handleConfigAutoConfigure(options: any): Promise<void> {
+    console.log(chalk.blue('Auto-configuring with accessible models...'));
+    console.log(chalk.dim(`Region: ${options.region}`));
+    if (options.profile) {
+      console.log(chalk.dim(`Profile: ${options.profile}`));
+    }
+    console.log(chalk.dim('Testing actual model access (this may take a moment)...'));
+    console.log();
+
+    const configService = new ConfigService(this.projectRoot);
+    
+    try {
+      const result = await configService.autoConfigureModels({
+        region: options.region,
+        profile: options.profile,
+        projectName: options.projectName,
+        testAccess: true, // Always test access for auto-configure
+      });
+
+      console.log(chalk.green('✓ Configuration completed successfully!'));
+      console.log();
+
+      console.log(chalk.blue('Accessible models:'));
+      result.accessibleModels.forEach(model => {
+        console.log(`  ${chalk.green('✓')} ${model}`);
+      });
+
+      if (result.inaccessibleModels.length > 0) {
+        console.log();
+        console.log(chalk.yellow('Inaccessible models:'));
+        result.inaccessibleModels.forEach(model => {
+          console.log(`  ${chalk.red('✗')} ${model}`);
+        });
+      }
+
+      if (result.warnings.length > 0) {
+        console.log();
+        console.log(chalk.yellow('Warnings:'));
+        result.warnings.forEach(warning => {
+          console.log(`  ${chalk.yellow('⚠')} ${warning}`);
+        });
+      }
+
+      console.log();
+      console.log(chalk.blue('Final configuration:'));
+      console.log(`  Main Model: ${chalk.green(result.config.models.main.modelId)}`);
+      console.log(`  Research Model: ${chalk.green(result.config.models.research.modelId)}`);
+      console.log(`  Fallback Model: ${chalk.green(result.config.models.fallback?.modelId || 'None')}`);
+      console.log(`  Region: ${result.config.models.main.region}`);
+
+      // Test the configuration
+      console.log();
+      console.log(chalk.blue('Testing configuration...'));
+      const isValid = await configService.testModelConfig(result.config.models.main);
+      if (isValid) {
+        console.log(chalk.green('✓ Configuration test passed'));
+      } else {
+        console.log(chalk.yellow('⚠ Configuration test failed - you may need to check your AWS credentials'));
+      }
+
+    } catch (error) {
+      if (error instanceof ConfigurationError) {
+        if (error.code === 'credentials') {
+          console.log(chalk.red('✗ AWS credentials not found or invalid'));
+          console.log(chalk.dim('Please configure AWS credentials using:'));
+          console.log(chalk.dim('  aws configure'));
+          console.log(chalk.dim('  or set AWS_PROFILE environment variable'));
+        } else if (error.code === 'no_models') {
+          console.log(chalk.red('✗ No accessible Claude models found'));
+          console.log(chalk.dim('Please check your AWS Bedrock access and region'));
+        } else {
+          console.log(chalk.red(`✗ Configuration error: ${error.message}`));
+        }
+      } else {
+        throw error;
+      }
     }
   }
 

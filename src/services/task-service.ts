@@ -265,7 +265,7 @@ export class TaskService implements ITaskService {
     const systemPrompt = this.buildTaskCreationPrompt();
     const modelConfig = await this.configService.getModelConfig('main');
     
-    const response = await this.bedrockClient.generateText({
+    const response = await this.bedrockClient.generateTextWithFallback({
       model: modelConfig.modelId as ClaudeModelId,
       system: systemPrompt,
       messages: [{ role: 'user', content: prompt }],

@@ -143,7 +143,7 @@ export class BedrockAutoDetect {
   /**
    * Auto-detect available models and recommend configuration
    */
-  async detectModels(): Promise<AutoDetectResult> {
+  async detectModels(testAccess: boolean = false): Promise<AutoDetectResult> {
     const result: AutoDetectResult = {
       available: [],
       unavailable: [],
@@ -172,11 +172,19 @@ export class BedrockAutoDetect {
       const claudeModels = getClaudeModels();
       
       for (const [modelId, modelInfo] of claudeModels) {
+        const isListed = availableBedrockIds.has(modelInfo.id);
+        
+        // If testing access, also check if we can actually invoke the model
+        let isAccessible = isListed;
+        if (testAccess && isListed) {
+          isAccessible = await this.testModelAccess(modelId);
+        }
+
         const detected: DetectedModel = {
           modelId,
           bedrockId: modelInfo.id,
           modelInfo,
-          isAvailable: availableBedrockIds.has(modelInfo.id),
+          isAvailable: isAccessible,
           region: this.config.region || 'us-east-1',
         };
 
@@ -192,7 +200,10 @@ export class BedrockAutoDetect {
 
       // If no models available, provide fallback recommendations
       if (result.available.length === 0) {
-        result.error = 'No Claude models found in your AWS Bedrock region. You may need to request access or try a different region.';
+        const accessMessage = testAccess ? 
+          'No Claude models are accessible in your AWS Bedrock region. You may need to request access to specific models or try a different region.' :
+          'No Claude models found in your AWS Bedrock region. You may need to request access or try a different region.';
+        result.error = accessMessage;
         return this.getFallbackRecommendations(result);
       }
 
@@ -297,6 +308,81 @@ export class BedrockAutoDetect {
     } catch (error) {
       return false;
     }
+  }
+
+  /**
+   * Test actual model access by making a real API call
+   * This checks if the user has invoke permissions, not just list permissions
+   */
+  async testModelAccess(modelId: BedrockModelId): Promise<boolean> {
+    try {
+      const modelInfo = BEDROCK_MODELS[modelId];
+      if (!modelInfo) return false;
+
+      const client = await this.initializeClient();
+      if (!client) return false;
+
+      // Import BedrockRuntimeClient for actual model invocation
+      const { BedrockRuntimeClient, InvokeModelCommand } = await import('@aws-sdk/client-bedrock-runtime');
+      
+      const runtimeClient = new BedrockRuntimeClient({
+        region: this.config.region,
+        credentials: client.config.credentials,
+      });
+
+      // Make a minimal test request
+      const testRequest = {
+        anthropic_version: 'bedrock-2023-05-31',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Hi' }],
+      };
+
+      const command = new InvokeModelCommand({
+        modelId: modelInfo.id,
+        contentType: 'application/json',
+        accept: 'application/json',
+        body: JSON.stringify(testRequest),
+      });
+
+      await runtimeClient.send(command);
+      return true;
+    } catch (error) {
+      // Check if it's an access error vs other errors
+      const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
+      if (errorMessage.includes('access denied') || 
+          errorMessage.includes('don\'t have access') ||
+          errorMessage.includes('on-demand throughput isn\'t supported') ||
+          errorMessage.includes('inference profile')) {
+        return false;
+      }
+      // For other errors (like throttling), assume the model is accessible
+      return true;
+    }
+  }
+
+  /**
+   * Get actually accessible models by testing invoke permissions
+   */
+  async getAccessibleModels(): Promise<DetectedModel[]> {
+    const result = await this.detectModels();
+    if (!result.hasCredentials || result.available.length === 0) {
+      return [];
+    }
+
+    const accessibleModels: DetectedModel[] = [];
+    
+    // Test each available model for actual access
+    for (const model of result.available) {
+      const hasAccess = await this.testModelAccess(model.modelId);
+      if (hasAccess) {
+        accessibleModels.push({
+          ...model,
+          isAvailable: true,
+        });
+      }
+    }
+
+    return accessibleModels;
   }
 
   /**

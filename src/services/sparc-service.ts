@@ -140,7 +140,7 @@ export class SparcService {
     const model = await this.getModelForOperation('canAnalyzeComplexity');
     const prompt = this.buildSparcRequirementsPrompt(task);
     
-    const response = await this.bedrockClient.generateText({
+    const response = await this.bedrockClient.generateTextWithFallback({
       model,
       messages: [{ role: 'user', content: prompt }],
       maxTokens: 2048,
@@ -168,7 +168,7 @@ export class SparcService {
     const model = await this.getModelForOperation('canAnalyzeComplexity');
     const prompt = this.buildSparcPseudocodePrompt(task);
     
-    const response = await this.bedrockClient.generateText({
+    const response = await this.bedrockClient.generateTextWithFallback({
       model,
       messages: [{ role: 'user', content: prompt }],
       maxTokens: 2048,
@@ -198,7 +198,7 @@ export class SparcService {
     const model = await this.getModelForOperation('canAnalyzeComplexity');
     const prompt = this.buildSparcArchitecturePrompt(task);
     
-    const response = await this.bedrockClient.generateText({
+    const response = await this.bedrockClient.generateTextWithFallback({
       model,
       messages: [{ role: 'user', content: prompt }],
       maxTokens: 2048,
@@ -237,7 +237,7 @@ export class SparcService {
     const model = await this.getModelForOperation('canAnalyzeComplexity');
     const prompt = this.buildSparcTestsPrompt(task);
     
-    const response = await this.bedrockClient.generateText({
+    const response = await this.bedrockClient.generateTextWithFallback({
       model,
       messages: [{ role: 'user', content: prompt }],
       maxTokens: 2048,

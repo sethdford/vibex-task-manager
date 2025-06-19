@@ -7,6 +7,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 import BedrockClient, { CLAUDE_MODELS, ClaudeModelId } from '../core/bedrock-client.js';
+import { BedrockAutoDetect } from '../core/bedrock-auto-detect.js';
 import {
   Config,
   BedrockModelConfig,
@@ -184,6 +185,125 @@ export class ConfigService implements IConfigService {
     } catch (error) {
       return false;
     }
+  }
+
+  /**
+   * Auto-detect accessible models and set up configuration
+   */
+  async autoConfigureModels(options: {
+    region?: string;
+    profile?: string;
+    accessKeyId?: string;
+    secretAccessKey?: string;
+    projectName?: string;
+    testAccess?: boolean;
+  } = {}): Promise<{
+    config: Config;
+    accessibleModels: string[];
+    inaccessibleModels: string[];
+    warnings: string[];
+  }> {
+    const warnings: string[] = [];
+    
+    // Initialize auto-detect with user's AWS config
+    const autoDetect = new BedrockAutoDetect({
+      region: options.region || 'us-east-1',
+      profile: options.profile,
+      accessKeyId: options.accessKeyId,
+      secretAccessKey: options.secretAccessKey,
+    });
+
+    // Detect models with optional access testing
+    const detectionResult = await autoDetect.detectModels(options.testAccess || false);
+    
+    if (!detectionResult.hasCredentials) {
+      throw new ConfigurationError(
+        'No valid AWS credentials found. Please configure AWS credentials for Bedrock access.',
+        'credentials'
+      );
+    }
+
+    if (detectionResult.available.length === 0) {
+      throw new ConfigurationError(
+        detectionResult.error || 'No accessible Claude models found in your AWS Bedrock region.',
+        'no_models'
+      );
+    }
+
+    // Get model recommendations
+    const recommendations = detectionResult.recommendations;
+    
+    if (!recommendations.main) {
+      throw new ConfigurationError(
+        'Unable to recommend a main model. Please check your AWS Bedrock access.',
+        'no_recommendations'
+      );
+    }
+
+    // Create configuration with recommended models
+    const config = this.getDefaultConfig();
+    
+    // Update AWS configuration for all models
+    const awsConfig = {
+      region: options.region || 'us-east-1',
+      profile: options.profile,
+      accessKeyId: options.accessKeyId,
+      secretAccessKey: options.secretAccessKey,
+    };
+
+    // Configure main model
+    config.models.main = {
+      ...config.models.main,
+      ...awsConfig,
+      modelId: recommendations.main,
+      maxTokens: Math.min(config.models.main.maxTokens, CLAUDE_MODELS[recommendations.main].maxTokens),
+    };
+
+    // Configure research model
+    if (recommendations.research) {
+      config.models.research = {
+        ...config.models.research,
+        ...awsConfig,
+        modelId: recommendations.research,
+        maxTokens: Math.min(config.models.research.maxTokens, CLAUDE_MODELS[recommendations.research].maxTokens),
+      };
+    } else {
+      // Use main model for research if no separate research model available
+      config.models.research = { ...config.models.main };
+      warnings.push('No separate research model available, using main model for research tasks');
+    }
+
+    // Configure fallback model
+    if (recommendations.fallback && config.models.fallback) {
+      config.models.fallback = {
+        ...config.models.fallback,
+        ...awsConfig,
+        modelId: recommendations.fallback,
+        maxTokens: Math.min(config.models.fallback.maxTokens, CLAUDE_MODELS[recommendations.fallback].maxTokens),
+      };
+    } else if (config.models.fallback) {
+      // Use main model as fallback if no separate fallback model available
+      config.models.fallback = { ...config.models.main };
+      warnings.push('No separate fallback model available, using main model as fallback');
+    }
+
+    // Update global configuration
+    if (options.projectName) {
+      config.global.projectName = options.projectName;
+    }
+
+    // Validate and save
+    const validatedConfig = await this.validateConfig(config);
+    await this.saveConfig(validatedConfig);
+    
+    this.cache = validatedConfig;
+
+    return {
+      config: validatedConfig,
+      accessibleModels: detectionResult.available.map(m => m.modelId),
+      inaccessibleModels: detectionResult.unavailable.map(m => m.modelId),
+      warnings,
+    };
   }
 
   /**
