@@ -98,6 +98,24 @@ export const CLAUDE_MODELS = {
     outputCostPer1K: 0.00125,
   },
   
+  // Claude v2 Models
+  'claude-v2': {
+    id: 'anthropic.claude-v2',
+    name: 'Claude v2',
+    maxTokens: 4096,
+    contextWindow: 100000,
+    inputCostPer1K: 0.008,
+    outputCostPer1K: 0.024,
+  },
+  'claude-v2-1': {
+    id: 'anthropic.claude-v2:1',
+    name: 'Claude v2.1',
+    maxTokens: 4096,
+    contextWindow: 200000,
+    inputCostPer1K: 0.008,
+    outputCostPer1K: 0.024,
+  },
+  
   // Claude Instant (Legacy)
   'claude-instant-v1': {
     id: 'anthropic.claude-instant-v1',

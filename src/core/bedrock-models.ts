@@ -204,6 +204,46 @@ export const BEDROCK_MODELS = {
     }
   },
   
+  // Claude v2 Models
+  'claude-v2': {
+    id: 'anthropic.claude-v2',
+    name: 'Claude v2',
+    provider: 'anthropic',
+    maxTokens: 4096,
+    contextWindow: 100000,
+    inputCostPer1K: 0.008,
+    outputCostPer1K: 0.024,
+    supportsTools: false,
+    isStreaming: true,
+    isClaude: true,
+    swe_score: 0.4,
+    taskCapabilities: {
+      canGenerateSubtasks: true,
+      canAnalyzeComplexity: true,
+      canParsePRD: true,
+      maxSubtasksPerTask: 12
+    }
+  },
+  'claude-v2-1': {
+    id: 'anthropic.claude-v2:1',
+    name: 'Claude v2.1',
+    provider: 'anthropic',
+    maxTokens: 4096,
+    contextWindow: 200000,
+    inputCostPer1K: 0.008,
+    outputCostPer1K: 0.024,
+    supportsTools: false,
+    isStreaming: true,
+    isClaude: true,
+    swe_score: 0.45,
+    taskCapabilities: {
+      canGenerateSubtasks: true,
+      canAnalyzeComplexity: true,
+      canParsePRD: true,
+      maxSubtasksPerTask: 12
+    }
+  },
+  
   // Legacy Models (still supported)
   'claude-instant-v1': {
     id: 'anthropic.claude-instant-v1',

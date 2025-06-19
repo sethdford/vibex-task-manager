@@ -913,12 +913,41 @@
       "created": "2025-06-19T21:07:57.462Z",
       "updated": "2025-06-19T21:07:57.462Z",
       "tags": []
+    },
+    {
+      "id": 20,
+      "title": "Add Product Editing Page",
+      "description": "Develop a page for editing existing product details like name, price, etc.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T21:29:39.976Z",
+      "updated": "2025-06-19T21:29:39.976Z",
+      "tags": []
+    },
+    {
+      "id": 21,
+      "title": "Create Dashboard",
+      "description": "Develop a dashboard page that displays key metrics and information for users. It should include widgets for recent orders, top products, customer count and more.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T21:29:55.411Z",
+      "updated": "2025-06-19T21:29:55.411Z",
+      "estimatedHours": 15,
+      "complexity": 7,
+      "tags": [
+        "frontend",
+        "reporting"
+      ]
     }
   ],
   "metadata": {
     "version": "1.0.0",
     "created": "2025-06-19T12:05:46.865Z",
-    "updated": "2025-06-19T21:07:57.462Z",
-    "totalTasks": 19
+    "updated": "2025-06-19T21:29:55.411Z",
+    "totalTasks": 21
   }
 }

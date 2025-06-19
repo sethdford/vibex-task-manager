@@ -248,6 +248,12 @@ export class BedrockAutoDetect {
       recommendations.main = 'claude-3-5-sonnet-20240620';
     } else if (modelIds.includes('claude-3-haiku-20240307')) {
       recommendations.main = 'claude-3-haiku-20240307';
+    } else if (modelIds.includes('claude-3-sonnet-20240229')) {
+      recommendations.main = 'claude-3-sonnet-20240229';
+    } else if (modelIds.includes('claude-v2-1')) {
+      recommendations.main = 'claude-v2-1';
+    } else if (modelIds.includes('claude-v2')) {
+      recommendations.main = 'claude-v2';
     } else if (modelIds.includes('claude-sonnet-4-20250514')) {
       recommendations.main = 'claude-sonnet-4-20250514';
     } else if (modelIds.includes('claude-3-5-sonnet-20241022')) {
@@ -262,6 +268,12 @@ export class BedrockAutoDetect {
       recommendations.research = 'claude-3-5-sonnet-20240620';
     } else if (modelIds.includes('claude-3-opus-20240229')) {
       recommendations.research = 'claude-3-opus-20240229';
+    } else if (modelIds.includes('claude-3-sonnet-20240229') && recommendations.main !== 'claude-3-sonnet-20240229') {
+      recommendations.research = 'claude-3-sonnet-20240229';
+    } else if (modelIds.includes('claude-v2-1') && recommendations.main !== 'claude-v2-1') {
+      recommendations.research = 'claude-v2-1';
+    } else if (modelIds.includes('claude-v2') && recommendations.main !== 'claude-v2') {
+      recommendations.research = 'claude-v2';
     } else if (recommendations.main && modelIds.includes('claude-sonnet-4-20250514')) {
       // If we didn't use Claude Sonnet 4 for main, use it for research
       recommendations.research = 'claude-sonnet-4-20250514';
@@ -271,9 +283,13 @@ export class BedrockAutoDetect {
       recommendations.research = researchModel?.modelId || recommendations.main;
     }
 
-    // Fallback model: Most cost-effective
+    // Fallback model: Most cost-effective but still capable
     if (modelIds.includes('claude-3-haiku-20240307')) {
       recommendations.fallback = 'claude-3-haiku-20240307';
+    } else if (modelIds.includes('claude-v2-1')) {
+      recommendations.fallback = 'claude-v2-1';
+    } else if (modelIds.includes('claude-v2')) {
+      recommendations.fallback = 'claude-v2';
     } else if (sortedByCost.length > 0) {
       recommendations.fallback = sortedByCost[0].modelId;
     }
@@ -285,11 +301,11 @@ export class BedrockAutoDetect {
    * Get fallback recommendations when detection fails
    */
   private getFallbackRecommendations(result: AutoDetectResult): AutoDetectResult {
-    // Use models that support ON_DEMAND access by default
+    // Use models that support ON_DEMAND access by default, with Claude v2 as backup
     result.recommendations = {
-      main: 'claude-3-5-sonnet-20240620',
-      research: 'claude-3-5-sonnet-20240620',
-      fallback: 'claude-3-haiku-20240307',
+      main: 'claude-v2-1',
+      research: 'claude-v2-1',
+      fallback: 'claude-v2',
     };
     
     return result;

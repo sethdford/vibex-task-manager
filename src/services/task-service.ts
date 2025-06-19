@@ -1191,13 +1191,18 @@ Respond with a JSON array of subtask objects, each with a 'title' and 'descripti
 
   private buildTaskCreationPrompt(): string {
     return `You are an expert task creation assistant. Based on the user's prompt, generate a JSON object representing a single task.
+
+IMPORTANT: Always respond with ONLY a valid JSON object. Do not include explanations, markdown formatting, or any other text.
+
+If the user's prompt is vague (like "help"), interpret it as a request to create a task related to that concept.
+
 The JSON object should have the following properties:
 - title: string (required)
-- description: string (required)
+- description: string (required)  
 - priority: 'low' | 'medium' | 'high' (optional, defaults to 'medium')
-- tags: string[] (optional)
-- estimatedHours: number (optional)
-- complexity: number (1-10, optional)
+- tags: string[] (optional, use empty array [] instead of null)
+- estimatedHours: number (optional, omit if unknown)
+- complexity: number (1-10, optional, omit if unknown)
 
 Example prompt: "Create a login page"
 Example response:
@@ -1208,6 +1213,15 @@ Example response:
   "tags": ["frontend", "auth"],
   "estimatedHours": 8,
   "complexity": 5
+}
+
+Example prompt: "help"
+Example response:
+{
+  "title": "Create Help System",
+  "description": "Develop a help system or documentation to assist users with common questions and tasks.",
+  "priority": "medium",
+  "tags": ["documentation", "user-support"]
 }`;
   }
 
