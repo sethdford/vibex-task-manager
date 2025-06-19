@@ -25,12 +25,52 @@ export interface BedrockModelInfo {
 
 // All AWS Bedrock Models
 export const BEDROCK_MODELS = {
-  // Claude 4 (3.7) Models
+  // Claude 4 Models (Latest)
+  'claude-opus-4-20250514': {
+    id: 'anthropic.claude-opus-4-20250514-v1:0',
+    name: 'Claude Opus 4',
+    provider: 'anthropic',
+    maxTokens: 8192,
+    contextWindow: 200000,
+    inputCostPer1K: 0.075,
+    outputCostPer1K: 0.375,
+    supportsTools: true,
+    isStreaming: true,
+    isClaude: true,
+    swe_score: 0.7,
+    taskCapabilities: {
+      canGenerateSubtasks: true,
+      canAnalyzeComplexity: true,
+      canParsePRD: true,
+      maxSubtasksPerTask: 25
+    }
+  },
+  'claude-sonnet-4-20250514': {
+    id: 'anthropic.claude-sonnet-4-20250514-v1:0',
+    name: 'Claude Sonnet 4',
+    provider: 'anthropic',
+    maxTokens: 8192,
+    contextWindow: 200000,
+    inputCostPer1K: 0.015,
+    outputCostPer1K: 0.075,
+    supportsTools: true,
+    isStreaming: true,
+    isClaude: true,
+    swe_score: 0.6,
+    taskCapabilities: {
+      canGenerateSubtasks: true,
+      canAnalyzeComplexity: true,
+      canParsePRD: true,
+      maxSubtasksPerTask: 22
+    }
+  },
+  
+  // Claude 3.7 Sonnet
   'claude-3-7-sonnet-20250219': {
     id: 'anthropic.claude-3-7-sonnet-20250219-v1:0',
-    name: 'Claude 4 (3.7) Sonnet',
+    name: 'Claude 3.7 Sonnet',
     provider: 'anthropic',
-    maxTokens: 64000,
+    maxTokens: 8192,
     contextWindow: 200000,
     inputCostPer1K: 0.003,
     outputCostPer1K: 0.015,
@@ -46,52 +86,12 @@ export const BEDROCK_MODELS = {
     }
   },
   
-  // Claude 4 Models
-  'claude-opus-4-20250514': {
-    id: 'anthropic.claude-opus-4-20250514-v1:0',
-    name: 'Claude Opus 4',
-    provider: 'anthropic',
-    maxTokens: 64000,
-    contextWindow: 200000,
-    inputCostPer1K: 0.015,
-    outputCostPer1K: 0.075,
-    supportsTools: true,
-    isStreaming: true,
-    isClaude: true,
-    swe_score: 0.55,
-    taskCapabilities: {
-      canGenerateSubtasks: true,
-      canAnalyzeComplexity: true,
-      canParsePRD: true,
-      maxSubtasksPerTask: 25
-    }
-  },
-  'claude-sonnet-4-20250514': {
-    id: 'anthropic.claude-sonnet-4-20250514-v1:0',
-    name: 'Claude Sonnet 4',
-    provider: 'anthropic',
-    maxTokens: 64000,
-    contextWindow: 200000,
-    inputCostPer1K: 0.003,
-    outputCostPer1K: 0.015,
-    supportsTools: true,
-    isStreaming: true,
-    isClaude: true,
-    swe_score: 0.52,
-    taskCapabilities: {
-      canGenerateSubtasks: true,
-      canAnalyzeComplexity: true,
-      canParsePRD: true,
-      maxSubtasksPerTask: 20
-    }
-  },
-  
   // Claude 3.5 Models
   'claude-3-5-sonnet-20241022': {
     id: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-    name: 'Claude 3.5 Sonnet (Latest)',
+    name: 'Claude 3.5 Sonnet v2',
     provider: 'anthropic',
-    maxTokens: 64000,
+    maxTokens: 8192,
     contextWindow: 200000,
     inputCostPer1K: 0.003,
     outputCostPer1K: 0.015,
@@ -103,21 +103,40 @@ export const BEDROCK_MODELS = {
       canGenerateSubtasks: true,
       canAnalyzeComplexity: true,
       canParsePRD: true,
-      maxSubtasksPerTask: 15
+      maxSubtasksPerTask: 18
     }
   },
   'claude-3-5-sonnet-20240620': {
     id: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
-    name: 'Claude 3.5 Sonnet (June 2024)',
+    name: 'Claude 3.5 Sonnet',
     provider: 'anthropic',
-    maxTokens: 64000,
+    maxTokens: 8192,
     contextWindow: 200000,
     inputCostPer1K: 0.003,
     outputCostPer1K: 0.015,
     supportsTools: true,
     isStreaming: true,
     isClaude: true,
-    swe_score: 0.49,
+    swe_score: 0.47,
+    taskCapabilities: {
+      canGenerateSubtasks: true,
+      canAnalyzeComplexity: true,
+      canParsePRD: true,
+      maxSubtasksPerTask: 18
+    }
+  },
+  'claude-3-5-haiku-20241022': {
+    id: 'anthropic.claude-3-5-haiku-20241022-v1:0',
+    name: 'Claude 3.5 Haiku',
+    provider: 'anthropic',
+    maxTokens: 8192,
+    contextWindow: 200000,
+    inputCostPer1K: 0.0008,
+    outputCostPer1K: 0.004,
+    supportsTools: true,
+    isStreaming: true,
+    isClaude: true,
+    swe_score: 0.4,
     taskCapabilities: {
       canGenerateSubtasks: true,
       canAnalyzeComplexity: true,
@@ -131,14 +150,14 @@ export const BEDROCK_MODELS = {
     id: 'anthropic.claude-3-opus-20240229-v1:0',
     name: 'Claude 3 Opus',
     provider: 'anthropic',
-    maxTokens: 32000,
+    maxTokens: 4096,
     contextWindow: 200000,
     inputCostPer1K: 0.015,
     outputCostPer1K: 0.075,
     supportsTools: true,
     isStreaming: true,
     isClaude: true,
-    swe_score: 0.4,
+    swe_score: 0.38,
     taskCapabilities: {
       canGenerateSubtasks: true,
       canAnalyzeComplexity: true,
@@ -150,14 +169,14 @@ export const BEDROCK_MODELS = {
     id: 'anthropic.claude-3-sonnet-20240229-v1:0',
     name: 'Claude 3 Sonnet',
     provider: 'anthropic',
-    maxTokens: 64000,
+    maxTokens: 4096,
     contextWindow: 200000,
     inputCostPer1K: 0.003,
     outputCostPer1K: 0.015,
     supportsTools: true,
     isStreaming: true,
     isClaude: true,
-    swe_score: 0.39,
+    swe_score: 0.34,
     taskCapabilities: {
       canGenerateSubtasks: true,
       canAnalyzeComplexity: true,
@@ -169,28 +188,28 @@ export const BEDROCK_MODELS = {
     id: 'anthropic.claude-3-haiku-20240307-v1:0',
     name: 'Claude 3 Haiku',
     provider: 'anthropic',
-    maxTokens: 64000,
+    maxTokens: 4096,
     contextWindow: 200000,
     inputCostPer1K: 0.00025,
     outputCostPer1K: 0.00125,
     supportsTools: true,
     isStreaming: true,
     isClaude: true,
-    swe_score: 0.26,
+    swe_score: 0.25,
     taskCapabilities: {
       canGenerateSubtasks: true,
-      canAnalyzeComplexity: false,
-      canParsePRD: false,
-      maxSubtasksPerTask: 8
+      canAnalyzeComplexity: true,
+      canParsePRD: true,
+      maxSubtasksPerTask: 10
     }
   },
   
-  // Claude Legacy Models
+  // Legacy Models (still supported)
   'claude-instant-v1': {
     id: 'anthropic.claude-instant-v1',
-    name: 'Claude Instant v1',
+    name: 'Claude Instant',
     provider: 'anthropic',
-    maxTokens: 32000,
+    maxTokens: 4096,
     contextWindow: 100000,
     inputCostPer1K: 0.0008,
     outputCostPer1K: 0.0024,
@@ -201,8 +220,8 @@ export const BEDROCK_MODELS = {
     taskCapabilities: {
       canGenerateSubtasks: true,
       canAnalyzeComplexity: false,
-      canParsePRD: false,
-      maxSubtasksPerTask: 5
+      canParsePRD: true,
+      maxSubtasksPerTask: 8
     }
   },
   
@@ -243,27 +262,6 @@ export const BEDROCK_MODELS = {
       canAnalyzeComplexity: false,
       canParsePRD: false,
       maxSubtasksPerTask: 4
-    }
-  },
-  
-  // Claude 3.5 Haiku
-  'claude-3-5-haiku-20241022': {
-    id: 'anthropic.claude-3-5-haiku-20241022-v1:0',
-    name: 'Claude 3.5 Haiku',
-    provider: 'anthropic',
-    maxTokens: 64000,
-    contextWindow: 200000,
-    inputCostPer1K: 0.001,
-    outputCostPer1K: 0.005,
-    supportsTools: true,
-    isStreaming: true,
-    isClaude: true,
-    swe_score: 0.35,
-    taskCapabilities: {
-      canGenerateSubtasks: true,
-      canAnalyzeComplexity: false,
-      canParsePRD: false,
-      maxSubtasksPerTask: 10
     }
   },
 } as const satisfies Record<string, BedrockModelInfo>;
@@ -324,22 +322,22 @@ export function getBestModelForBudget(maxCostPer1KTokens: number): BedrockModelI
 // Model recommendations by use case
 export const MODEL_RECOMMENDATIONS = {
   // Best performance (Claude 4)
-  bestPerformance: 'claude-3-7-sonnet-20250219' as BedrockModelId,
+  bestPerformance: 'claude-opus-4-20250514' as BedrockModelId,
   
   // Best value (good performance, reasonable cost)
-  bestValue: 'claude-3-5-sonnet-20241022' as BedrockModelId,
+  bestValue: 'claude-sonnet-4-20250514' as BedrockModelId,
   
   // Best for long context
-  bestLongContext: 'claude-3-7-sonnet-20250219' as BedrockModelId,
+  bestLongContext: 'claude-opus-4-20250514' as BedrockModelId,
   
   // Most cost-effective
   mostCostEffective: 'claude-3-haiku-20240307' as BedrockModelId,
   
   // Best for complex reasoning
-  bestComplexReasoning: 'claude-3-opus-20240229' as BedrockModelId,
+  bestComplexReasoning: 'claude-opus-4-20250514' as BedrockModelId,
   
   // Fastest response time
-  fastestResponse: 'claude-3-haiku-20240307' as BedrockModelId,
+  fastestResponse: 'claude-3-5-haiku-20241022' as BedrockModelId,
   
   // Best non-Claude option
   bestNonClaude: 'titan-text-premier-v1' as BedrockModelId,

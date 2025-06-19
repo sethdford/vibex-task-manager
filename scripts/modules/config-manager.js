@@ -498,8 +498,12 @@ function getAvailableModels() {
                 let name = nameParts.join(' ');
                 if (modelId === 'claude-3.5-sonnet-20240620')
                     name = 'Claude 3.5 Sonnet';
-                if (modelId === 'claude-3-7-sonnet-20250219')
-                    name = 'Claude 3.7 Sonnet';
+                				if (modelId === 'claude-3-7-sonnet-20250219')
+					name = 'Claude 3.7 Sonnet';
+				if (modelId === 'claude-sonnet-4-20250514')
+					name = 'Claude Sonnet 4';
+				if (modelId === 'claude-opus-4-20250514')
+					name = 'Claude Opus 4';
                 if (modelId === 'gpt-4o')
                     name = 'GPT-4o';
                 if (modelId === 'gpt-4-turbo')

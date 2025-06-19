@@ -54,7 +54,7 @@ const DEFAULTS: Config = {
   models: {
     main: {
       provider: 'bedrock',
-      modelId: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0', // Claude 4
+      		modelId: 'anthropic.claude-3-5-sonnet-20240620-v1:0', // Claude 3.5 Sonnet (ON_DEMAND supported)
       maxTokens: 64000,
       temperature: 0.2
     },
@@ -582,7 +582,7 @@ export function getAvailableModels(): AvailableModel[] {
         let name = nameParts.join(' ');
         if (modelId === 'claude-3.5-sonnet-20240620')
           name = 'Claude 3.5 Sonnet';
-        if (modelId === 'claude-3-7-sonnet-20250219')
+        		if (modelId === 'claude-sonnet-4-20250514')
           name = 'Claude 3.7 Sonnet';
         if (modelId === 'gpt-4o') name = 'GPT-4o';
         if (modelId === 'gpt-4-turbo') name = 'GPT-4 Turbo';

@@ -2,20 +2,20 @@
   "version": "1.0.0",
   "models": {
     "main": {
-      "modelId": "claude-3-7-sonnet-20250219",
-      "maxTokens": 4096,
+      "modelId": "claude-3-5-sonnet-20240620",
+      "maxTokens": 8192,
       "temperature": 0.3,
       "region": "us-east-1"
     },
     "research": {
-      "modelId": "claude-3-opus-20240229",
+      "modelId": "claude-3-5-sonnet-20240620",
       "maxTokens": 8192,
       "temperature": 0.1,
       "region": "us-east-1"
     },
     "fallback": {
       "modelId": "claude-3-haiku-20240307",
-      "maxTokens": 2048,
+      "maxTokens": 4096,
       "temperature": 0.2,
       "region": "us-east-1"
     }
@@ -30,7 +30,7 @@
     "autoBackup": true,
     "maxBackups": 10
   },
-  "lastUpdated": "2025-06-19T12:20:59.458Z",
+  "lastUpdated": "2025-06-19T16:45:00.000Z",
   "dataDirectory": ".vibex",
   "autoSave": true,
   "autoBackup": true,

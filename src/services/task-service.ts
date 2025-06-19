@@ -274,14 +274,9 @@ export class TaskService implements ITaskService {
 
     let taskData: any;
     try {
-      // Debug logging to capture raw AI response
-      console.log('=== DEBUG: Raw AI Response ===');
-      console.log('Response type:', typeof response.text);
-      console.log('Response length:', response.text.length);
-      console.log('Raw response:', response.text);
-      console.log('=== END DEBUG ===');
-      
-      taskData = JSON.parse(response.text);
+      // Extract JSON from markdown code blocks if present
+      const cleanedResponse = this.extractJsonFromResponse(response.text);
+      taskData = JSON.parse(cleanedResponse);
     } catch (e) {
       throw new AIServiceError('Failed to parse AI response for task creation.', JSON.stringify({ prompt, response: response.text }));
     }
@@ -1247,6 +1242,35 @@ Respond with a JSON object with 'projectName', 'overview', 'estimatedComplexity'
   private clearCache(): void {
     this.cache.clear();
     console.log('Task cache cleared');
+  }
+
+  /**
+   * Extract JSON from AI response, handling markdown code blocks
+   */
+  private extractJsonFromResponse(text: string): string {
+    if (!text || text.trim() === '') {
+      throw new Error('AI response text is empty');
+    }
+
+    let cleanedResponse = text.trim();
+
+    // Check if response is wrapped in markdown code blocks
+    const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
+    const match = cleanedResponse.match(codeBlockRegex);
+    
+    if (match) {
+      cleanedResponse = match[1].trim();
+    }
+
+    // Extract JSON between first { and last }
+    const firstBraceIndex = cleanedResponse.indexOf('{');
+    const lastBraceIndex = cleanedResponse.lastIndexOf('}');
+    
+    if (firstBraceIndex !== -1 && lastBraceIndex > firstBraceIndex) {
+      cleanedResponse = cleanedResponse.substring(firstBraceIndex, lastBraceIndex + 1);
+    }
+
+    return cleanedResponse;
   }
 
   // ============================================================================

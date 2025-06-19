@@ -233,8 +233,8 @@ export class BedrockAutoDetect {
 
     // Main model: Best performance/value balance
     // Prefer Claude 4 (3.7) Sonnet if available, otherwise Claude 3.5 Sonnet
-    if (modelIds.includes('claude-3-7-sonnet-20250219')) {
-      recommendations.main = 'claude-3-7-sonnet-20250219';
+    		if (modelIds.includes('claude-sonnet-4-20250514')) {
+			recommendations.main = 'claude-sonnet-4-20250514';
     } else if (modelIds.includes('claude-3-5-sonnet-20241022')) {
       recommendations.main = 'claude-3-5-sonnet-20241022';
     } else if (modelIds.includes('claude-3-5-sonnet-20240620')) {
@@ -247,9 +247,9 @@ export class BedrockAutoDetect {
     // Prefer Opus for complex reasoning if available
     if (modelIds.includes('claude-3-opus-20240229')) {
       recommendations.research = 'claude-3-opus-20240229';
-    } else if (recommendations.main && modelIds.includes('claude-3-7-sonnet-20250219')) {
-      // If we didn't use Claude 4 for main, use it for research
-      recommendations.research = 'claude-3-7-sonnet-20250219';
+    		} else if (recommendations.main && modelIds.includes('claude-sonnet-4-20250514')) {
+			// If we didn't use Claude Sonnet 4 for main, use it for research
+			recommendations.research = 'claude-sonnet-4-20250514';
     } else if (sortedByPerformance.length > 0) {
       // Use the best performing model that's not already the main model
       const researchModel = sortedByPerformance.find(m => m.modelId !== recommendations.main);

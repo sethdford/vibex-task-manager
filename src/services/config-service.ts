@@ -201,15 +201,21 @@ export class ConfigService implements IConfigService {
   }): Promise<Config> {
     const config = this.getDefaultConfig();
 
-    // Update model configurations
+    // Update model configurations and adjust maxTokens to match model capabilities
     if (options.mainModel) {
       config.models.main.modelId = options.mainModel;
+      const mainModelInfo = CLAUDE_MODELS[options.mainModel];
+      config.models.main.maxTokens = Math.min(config.models.main.maxTokens, mainModelInfo.maxTokens);
     }
     if (options.researchModel) {
       config.models.research.modelId = options.researchModel;
+      const researchModelInfo = CLAUDE_MODELS[options.researchModel];
+      config.models.research.maxTokens = Math.min(config.models.research.maxTokens, researchModelInfo.maxTokens);
     }
     if (options.fallbackModel && config.models.fallback) {
       config.models.fallback.modelId = options.fallbackModel;
+      const fallbackModelInfo = CLAUDE_MODELS[options.fallbackModel];
+      config.models.fallback.maxTokens = Math.min(config.models.fallback.maxTokens, fallbackModelInfo.maxTokens);
     }
 
     // Update AWS configuration for all models

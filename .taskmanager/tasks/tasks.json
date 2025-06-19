@@ -570,12 +570,343 @@
       "created": "2025-06-19T13:39:15.439Z",
       "updated": "2025-06-19T13:39:15.439Z",
       "tags": []
+    },
+    {
+      "id": 13,
+      "title": "SPARC Methodology Test Task",
+      "description": "Testing the SPARC methodology integration with AI-powered task management",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T13:40:12.645Z",
+      "updated": "2025-06-19T13:41:24.118Z",
+      "tags": [],
+      "sparc": {
+        "enabled": true,
+        "currentPhase": "completion",
+        "phases": {
+          "specification": {
+            "status": "done",
+            "requirements": [
+              "Requirement 1: The system shall implement a SPARC methodology framework that integrates with AI-powered task management systems.",
+              "Requirement 2: The build swarm must establish clear communication protocols between AI components and human team members.",
+              "Requirement 3: The system shall provide real-time status updates on task progression through the SPARC methodology phases.",
+              "Requirement 4: The build swarm must implement automated testing procedures to validate SPARC methodology compliance.",
+              "Requirement 5: The system shall maintain a performance response time of less than 2 seconds for all user interactions.",
+              "Requirement 6: The build swarm must implement role-based access controls to protect sensitive task information.",
+              "Requirement 7: The system shall encrypt all data transmissions between AI and human components using industry-standard protocols.",
+              "Requirement 8: The build swarm must provide comprehensive logging of all methodology phase transitions for audit purposes.",
+              "Requirement 9: The system shall integrate with existing project management tools through standardized APIs.",
+              "Requirement 10: The build swarm must support concurrent task processing across multiple SPARC methodology instances.",
+              "Requirement 11: The system shall include automated recovery mechanisms for interrupted methodology workflows.",
+              "Requirement 12: The build swarm must demonstrate successful completion of a full SPARC methodology cycle with at least 95% accuracy.",
+              "Requirement 13: The system shall provide metrics on methodology efficiency and bottlenecks.",
+              "Requirement 14: The build swarm must include documentation for all integration points and API specifications.",
+              "Requirement 15: The system shall support customization of SPARC methodology phases to accommodate different project types."
+            ],
+            "testCriteria": [],
+            "completedAt": "2025-06-19T13:40:24.117Z"
+          },
+          "pseudocode": {
+            "status": "done",
+            "agentCoordination": "Agents communicate through a distributed message broker with topic-based channels. Each agent subscribes to relevant topics and publishes results to designated output channels. Coordination is achieved through a hierarchical structure with a Coordinator agent overseeing task distribution and monitoring execution. Agents implement heartbeat mechanisms to signal liveness and report task status. Conflict resolution follows a voting protocol where agents propose solutions and reach consensus through majority agreement. Resource allocation is managed by the Coordinator based on priority queues and agent capability profiles.",
+            "taskFlow": "1. Task Initialization\n   1.1. Coordinator receives task request\n   1.2. Task decomposed into subtasks with dependency graph\n   1.3. Resource requirements estimated\n\n2. Agent Selection\n   2.1. Query agent capability registry\n   2.2. Match subtasks to available agents\n   2.3. Reserve agent resources\n   2.4. Distribute task specifications\n\n3. Execution Phase\n   3.1. Agents acknowledge task receipt\n   3.2. Parallel execution of independent subtasks\n   3.3. Sequential execution of dependent subtasks\n   3.4. Progress reporting at defined checkpoints\n\n4. Monitoring and Adaptation\n   4.1. Coordinator tracks execution metrics\n   4.2. Detect performance anomalies\n   4.3. Implement corrective actions if needed\n      4.3.1. Reassign subtasks\n      4.3.2. Adjust resource allocation\n      4.3.3. Modify execution parameters\n\n5. Error Handling\n   5.1. Exception detection\n   5.2. Local recovery attempts\n   5.3. Escalation to Coordinator if recovery fails\n   5.4. Rollback to last consistent state if needed\n\n6. Result Aggregation\n   6.1. Collect subtask outputs\n   6.2. Validate result integrity\n   6.3. Merge partial results\n   6.4. Generate final output\n\n7. Task Completion\n   7.1. Release agent resources\n   7.2. Update task history\n   7.3. Generate execution report\n   7.4. Notify task requester",
+            "completedAt": "2025-06-19T13:40:40.257Z"
+          },
+          "architecture": {
+            "status": "done",
+            "swarmStructure": "A distributed SPARC methodology swarm with a central orchestrator, specialized methodology agents, integration layers, and monitoring components to ensure compliance, security, and performance across the AI-powered task management system.",
+            "agentRoles": [
+              {
+                "role": "SPARC Orchestrator Agent",
+                "responsibilities": [
+                  "Coordinate overall SPARC methodology workflow",
+                  "Manage transitions between methodology phases",
+                  "Allocate tasks to specialized agents",
+                  "Monitor system performance and methodology compliance",
+                  "Implement recovery mechanisms for interrupted workflows"
+                ],
+                "dependencies": [
+                  "Specification Agent",
+                  "Planning Agent",
+                  "Action Agent",
+                  "Review Agent",
+                  "Communication Agent",
+                  "Monitoring Agent"
+                ]
+              },
+              {
+                "role": "Specification Agent",
+                "responsibilities": [
+                  "Define task requirements and constraints",
+                  "Establish success criteria for tasks",
+                  "Create standardized specification templates",
+                  "Validate specification completeness",
+                  "Customize specification phase for different project types"
+                ],
+                "dependencies": [
+                  "Communication Agent",
+                  "Integration Agent"
+                ]
+              },
+              {
+                "role": "Planning Agent",
+                "responsibilities": [
+                  "Develop execution strategies based on specifications",
+                  "Break down complex tasks into manageable components",
+                  "Estimate resource requirements and timelines",
+                  "Identify dependencies between task components",
+                  "Optimize task sequencing for efficiency"
+                ],
+                "dependencies": [
+                  "Specification Agent",
+                  "Resource Management Agent"
+                ]
+              },
+              {
+                "role": "Action Agent",
+                "responsibilities": [
+                  "Execute planned tasks according to specifications",
+                  "Coordinate concurrent task processing",
+                  "Track progress of task execution",
+                  "Implement automated testing procedures",
+                  "Adapt execution based on real-time feedback"
+                ],
+                "dependencies": [
+                  "Planning Agent",
+                  "Testing Agent",
+                  "Resource Management Agent"
+                ]
+              },
+              {
+                "role": "Review Agent",
+                "responsibilities": [
+                  "Evaluate task outcomes against specifications",
+                  "Identify areas for improvement",
+                  "Document lessons learned",
+                  "Validate SPARC methodology compliance",
+                  "Generate performance metrics and reports"
+                ],
+                "dependencies": [
+                  "Action Agent",
+                  "Testing Agent",
+                  "Monitoring Agent"
+                ]
+              },
+              {
+                "role": "Communication Agent",
+                "responsibilities": [
+                  "Establish protocols between AI components and human team members",
+                  "Provide real-time status updates on task progression",
+                  "Facilitate information exchange across the swarm",
+                  "Implement role-based access controls for information sharing",
+                  "Format communications for different stakeholder groups"
+                ],
+                "dependencies": [
+                  "Security Agent",
+                  "Integration Agent"
+                ]
+              },
+              {
+                "role": "Testing Agent",
+                "responsibilities": [
+                  "Implement automated testing procedures",
+                  "Validate SPARC methodology compliance",
+                  "Perform quality assurance checks",
+                  "Simulate edge cases and failure scenarios",
+                  "Report testing results to relevant agents"
+                ],
+                "dependencies": [
+                  "Specification Agent",
+                  "Monitoring Agent"
+                ]
+              },
+              {
+                "role": "Security Agent",
+                "responsibilities": [
+                  "Implement role-based access controls",
+                  "Encrypt data transmissions between components",
+                  "Enforce security protocols across the swarm",
+                  "Monitor for potential security breaches",
+                  "Ensure compliance with data protection requirements"
+                ],
+                "dependencies": [
+                  "Integration Agent",
+                  "Monitoring Agent"
+                ]
+              },
+              {
+                "role": "Integration Agent",
+                "responsibilities": [
+                  "Connect with existing project management tools",
+                  "Implement standardized APIs for external systems",
+                  "Manage data exchange between platforms",
+                  "Document integration points and specifications",
+                  "Handle version compatibility issues"
+                ],
+                "dependencies": [
+                  "Security Agent"
+                ]
+              },
+              {
+                "role": "Monitoring Agent",
+                "responsibilities": [
+                  "Track system performance metrics",
+                  "Ensure response times under 2 seconds",
+                  "Log methodology phase transitions",
+                  "Identify bottlenecks in the workflow",
+                  "Generate efficiency reports and analytics"
+                ],
+                "dependencies": [
+                  "SPARC Orchestrator Agent"
+                ]
+              },
+              {
+                "role": "Resource Management Agent",
+                "responsibilities": [
+                  "Allocate computational resources across the swarm",
+                  "Balance workload for concurrent task processing",
+                  "Optimize resource utilization",
+                  "Scale resources based on demand",
+                  "Ensure system performance requirements are met"
+                ],
+                "dependencies": [
+                  "Monitoring Agent",
+                  "SPARC Orchestrator Agent"
+                ]
+              }
+            ],
+            "completedAt": "2025-06-19T13:41:10.757Z"
+          },
+          "refinement": {
+            "status": "done",
+            "testCases": [
+              "Test Case 1: Verify that the SPARC agent can successfully initialize and establish connection with the task management system",
+              "Test Case 2: Validate that the agent can correctly parse and interpret natural language task descriptions",
+              "Test Case 3: Test the agent's ability to break down complex tasks into smaller, manageable subtasks",
+              "Test Case 4: Verify that priority assignment algorithm correctly categorizes tasks based on urgency and importance",
+              "Test Case 5: Test the integration between the planning module and the execution module",
+              "Test Case 6: Validate that multiple agents can coordinate on a shared task without conflicts",
+              "Test Case 7: Verify that the system can handle concurrent task processing without performance degradation",
+              "Test Case 8: Test the system's response when given ambiguous or incomplete task instructions",
+              "Test Case 9: Validate error handling when a subtask fails during execution",
+              "Test Case 10: Test the system's ability to recover from network interruptions during task execution",
+              "Test Case 11: Verify that the feedback loop correctly incorporates user feedback to improve future task handling",
+              "Test Case 12: Test the system's performance under high load (100+ simultaneous tasks)",
+              "Test Case 13: Validate that the system correctly handles tasks with dependencies",
+              "Test Case 14: Test the system's ability to adapt when task requirements change mid-execution",
+              "Test Case 15: Verify that the system maintains data consistency across distributed agents",
+              "Test Case 16: Test edge case: handling of extremely long-running tasks (>24 hours)",
+              "Test Case 17: Validate the system's behavior when reaching resource limits (memory, CPU)",
+              "Test Case 18: Test the system's ability to prioritize critical tasks during resource contention",
+              "Test Case 19: Verify that the logging and monitoring components accurately track task execution",
+              "Test Case 20: Test the system's security mechanisms against unauthorized task submission"
+            ],
+            "completedAt": "2025-06-19T13:41:24.115Z"
+          },
+          "completion": {
+            "status": "done",
+            "buildValidation": false,
+            "testResults": [],
+            "completedAt": "2025-06-19T13:41:24.118Z"
+          }
+        },
+        "metadata": {
+          "startedAt": "2025-06-19T13:40:12.648Z",
+          "totalPhases": 5,
+          "completedPhases": 5,
+          "methodology": "sparc"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "Get Started with Project Setup",
+      "description": "Set up the initial project environment including repository creation, basic folder structure, and essential dependencies installation. Create a README.md file with project overview and setup instructions.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T15:29:25.371Z",
+      "updated": "2025-06-19T15:29:25.371Z",
+      "estimatedHours": 3,
+      "complexity": 3,
+      "tags": [
+        "setup",
+        "initialization"
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Implement Secure User Authentication System",
+      "description": "Develop a comprehensive user authentication system with the following security requirements:\n\n1. Password requirements: minimum 8 characters, must include uppercase, lowercase, numbers, and special characters\n2. Implement multi-factor authentication (email/SMS)\n3. Use secure password hashing with bcrypt or Argon2\n4. Implement rate limiting for login attempts\n5. Set up secure session management with proper timeout\n6. Create secure password reset workflow\n7. Implement CSRF protection\n8. Set secure HTTP headers (HSTS, X-XSS-Protection, etc.)\n9. Conduct security testing for common vulnerabilities\n10. Document security practices for the development team",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T15:29:42.131Z",
+      "updated": "2025-06-19T15:29:42.131Z",
+      "estimatedHours": 40,
+      "complexity": 8,
+      "tags": [
+        "security",
+        "authentication",
+        "backend"
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Create a Hello World Program",
+      "description": "Write a basic 'Hello World' program that displays the text 'Hello, World!' when executed. This serves as a simple verification that the programming environment is set up correctly.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T15:30:13.859Z",
+      "updated": "2025-06-19T15:30:13.859Z",
+      "estimatedHours": 0.5,
+      "complexity": 1,
+      "tags": [
+        "beginner",
+        "setup"
+      ]
+    },
+    {
+      "id": 17,
+      "title": "Test the bug fix implementation",
+      "description": "Verify that the recently implemented bug fix works as expected. Create test cases that cover the original issue scenario, edge cases, and potential regressions. Document test results and confirm the fix resolves the reported problem.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T15:30:42.654Z",
+      "updated": "2025-06-19T15:30:42.654Z",
+      "estimatedHours": 3,
+      "complexity": 4,
+      "tags": [
+        "testing",
+        "quality assurance",
+        "bug fix"
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Test Task",
+      "description": "Testing the updated task manager",
+      "status": "in-progress",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T17:52:54.476Z",
+      "updated": "2025-06-19T17:53:12.952Z",
+      "tags": []
     }
   ],
   "metadata": {
     "version": "1.0.0",
     "created": "2025-06-19T12:05:46.865Z",
-    "updated": "2025-06-19T13:39:15.439Z",
-    "totalTasks": 12
+    "updated": "2025-06-19T17:53:12.952Z",
+    "totalTasks": 18
   }
 }

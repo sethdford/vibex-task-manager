@@ -7,64 +7,95 @@ import { fromIni, fromEnv } from '@aws-sdk/credential-providers';
 import { z } from 'zod';
 // Claude model definitions
 export const CLAUDE_MODELS = {
-    // Claude 4 (3.7) Sonnet - Latest and most capable
+    // Claude 4 Models - Latest and most capable
+    'claude-opus-4-20250514': {
+        id: 'anthropic.claude-opus-4-20250514-v1:0',
+        name: 'Claude Opus 4',
+        maxTokens: 8192,
+        contextWindow: 200000,
+        inputCostPer1K: 0.075,
+        outputCostPer1K: 0.375,
+    },
+    'claude-sonnet-4-20250514': {
+        id: 'anthropic.claude-sonnet-4-20250514-v1:0',
+        name: 'Claude Sonnet 4',
+        maxTokens: 8192,
+        contextWindow: 200000,
+        inputCostPer1K: 0.015,
+        outputCostPer1K: 0.075,
+    },
+    
+    // Claude 3.7 Sonnet
     'claude-3-7-sonnet-20250219': {
-        id: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
-        name: 'Claude 4 (3.7) Sonnet',
-        maxTokens: 64000,
+        id: 'anthropic.claude-3-7-sonnet-20250219-v1:0',
+        name: 'Claude 3.7 Sonnet',
+        maxTokens: 8192,
         contextWindow: 200000,
         inputCostPer1K: 0.003,
         outputCostPer1K: 0.015,
     },
+    
     // Claude 3.5 Sonnet
     'claude-3-5-sonnet-20241022': {
         id: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-        name: 'Claude 3.5 Sonnet',
-        maxTokens: 64000,
+        name: 'Claude 3.5 Sonnet v2',
+        maxTokens: 8192,
         contextWindow: 200000,
         inputCostPer1K: 0.003,
         outputCostPer1K: 0.015,
     },
     'claude-3-5-sonnet-20240620': {
         id: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
-        name: 'Claude 3.5 Sonnet (June)',
-        maxTokens: 64000,
+        name: 'Claude 3.5 Sonnet',
+        maxTokens: 8192,
         contextWindow: 200000,
         inputCostPer1K: 0.003,
         outputCostPer1K: 0.015,
     },
+    'claude-3-5-haiku-20241022': {
+        id: 'anthropic.claude-3-5-haiku-20241022-v1:0',
+        name: 'Claude 3.5 Haiku',
+        maxTokens: 8192,
+        contextWindow: 200000,
+        inputCostPer1K: 0.0008,
+        outputCostPer1K: 0.004,
+    },
+    
     // Claude 3 Opus
     'claude-3-opus-20240229': {
         id: 'anthropic.claude-3-opus-20240229-v1:0',
         name: 'Claude 3 Opus',
-        maxTokens: 32000,
+        maxTokens: 4096,
         contextWindow: 200000,
         inputCostPer1K: 0.015,
         outputCostPer1K: 0.075,
     },
+    
     // Claude 3 Sonnet
     'claude-3-sonnet-20240229': {
         id: 'anthropic.claude-3-sonnet-20240229-v1:0',
         name: 'Claude 3 Sonnet',
-        maxTokens: 64000,
+        maxTokens: 4096,
         contextWindow: 200000,
         inputCostPer1K: 0.003,
         outputCostPer1K: 0.015,
     },
+    
     // Claude 3 Haiku
     'claude-3-haiku-20240307': {
         id: 'anthropic.claude-3-haiku-20240307-v1:0',
         name: 'Claude 3 Haiku',
-        maxTokens: 64000,
+        maxTokens: 4096,
         contextWindow: 200000,
         inputCostPer1K: 0.00025,
         outputCostPer1K: 0.00125,
     },
+    
     // Claude Instant (Legacy)
     'claude-instant-v1': {
         id: 'anthropic.claude-instant-v1',
-        name: 'Claude Instant v1',
-        maxTokens: 32000,
+        name: 'Claude Instant',
+        maxTokens: 4096,
         contextWindow: 100000,
         inputCostPer1K: 0.0008,
         outputCostPer1K: 0.0024,
