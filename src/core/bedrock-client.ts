@@ -583,7 +583,10 @@ Schema requirements:
       
       // Model not found or unavailable
       if (message.includes('model not found') ||
-          message.includes('model not available')) {
+          message.includes('model not available') ||
+          message.includes('don\'t have access to the model') ||
+          message.includes('on-demand throughput isn\'t supported') ||
+          message.includes('inference profile')) {
         return true;
       }
     }

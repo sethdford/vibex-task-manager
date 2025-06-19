@@ -120,20 +120,20 @@ export class ConfigService implements IConfigService {
     return {
       models: {
         main: {
-          modelId: 'claude-3-haiku-20240307',
-          maxTokens: 4096,
+          modelId: 'claude-3-5-sonnet-20240620',
+          maxTokens: 8192,
           temperature: 0.3,
           region: 'us-east-1',
         },
         research: {
-          modelId: 'claude-3-opus-20240229',
+          modelId: 'claude-3-5-sonnet-20240620',
           maxTokens: 8192,
           temperature: 0.1,
           region: 'us-east-1',
         },
         fallback: {
           modelId: 'claude-3-haiku-20240307',
-          maxTokens: 2048,
+          maxTokens: 4096,
           temperature: 0.2,
           region: 'us-east-1',
         },

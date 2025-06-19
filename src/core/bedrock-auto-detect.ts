@@ -231,25 +231,29 @@ export class BedrockAutoDetect {
     // Find best available models for each role
     const modelIds = availableModels.map(m => m.modelId);
 
-    // Main model: Best performance/value balance
-    // Prefer Claude 4 (3.7) Sonnet if available, otherwise Claude 3.5 Sonnet
-    		if (modelIds.includes('claude-sonnet-4-20250514')) {
-			recommendations.main = 'claude-sonnet-4-20250514';
+    // Main model: Prefer models with ON_DEMAND support first
+    // These models are immediately usable without additional access requests
+    if (modelIds.includes('claude-3-5-sonnet-20240620')) {
+      recommendations.main = 'claude-3-5-sonnet-20240620';
+    } else if (modelIds.includes('claude-3-haiku-20240307')) {
+      recommendations.main = 'claude-3-haiku-20240307';
+    } else if (modelIds.includes('claude-sonnet-4-20250514')) {
+      recommendations.main = 'claude-sonnet-4-20250514';
     } else if (modelIds.includes('claude-3-5-sonnet-20241022')) {
       recommendations.main = 'claude-3-5-sonnet-20241022';
-    } else if (modelIds.includes('claude-3-5-sonnet-20240620')) {
-      recommendations.main = 'claude-3-5-sonnet-20240620';
     } else if (sortedByPerformance.length > 0) {
       recommendations.main = sortedByPerformance[0].modelId;
     }
 
-    // Research model: Best performance regardless of cost
-    // Prefer Opus for complex reasoning if available
-    if (modelIds.includes('claude-3-opus-20240229')) {
+    // Research model: Prefer ON_DEMAND models, then performance
+    // Start with models that work immediately
+    if (modelIds.includes('claude-3-5-sonnet-20240620') && recommendations.main !== 'claude-3-5-sonnet-20240620') {
+      recommendations.research = 'claude-3-5-sonnet-20240620';
+    } else if (modelIds.includes('claude-3-opus-20240229')) {
       recommendations.research = 'claude-3-opus-20240229';
-    		} else if (recommendations.main && modelIds.includes('claude-sonnet-4-20250514')) {
-			// If we didn't use Claude Sonnet 4 for main, use it for research
-			recommendations.research = 'claude-sonnet-4-20250514';
+    } else if (recommendations.main && modelIds.includes('claude-sonnet-4-20250514')) {
+      // If we didn't use Claude Sonnet 4 for main, use it for research
+      recommendations.research = 'claude-sonnet-4-20250514';
     } else if (sortedByPerformance.length > 0) {
       // Use the best performing model that's not already the main model
       const researchModel = sortedByPerformance.find(m => m.modelId !== recommendations.main);
@@ -270,11 +274,11 @@ export class BedrockAutoDetect {
    * Get fallback recommendations when detection fails
    */
   private getFallbackRecommendations(result: AutoDetectResult): AutoDetectResult {
-    // Use the predefined best models as recommendations
+    // Use models that support ON_DEMAND access by default
     result.recommendations = {
-      main: MODEL_RECOMMENDATIONS.bestValue,
-      research: MODEL_RECOMMENDATIONS.bestComplexReasoning,
-      fallback: MODEL_RECOMMENDATIONS.mostCostEffective,
+      main: 'claude-3-5-sonnet-20240620',
+      research: 'claude-3-5-sonnet-20240620',
+      fallback: 'claude-3-haiku-20240307',
     };
     
     return result;
