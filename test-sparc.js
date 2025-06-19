@@ -10,6 +10,7 @@ import { TaskService } from './dist/src/services/task-service.js';
 import { ConfigService } from './dist/src/services/config-service.js';
 import BedrockClient from './dist/src/core/bedrock-client.js';
 import { SparcService } from './dist/src/services/sparc-service.js';
+import chalk from 'chalk';
 
 async function testSparcMethodology() {
   console.log('🚀 Testing SPARC Methodology Integration\n');
@@ -35,12 +36,12 @@ async function testSparcMethodology() {
 
     // Enable SPARC methodology
     console.log('🔧 Enabling SPARC methodology...');
-    const taskWithSparc = await taskService.enableSparcMethodology(testTask.id);
-    console.log(`✓ SPARC enabled. Current phase: ${taskWithSparc.sparc?.currentPhase}\n`);
+    const { task: taskWithSparc, message: enableMessage } = await taskService.enableSparc(testTask.id);
+    console.log(`✓ ${enableMessage}\n`);
 
     // Generate requirements using AI
-    console.log('📋 Generating SPARC requirements using Claude 4...');
-    const requirements = await taskService.generateSparcRequirements(testTask.id);
+    console.log('📋 Generating SPARC requirements using AI...');
+    const { requirements } = await taskService.generateSparcRequirements(testTask.id);
     console.log('Generated Requirements:');
     requirements.forEach((req, index) => {
       console.log(`${index + 1}. ${req}`);
@@ -53,10 +54,10 @@ async function testSparcMethodology() {
     console.log('✓ Advanced to pseudocode phase\n');
 
     // Generate pseudocode using AI
-    console.log('💻 Generating SPARC pseudocode using Claude 4...');
+    console.log('💻 Generating SPARC pseudocode using AI...');
     const pseudocode = await taskService.generateSparcPseudocode(testTask.id);
     console.log('Agent Coordination:');
-    console.log(pseudocode.coordination);
+    console.log(pseudocode.agentCoordination);
     console.log('\nTask Flow:');
     console.log(pseudocode.taskFlow);
     console.log('');
@@ -67,16 +68,19 @@ async function testSparcMethodology() {
     console.log('✓ Advanced to architecture phase\n');
 
     // Generate architecture using AI
-    console.log('🏛️ Generating SPARC architecture using Claude 4...');
+    console.log('🏛️ Generating SPARC architecture using AI...');
     const architecture = await taskService.generateSparcArchitecture(testTask.id);
     console.log('Swarm Structure:');
-    console.log(architecture.structure);
+    console.log(architecture.swarmStructure);
     console.log('\nAgent Roles:');
-    architecture.roles.forEach((role, index) => {
+    architecture.agentRoles.forEach((role, index) => {
       console.log(`${index + 1}. ${role.role}:`);
       role.responsibilities.forEach(resp => {
         console.log(`   - ${resp}`);
       });
+       if(role.dependencies && role.dependencies.length > 0){
+        console.log(`   Dependencies: ${role.dependencies.join(', ')}`);
+      }
     });
     console.log('');
 
@@ -86,10 +90,10 @@ async function testSparcMethodology() {
     console.log('✓ Advanced to refinement phase\n');
 
     // Generate test cases using AI
-    console.log('🧪 Generating SPARC test cases using Claude 4...');
-    const tests = await taskService.generateSparcTests(testTask.id);
+    console.log('🧪 Generating SPARC test cases using AI...');
+    const { testCases } = await taskService.generateSparcTests(testTask.id);
     console.log('Generated Test Cases:');
-    tests.forEach((test, index) => {
+    testCases.forEach((test, index) => {
       console.log(`${index + 1}. ${test}`);
     });
     console.log('');
@@ -109,20 +113,12 @@ async function testSparcMethodology() {
     // Validate completion
     console.log('🔍 Validating SPARC completion...');
     const validation = await taskService.validateSparcCompletion(testTask.id);
-    console.log(`Status: ${validation.isValid ? '✓ Valid' : '✗ Invalid'}`);
+    console.log(chalk.green(validation.message));
     
-    if (validation.issues.length > 0) {
-      console.log('\nIssues:');
-      validation.issues.forEach(issue => {
-        console.log(`  - ${issue}`);
-      });
+    if (validation.report) {
+        console.log(chalk.yellow('Validation Report:'));
+        console.log(JSON.stringify(validation.report, null, 2));
     }
-    
-    console.log('\nTest Results:');
-    validation.testResults.forEach(test => {
-      const icon = test.status === 'pass' ? '✓' : test.status === 'fail' ? '✗' : '○';
-      console.log(`  ${icon} ${test.testName}: ${test.status}`);
-    });
 
     console.log('\n🎉 SPARC Methodology Test Completed Successfully!');
     console.log('\nSPARC Phases:');

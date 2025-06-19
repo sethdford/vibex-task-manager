@@ -558,12 +558,24 @@
           "methodology": "sparc"
         }
       }
+    },
+    {
+      "id": 12,
+      "title": "SPARC Methodology Test Task",
+      "description": "Testing the SPARC methodology integration with AI-powered task management",
+      "status": "pending",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [],
+      "created": "2025-06-19T13:39:15.439Z",
+      "updated": "2025-06-19T13:39:15.439Z",
+      "tags": []
     }
   ],
   "metadata": {
     "version": "1.0.0",
     "created": "2025-06-19T12:05:46.865Z",
-    "updated": "2025-06-19T13:35:48.279Z",
-    "totalTasks": 11
+    "updated": "2025-06-19T13:39:15.439Z",
+    "totalTasks": 12
   }
 }
