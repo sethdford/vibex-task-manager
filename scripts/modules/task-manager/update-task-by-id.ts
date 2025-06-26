@@ -95,9 +95,9 @@ function parseUpdatedTaskFromText(text, expectedTaskId, logFn, isMCP) {
 			firstBraceIndex,
 			lastBraceIndex + 1
 		);
-			if (potentialJsonFromBraces && potentialJsonFromBraces.length <= 2) {
-		potentialJsonFromBraces = null; // Ignore empty braces {}
-	}
+		if (potentialJsonFromBraces && potentialJsonFromBraces.length <= 2) {
+			potentialJsonFromBraces = null; // Ignore empty braces {}
+		}
 	}
 
 	// If {} extraction yielded something, try parsing it immediately
@@ -157,7 +157,10 @@ function parseUpdatedTaskFromText(text, expectedTaskId, logFn, isMCP) {
 	try {
 		parsedTask = JSON.parse(cleanedResponse);
 	} catch (parseError) {
-		report('error', `Failed to parse JSON object: ${(parseError as Error).message}`);
+		report(
+			'error',
+			`Failed to parse JSON object: ${(parseError as Error).message}`
+		);
 		report(
 			'error',
 			`Problematic JSON string (first 500 chars): ${cleanedResponse.substring(0, 500)}`
@@ -384,8 +387,8 @@ The changes described in the prompt should be thoughtfully applied to make the t
 		const userPrompt = `Here is the task to update:\n${taskDataString}\n\nPlease update this task based on the following new context:\n${prompt}\n\nIMPORTANT: In the task JSON above, any subtasks with "status": "done" or "status": "completed" should be preserved exactly as is. Build your changes around these completed items.\n\nReturn only the updated task as a valid JSON object.`;
 		// --- End Build Prompts ---
 
-			let loadingIndicator: any = null;
-	let aiServiceResponse: any = null;
+		let loadingIndicator: any = null;
+		let aiServiceResponse: any = null;
 
 		if (!isMCP && outputFormat === 'text') {
 			loadingIndicator = startLoadingIndicator(
@@ -405,8 +408,7 @@ The changes described in the prompt should be thoughtfully applied to make the t
 				outputType: isMCP ? 'mcp' : 'cli'
 			});
 
-			if (loadingIndicator)
-				stopLoadingIndicator(loadingIndicator);
+			if (loadingIndicator) stopLoadingIndicator(loadingIndicator);
 
 			// Use mainResult (text) for parsing
 			const updatedTask = parseUpdatedTaskFromText(
@@ -450,27 +452,27 @@ The changes described in the prompt should be thoughtfully applied to make the t
 						(st) => st.status === 'done' || st.status === 'completed'
 					);
 					completedOriginal.forEach((compSub) => {
-											const updatedSub = updatedTask.subtasks?.find(
-						(st) => st.id === compSub.id
-					);
-					if (
-						!updatedSub ||
-						JSON.stringify(updatedSub) !== JSON.stringify(compSub)
-					) {
-						report(
-							'warn',
-							`Completed subtask ${compSub.id} was modified or removed. Restoring.`
+						const updatedSub = updatedTask.subtasks?.find(
+							(st) => st.id === compSub.id
 						);
-						// Remove potentially modified version
-						if (updatedTask.subtasks) {
-							updatedTask.subtasks = updatedTask.subtasks.filter(
-								(st) => st.id !== compSub.id
+						if (
+							!updatedSub ||
+							JSON.stringify(updatedSub) !== JSON.stringify(compSub)
+						) {
+							report(
+								'warn',
+								`Completed subtask ${compSub.id} was modified or removed. Restoring.`
 							);
-						}
-													// Add back original
-						if (updatedTask.subtasks) {
-							updatedTask.subtasks.push(compSub);
-						}
+							// Remove potentially modified version
+							if (updatedTask.subtasks) {
+								updatedTask.subtasks = updatedTask.subtasks.filter(
+									(st) => st.id !== compSub.id
+								);
+							}
+							// Add back original
+							if (updatedTask.subtasks) {
+								updatedTask.subtasks.push(compSub);
+							}
 						}
 					});
 					// Deduplicate just in case
@@ -510,7 +512,8 @@ The changes described in the prompt should be thoughtfully applied to make the t
 		} catch (error) {
 			// Catch errors from generateTextService
 			if (loadingIndicator) stopLoadingIndicator(loadingIndicator);
-			const errorMessage = error instanceof Error ? error.message : String(error);
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
 			report('error', `Error during AI service call: ${errorMessage}`);
 			if (errorMessage.includes('API key')) {
 				report('error', 'Please ensure API keys are configured correctly.');

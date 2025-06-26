@@ -62,7 +62,7 @@ export async function setTaskStatusDirect(
 ): Promise<ApiResult<SetTaskStatusResult>> {
 	// Destructure expected args, including the resolved tasksJsonPath
 	const { tasksJsonPath, id, status, complexityReportPath } = args;
-	
+
 	try {
 		log.info(`Setting task status with args: ${JSON.stringify(args)}`);
 
@@ -78,7 +78,8 @@ export async function setTaskStatusDirect(
 
 		// Check required parameters (id and status)
 		if (!id) {
-			const errorMessage = 'No task ID specified. Please provide a task ID to update.';
+			const errorMessage =
+				'No task ID specified. Please provide a task ID to update.';
 			log.error(errorMessage);
 			return {
 				success: false,
@@ -87,7 +88,8 @@ export async function setTaskStatusDirect(
 		}
 
 		if (!status) {
-			const errorMessage = 'No status specified. Please provide a new status value.';
+			const errorMessage =
+				'No status specified. Please provide a new status value.';
 			log.error(errorMessage);
 			return {
 				success: false,
@@ -108,7 +110,9 @@ export async function setTaskStatusDirect(
 		enableSilentMode(); // Enable silent mode before calling core function
 		try {
 			// Call the core function
-			await setTaskStatus(tasksPath, taskId.toString(), newStatus, { mcpLog: log });
+			await setTaskStatus(tasksPath, taskId.toString(), newStatus, {
+				mcpLog: log
+			});
 
 			log.info(`Successfully set task ${taskId} status to ${newStatus}`);
 
@@ -151,14 +155,16 @@ export async function setTaskStatusDirect(
 						);
 					}
 				} catch (nextErr) {
-					const nextErrorMessage = nextErr instanceof Error ? nextErr.message : 'Unknown error';
+					const nextErrorMessage =
+						nextErr instanceof Error ? nextErr.message : 'Unknown error';
 					log.error(`Error retrieving next task: ${nextErrorMessage}`);
 				}
 			}
 
 			return result;
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage =
+				error instanceof Error ? error.message : 'Unknown error';
 			log.error(`Error setting task status: ${errorMessage}`);
 			return {
 				success: false,
@@ -177,7 +183,8 @@ export async function setTaskStatusDirect(
 			disableSilentMode();
 		}
 
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown error';
 		log.error(`Error setting task status: ${errorMessage}`);
 		return {
 			success: false,

@@ -87,7 +87,8 @@ async function expandAllTasks(
 	const allTelemetryData: SrcTelemetryData[] = []; // Still collect individual data first
 
 	if (!isMCPCall && outputFormat === 'text') {
-		let loadingIndicator: any = null; loadingIndicator = startLoadingIndicator(
+		let loadingIndicator: any = null;
+		loadingIndicator = startLoadingIndicator(
 			'Analyzing tasks for expansion...'
 		);
 	}
@@ -163,7 +164,10 @@ async function expandAllTasks(
 				if (taskIndicator) {
 					taskIndicator.fail('Failed');
 				}
-				log('error', `Failed to expand task ${task.id}: ${(error as Error).message}`);
+				log(
+					'error',
+					`Failed to expand task ${task.id}: ${(error as Error).message}`
+				);
 				// Continue to the next task
 			}
 		}
@@ -209,12 +213,16 @@ async function expandAllTasks(
 			failedCount,
 			skippedCount: 0,
 			tasksToExpand: tasksToExpandCount,
-			telemetryData: (aggregatedTelemetryData ? [aggregatedTelemetryData] : []) as SrcTelemetryData[]
+			telemetryData: (aggregatedTelemetryData
+				? [aggregatedTelemetryData]
+				: []) as SrcTelemetryData[]
 		};
 	} catch (error) {
-		if (loadingIndicator)
-			stopLoadingIndicator(loadingIndicator);
-		log('error', `Error during expand all operation: ${(error as Error).message}`);
+		if (loadingIndicator) stopLoadingIndicator(loadingIndicator);
+		log(
+			'error',
+			`Error during expand all operation: ${(error as Error).message}`
+		);
 		if (!isMCPCall && getDebugFlag(null)) {
 			console.error(error); // Log full stack in debug CLI mode
 		}

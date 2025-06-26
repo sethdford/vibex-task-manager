@@ -2,11 +2,9 @@
  * tools/parsePRD.js
  * Tool to parse PRD document and generate tasks
  */
-import {
-	MCPTool } from './utils.js';
+import { MCPTool } from './utils.js';
 
-import {
-	z } from 'zod';
+import { z } from 'zod';
 // // import { parsePRDDirect } from '../core/vibex-task-manager-core.js';
 import {
 	PRD_FILE,
@@ -19,8 +17,7 @@ import {
  * @param {Object} server - FastMCP server instance
  */
 export function registerParsePRDTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'parse_prd',
 		description: `Parse a Product Requirements Document (PRD) text file to automatically generate initial tasks. Reinitializing the project is not necessary to run this tool. It is recommended to run parse-prd after initializing the project and creating/importing a prd.txt file in the project root's ${TASKMANAGER_DOCS_DIR} directory.`,
 		parameters: z.object({
@@ -72,7 +69,7 @@ export function registerParsePRDTool(server: any): void {
 				});
 				return {
 					success: true,
-					stdout: message,
+					stdout: message
 				};
 			} catch (e: any) {
 				session.log({
@@ -102,8 +99,8 @@ async function parsePRD(
 */
 
 async function getTasks(options: {
-  file?: string;
-  status?: string;
+	file?: string;
+	status?: string;
 }) {
-  // ... existing code ...
+	// ... existing code ...
 }

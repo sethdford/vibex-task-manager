@@ -43,8 +43,7 @@ function processTaskResponse(data) {
  * @param {Object} server - FastMCP server instance
  */
 export function registerShowTaskTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'get_task',
 		description: 'Get detailed information about a specific task',
 		parameters: z.object({
@@ -82,7 +81,9 @@ export function registerShowTaskTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -100,7 +101,9 @@ export function registerShowTaskTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding complexity report: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding complexity report: ${(error as Error).message}`
+					);
 				}
 				const result = await showTaskDirect(
 					{
@@ -125,7 +128,9 @@ export function registerShowTaskTool(server: any): void {
 					'Error getting task'
 				);
 			} catch (error) {
-				wrappedLogger.error(`Error in get-task tool: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Error in get-task tool: ${(error as Error).message}`
+				);
 				return createErrorResponse((error as Error).message);
 			}
 		})

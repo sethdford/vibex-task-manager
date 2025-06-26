@@ -1,7 +1,7 @@
 {
-  "name": "uri-templates",
-  "version": "0.2.0",
-  "description": "Stub replacement for uri-templates",
-  "main": "index.js",
-  "license": "MIT"
-} 
+	"name": "uri-templates",
+	"version": "0.2.0",
+	"description": "Stub replacement for uri-templates",
+	"main": "index.js",
+	"license": "MIT"
+}

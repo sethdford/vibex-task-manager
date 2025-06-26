@@ -154,9 +154,16 @@ export async function removeTaskDirect(
 			for (const taskId of taskIdArray) {
 				try {
 					const result: any = await removeTask(tasksJsonPath, taskId);
-					if (result.success && result.removedTasks && result.removedTasks.length > 0) {
+					if (
+						result.success &&
+						result.removedTasks &&
+						result.removedTasks.length > 0
+					) {
 						// Handle the consolidated result format (with message field)
-						const message = result.message || (result.messages && result.messages.join('; ')) || 'Task removed successfully';
+						const message =
+							result.message ||
+							(result.messages && result.messages.join('; ')) ||
+							'Task removed successfully';
 						results.push({
 							taskId,
 							success: true,
@@ -166,7 +173,10 @@ export async function removeTaskDirect(
 						logger.info(`Successfully removed task: ${taskId}`);
 					} else {
 						// Handle error case
-						const error = result.error || (result.errors && result.errors.join('; ')) || 'Unknown error';
+						const error =
+							result.error ||
+							(result.errors && result.errors.join('; ')) ||
+							'Unknown error';
 						results.push({
 							taskId,
 							success: false,

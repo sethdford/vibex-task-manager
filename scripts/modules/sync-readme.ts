@@ -92,7 +92,10 @@ function createEndMarker() {
  * @param {string} options.tasksPath - Custom path to tasks.json
  * @returns {boolean} - True if sync was successful, false otherwise
  */
-export async function syncTasksToReadme(projectRoot = null, options: { withSubtasks?: boolean; status?: string; tasksPath?: string } = {}) {
+export async function syncTasksToReadme(
+	projectRoot = null,
+	options: { withSubtasks?: boolean; status?: string; tasksPath?: string } = {}
+) {
 	try {
 		const actualProjectRoot = projectRoot || findProjectRoot() || '.';
 		const { withSubtasks = false, status, tasksPath } = options;
@@ -175,7 +178,10 @@ export async function syncTasksToReadme(projectRoot = null, options: { withSubta
 
 		return true;
 	} catch (error) {
-		console.log(chalk.red('❌ Failed to sync tasks to README:'), (error as Error).message);
+		console.log(
+			chalk.red('❌ Failed to sync tasks to README:'),
+			(error as Error).message
+		);
 		log('error', `README sync error: ${(error as Error).message}`);
 		return false;
 	}

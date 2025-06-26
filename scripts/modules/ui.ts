@@ -50,9 +50,7 @@ function displayBanner() {
 	console.log(coolGradient(bannerText));
 
 	// Add creator credit line below the banner
-	console.log(
-		chalk.dim('Open Source Task Management')
-	);
+	console.log(chalk.dim('Open Source Task Management'));
 
 	// Read version directly from package.json
 	const version = getVibexTaskManagerVersion();
@@ -249,7 +247,9 @@ function createProgressBar(percent, length = 30, statusBreakdown = null) {
 
 				const percentageValue = typeof percentage === 'number' ? percentage : 0;
 				// Calculate how many characters this status should fill
-				const statusChars = Math.round((percentageValue / totalRemaining) * empty);
+				const statusChars = Math.round(
+					(percentageValue / totalRemaining) * empty
+				);
 
 				// Make sure we don't exceed the total length due to rounding
 				const actualChars = Math.min(statusChars, empty - addedChars);
@@ -340,7 +340,7 @@ function getStatusWithColor(status, forTable = false) {
  */
 function formatDependenciesWithStatus(
 	dependencies,
-		allTasks,
+	allTasks,
 	forConsole = false,
 	complexityReport = null // Add complexityReport parameter
 ) {
@@ -877,8 +877,7 @@ async function displayNextTask(tasksPath, complexityReportPath = null) {
 		style: {
 			head: [],
 			border: [],
-			
-			
+
 			compact: true
 		},
 		chars: { mid: '', 'left-mid': '', 'mid-mid': '', 'right-mid': '' },
@@ -979,8 +978,7 @@ async function displayNextTask(tasksPath, complexityReportPath = null) {
 			style: {
 				head: [],
 				border: [],
-				
-				
+
 				compact: true
 			},
 			chars: { mid: '', 'left-mid': '', 'mid-mid': '', 'right-mid': '' },
@@ -1157,8 +1155,7 @@ async function displayTaskById(
 			style: {
 				head: [],
 				border: [],
-				
-				
+
 				compact: true
 			},
 			chars: { mid: '', 'left-mid': '', 'mid-mid': '', 'right-mid': '' },
@@ -1235,8 +1232,7 @@ async function displayTaskById(
 		style: {
 			head: [],
 			border: [],
-			
-			
+
 			compact: true
 		},
 		chars: { mid: '', 'left-mid': '', 'mid-mid': '', 'right-mid': '' },
@@ -1333,8 +1329,7 @@ async function displayTaskById(
 			style: {
 				head: [],
 				border: [],
-				
-				
+
 				compact: true
 			},
 			chars: { mid: '', 'left-mid': '', 'mid-mid': '', 'right-mid': '' },
@@ -1588,7 +1583,10 @@ async function displayComplexityReport(reportPath) {
 		});
 		readline.close();
 
-		if (String(answer).toLowerCase() === 'y' || String(answer).toLowerCase() === 'yes') {
+		if (
+			String(answer).toLowerCase() === 'y' ||
+			String(answer).toLowerCase() === 'yes'
+		) {
 			// Call the analyze-complexity command
 			console.log(chalk.blue('Generating complexity report...'));
 			const tasksPath = TASKMANAGER_TASKS_FILE;
@@ -1617,7 +1615,10 @@ async function displayComplexityReport(reportPath) {
 	try {
 		report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
 	} catch (error) {
-		log('error', `Error reading complexity report: ${(error as Error).message}`);
+		log(
+			'error',
+			`Error reading complexity report: ${(error as Error).message}`
+		);
 		return;
 	}
 
@@ -1636,8 +1637,7 @@ async function displayComplexityReport(reportPath) {
 		style: {
 			head: [],
 			border: [],
-			
-			
+
 			compact: true
 		},
 		chars: {
@@ -1882,7 +1882,10 @@ async function confirmTaskOverwrite(tasksPath) {
 	});
 	rl.close();
 
-	return String(answer).toLowerCase() === 'y' || String(answer).toLowerCase() === 'yes';
+	return (
+		String(answer).toLowerCase() === 'y' ||
+		String(answer).toLowerCase() === 'yes'
+	);
 }
 
 /**
@@ -1907,16 +1910,20 @@ function displayApiKeyStatus(statusReport) {
 
 	statusReport.forEach(({ provider, cli, mcp }) => {
 		let cliStatus, mcpStatus;
-		
+
 		// Special handling for AWS Bedrock
 		if (provider.toLowerCase() === 'bedrock') {
-			cliStatus = cli ? chalk.green('✅ AWS Configured') : chalk.blue('ℹ️ Use AWS CLI');
-			mcpStatus = mcp ? chalk.green('✅ AWS Configured') : chalk.blue('ℹ️ Use AWS CLI');
+			cliStatus = cli
+				? chalk.green('✅ AWS Configured')
+				: chalk.blue('ℹ️ Use AWS CLI');
+			mcpStatus = mcp
+				? chalk.green('✅ AWS Configured')
+				: chalk.blue('ℹ️ Use AWS CLI');
 		} else {
 			cliStatus = cli ? chalk.green('✅ Found') : chalk.red('❌ Missing');
 			mcpStatus = mcp ? chalk.green('✅ Found') : chalk.red('❌ Missing');
 		}
-		
+
 		// Capitalize provider name for display
 		const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
 		table.push([providerName, cliStatus, mcpStatus]);

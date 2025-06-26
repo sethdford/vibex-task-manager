@@ -71,10 +71,15 @@ export async function generateTaskFilesDirect(
 			// Make sure to restore normal logging even if there's an error
 			disableSilentMode();
 
-			logger.error(`Error in generateTaskFiles: ${(genError as Error).message}`);
+			logger.error(
+				`Error in generateTaskFiles: ${(genError as Error).message}`
+			);
 			return {
 				success: false,
-				error: { code: 'GENERATE_FILES_ERROR', message: (genError as Error).message }
+				error: {
+					code: 'GENERATE_FILES_ERROR',
+					message: (genError as Error).message
+				}
 			};
 		}
 
@@ -98,7 +103,8 @@ export async function generateTaskFilesDirect(
 			success: false,
 			error: {
 				code: 'GENERATE_TASKS_ERROR',
-				message: (error as Error).message || 'Unknown error generating task files'
+				message:
+					(error as Error).message || 'Unknown error generating task files'
 			}
 		};
 	}

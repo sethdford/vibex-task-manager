@@ -70,10 +70,16 @@ let cachedVersionInfo: VersionInfo | null = null;
 function getVersionInfo(): VersionInfo {
 	if (cachedVersionInfo) return cachedVersionInfo;
 	try {
-		const packageJsonPath = path.join(path.dirname(__filename), '../../../package.json');
+		const packageJsonPath = path.join(
+			path.dirname(__filename),
+			'../../../package.json'
+		);
 		if (fs.existsSync(packageJsonPath)) {
 			const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-			cachedVersionInfo = { version: packageJson.version, name: packageJson.name };
+			cachedVersionInfo = {
+				version: packageJson.version,
+				name: packageJson.name
+			};
 			return cachedVersionInfo;
 		}
 	} catch (error) {
@@ -86,7 +92,10 @@ function getVersionInfo(): VersionInfo {
 /**
  * Get normalized project root path
  */
-function getProjectRoot(projectRootRaw: string | undefined, log: UnifiedLogger): string {
+function getProjectRoot(
+	projectRootRaw: string | undefined,
+	log: UnifiedLogger
+): string {
 	// PRECEDENCE ORDER:
 	// 1. Environment variable override (VIBEX_TASK_MANAGER_PROJECT_ROOT)
 	// 2. Explicitly provided projectRoot in args
@@ -126,12 +135,14 @@ function getProjectRoot(projectRootRaw: string | undefined, log: UnifiedLogger):
 
 	// 4. Check if current directory has any project markers
 	const cwd = process.cwd();
-	const hasMarkers = PROJECT_MARKERS.some(marker =>
+	const hasMarkers = PROJECT_MARKERS.some((marker) =>
 		fs.existsSync(path.join(cwd, marker))
 	);
 
 	if (hasMarkers) {
-		log.info(`Using current directory as project root (has project markers): ${cwd}`);
+		log.info(
+			`Using current directory as project root (has project markers): ${cwd}`
+		);
 		return cwd;
 	}
 
@@ -212,7 +223,8 @@ export function handleApiResult(
 	if (result.success) {
 		return createSuccessResponse(result.data || result.stdout);
 	} else {
-		const errorMessage = result.error || result.stderr || 'Unknown error occurred';
+		const errorMessage =
+			result.error || result.stderr || 'Unknown error occurred';
 		wrappedLogger.error(`${errorPrefix}: ${errorMessage}`);
 		return createErrorResponse(`${errorPrefix}: ${errorMessage}`);
 	}
@@ -292,10 +304,11 @@ export function apiResultToCommandResult<T = any>(apiResult: {
 		};
 	} else {
 		// Handle both string and object error types
-		const errorMessage = typeof apiResult.error === 'string' 
-			? apiResult.error 
-			: apiResult.error?.message || 'Unknown error occurred';
-		
+		const errorMessage =
+			typeof apiResult.error === 'string'
+				? apiResult.error
+				: apiResult.error?.message || 'Unknown error occurred';
+
 		return {
 			success: false,
 			error: errorMessage

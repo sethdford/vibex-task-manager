@@ -21,8 +21,7 @@ import { Ora } from 'ora';
  * @param {Object} server - FastMCP server instance
  */
 export function registerRemoveTaskTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'remove_task',
 		description: 'Remove a task or subtask permanently from the tasks list',
 		parameters: z.object({
@@ -52,7 +51,9 @@ export function registerRemoveTaskTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -73,7 +74,9 @@ export function registerRemoveTaskTool(server: any): void {
 					const idList = args.id.split(',').map((id) => id.trim());
 
 					for (const id of idList) {
-						const taskResult = result.data?.results.find((r) => r.taskId === id);
+						const taskResult = result.data?.results.find(
+							(r) => r.taskId === id
+						);
 						if (taskResult?.success) {
 							successMessages.push(`#${id}`);
 						} else {
@@ -89,8 +92,7 @@ export function registerRemoveTaskTool(server: any): void {
 					}
 					return {
 						success: true,
-						stdout:
-							`Successfully removed tasks: ${successMessages.join(', ')}`
+						stdout: `Successfully removed tasks: ${successMessages.join(', ')}`
 					};
 				} else {
 					const errorMessages =
@@ -104,7 +106,9 @@ export function registerRemoveTaskTool(server: any): void {
 					'Error removing task'
 				);
 			} catch (error) {
-				wrappedLogger.error(`Error in remove-task tool: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Error in remove-task tool: ${(error as Error).message}`
+				);
 				return createErrorResponse((error as Error).message);
 			}
 		})

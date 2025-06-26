@@ -91,7 +91,11 @@ let silentMode = false;
  * @param projectRoot - The project root directory (for .env fallback).
  * @returns The value of the environment variable or undefined if not found.
  */
-function resolveEnvVariable(key: string, session: SessionEnv | null = null, projectRoot: string | null = null): string | undefined {
+function resolveEnvVariable(
+	key: string,
+	session: SessionEnv | null = null,
+	projectRoot: string | null = null
+): string | undefined {
 	// 1. Check session.env
 	if (session?.env?.[key]) {
 		return session.env[key];
@@ -108,9 +112,12 @@ function resolveEnvVariable(key: string, session: SessionEnv | null = null, proj
 					// console.log(`DEBUG: Found key ${key} in ${envPath}`); // Optional debug log
 					return parsedEnv[key];
 				}
-					} catch (error) {
-			// Log error but don't crash, just proceed as if key wasn't found in file
-			log('warn', `Could not read or parse ${envPath}: ${(error as Error).message}`);
+			} catch (error) {
+				// Log error but don't crash, just proceed as if key wasn't found in file
+				log(
+					'warn',
+					`Could not read or parse ${envPath}: ${(error as Error).message}`
+				);
 			}
 		}
 	}
@@ -275,7 +282,11 @@ function readJSON(filepath: string): any | null {
 		const rawData = fs.readFileSync(filepath, 'utf8');
 		return JSON.parse(rawData);
 	} catch (error) {
-		log('error', `Error reading JSON file ${filepath}:`, (error as Error).message);
+		log(
+			'error',
+			`Error reading JSON file ${filepath}:`,
+			(error as Error).message
+		);
 		if (isDebug) {
 			// Use dynamic debug flag
 			// Use log utility for debug output too
@@ -309,7 +320,11 @@ function writeJSON(filepath: string, data: any): void {
 		}
 		fs.writeFileSync(filepath, JSON.stringify(data, null, 2), 'utf8');
 	} catch (error) {
-		log('error', `Error writing JSON file ${filepath}:`, (error as Error).message);
+		log(
+			'error',
+			`Error writing JSON file ${filepath}:`,
+			(error as Error).message
+		);
 		if (isDebug) {
 			// Use dynamic debug flag
 			// Use log utility for debug output too
@@ -333,7 +348,9 @@ function sanitizePrompt(prompt: string): string {
  * @param customPath - Optional custom path to the report
  * @returns The parsed complexity report or null if not found
  */
-function readComplexityReport(customPath: string | null = null): ComplexityReport | null {
+function readComplexityReport(
+	customPath: string | null = null
+): ComplexityReport | null {
 	// GUARD: Prevent circular dependency during config loading
 	let isDebug = false; // Default fallback
 	try {
@@ -374,7 +391,10 @@ function readComplexityReport(customPath: string | null = null): ComplexityRepor
 		return reportData;
 	} catch (error) {
 		if (isDebug) {
-			log('error', `Error reading complexity report: ${(error as any).message}`);
+			log(
+				'error',
+				`Error reading complexity report: ${(error as any).message}`
+			);
 		}
 		return null;
 	}
@@ -386,7 +406,10 @@ function readComplexityReport(customPath: string | null = null): ComplexityRepor
  * @param taskId - The task ID to find
  * @returns The task analysis or null if not found
  */
-function findTaskInComplexityReport(report: ComplexityReport, taskId: number): TaskAnalysis | null {
+function findTaskInComplexityReport(
+	report: ComplexityReport,
+	taskId: number
+): TaskAnalysis | null {
 	if (
 		!report ||
 		!report.complexityAnalysis ||
@@ -395,10 +418,15 @@ function findTaskInComplexityReport(report: ComplexityReport, taskId: number): T
 		return null;
 	}
 
-	return report.complexityAnalysis.find((task) => task.taskId === taskId) || null;
+	return (
+		report.complexityAnalysis.find((task) => task.taskId === taskId) || null
+	);
 }
 
-function addComplexityToTask(task: Task | Subtask, complexityReport: ComplexityReport): void {
+function addComplexityToTask(
+	task: Task | Subtask,
+	complexityReport: ComplexityReport
+): void {
 	let taskId;
 	if (task.isSubtask) {
 		taskId = task.parentTask?.id;
@@ -641,8 +669,10 @@ const toKebabCase = (str: string): string => {
  * @param args - Command line arguments to check
  * @returns List of flags that should be converted
  */
-function detectCamelCaseFlags(args: string[]): Array<{ original: string; kebabCase: string }> {
-	const camelCaseFlags: Array<{original: string, kebabCase: string}> = [];
+function detectCamelCaseFlags(
+	args: string[]
+): Array<{ original: string; kebabCase: string }> {
+	const camelCaseFlags: Array<{ original: string; kebabCase: string }> = [];
 	for (const arg of args) {
 		if (arg.startsWith('--')) {
 			const flagName = arg.split('=')[0].slice(2); // Remove -- and anything after =
@@ -673,7 +703,10 @@ function detectCamelCaseFlags(args: string[]): Array<{ original: string; kebabCa
  * @param overallCommandName - The name for the aggregated command.
  * @returns Aggregated telemetry object or null if input is empty.
  */
-function aggregateTelemetry(telemetryArray: TelemetryData[], overallCommandName: string): TelemetryData | null {
+function aggregateTelemetry(
+	telemetryArray: TelemetryData[],
+	overallCommandName: string
+): TelemetryData | null {
 	if (!telemetryArray || telemetryArray.length === 0) {
 		return null;
 	}

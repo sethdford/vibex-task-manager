@@ -22,14 +22,22 @@ export async function complexityReportDirect(
 		wrappedLogger.info(`Reading complexity report from: ${args.reportPath}`);
 		const reportData = readComplexityReport(args.reportPath);
 		if (!reportData) {
-			return { 
-				success: false, 
-				error: { code: 'REPORT_NOT_FOUND', message: `Complexity report not found at ${args.reportPath}` } 
+			return {
+				success: false,
+				error: {
+					code: 'REPORT_NOT_FOUND',
+					message: `Complexity report not found at ${args.reportPath}`
+				}
 			};
 		}
 		return { success: true, data: reportData };
 	} catch (error) {
-		wrappedLogger.error(`Error in complexityReportDirect: ${(error as Error).message}`);
-		return { success: false, error: { code: 'REPORT_FAILED', message: (error as Error).message } };
+		wrappedLogger.error(
+			`Error in complexityReportDirect: ${(error as Error).message}`
+		);
+		return {
+			success: false,
+			error: { code: 'REPORT_FAILED', message: (error as Error).message }
+		};
 	}
 }

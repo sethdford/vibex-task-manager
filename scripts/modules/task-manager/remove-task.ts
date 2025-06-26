@@ -242,4 +242,4 @@ async function removeTask(tasksPath: string, taskIds: string) {
 	}
 }
 
-export default removeTask; 
+export default removeTask;

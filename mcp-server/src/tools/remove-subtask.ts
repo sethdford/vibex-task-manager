@@ -2,11 +2,9 @@
  * tools/remove-subtask.js
  * Tool for removing subtasks from parent tasks
  */
-import {
-	MCPTool } from './utils.js';
+import { MCPTool } from './utils.js';
 
-import {
-	z } from 'zod';
+import { z } from 'zod';
 import {
 	apiResultToCommandResult,
 	handleApiResult,
@@ -14,10 +12,8 @@ import {
 	withNormalizedProjectRoot,
 	createSuccessResponse
 } from './utils.js';
-import {
-	removeSubtaskDirect } from '../core/vibex-task-manager-core.js';
-import {
-	findTasksPath } from '../core/utils/path-utils.js';
+import { removeSubtaskDirect } from '../core/vibex-task-manager-core.js';
+import { findTasksPath } from '../core/utils/path-utils.js';
 import { createLogger } from '../core/logger.js';
 
 /**
@@ -25,8 +21,7 @@ import { createLogger } from '../core/logger.js';
  * @param {Object} server - FastMCP server instance
  */
 export function registerRemoveSubtaskTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'remove_subtask',
 		description: 'Remove a subtask from its parent task',
 		parameters: z.object({
@@ -58,7 +53,9 @@ export function registerRemoveSubtaskTool(server: any): void {
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
 			const wrappedLogger = createLogger(log);
 			try {
-				wrappedLogger.info(`Removing subtask with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(
+					`Removing subtask with args: ${JSON.stringify(args)}`
+				);
 
 				let tasksJsonPath;
 				try {
@@ -67,7 +64,9 @@ export function registerRemoveSubtaskTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -82,19 +81,20 @@ export function registerRemoveSubtaskTool(server: any): void {
 				);
 
 				if (result.success) {
-					const message = result.data?.message || 'Subtask operation successful';
+					const message =
+						result.data?.message || 'Subtask operation successful';
 					wrappedLogger.info(message);
 					return createSuccessResponse(message);
 				} else {
 					const errorMessage =
 						result.error?.message || 'Unknown error removing subtask';
-					wrappedLogger.error(
-						`Failed to remove subtask: ${errorMessage}`
-					);
+					wrappedLogger.error(`Failed to remove subtask: ${errorMessage}`);
 					return createErrorResponse(errorMessage);
 				}
 			} catch (error) {
-				wrappedLogger.error(`Error in remove-subtask tool: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Error in remove-subtask tool: ${(error as Error).message}`
+				);
 				return createErrorResponse((error as Error).message);
 			}
 		})

@@ -92,7 +92,11 @@ export async function migrateProject(options: MigrationOptions = {}) {
 
 	// Perform migration
 	try {
-		await performMigration(projectRoot, migrationPlan, options as Required<MigrationOptions>);
+		await performMigration(
+			projectRoot,
+			migrationPlan,
+			options as Required<MigrationOptions>
+		);
 		log.success('Migration completed successfully!');
 		log.info('You can now use the new .taskmaster directory structure.');
 		if (!options.cleanup) {
@@ -114,7 +118,7 @@ export async function migrateProject(options: MigrationOptions = {}) {
  * @returns {Array} Migration plan items
  */
 function analyzeMigrationNeeds(projectRoot) {
-	const migrationPlan: Array<{from: string, to: string, type: string}> = [];
+	const migrationPlan: Array<{ from: string; to: string; type: string }> = [];
 
 	// Check for tasks directory
 	const tasksDir = path.join(projectRoot, 'tasks');
@@ -198,7 +202,11 @@ function analyzeMigrationNeeds(projectRoot) {
  * @param {Array} migrationPlan - List of files to migrate
  * @param {Required<MigrationOptions>} options - Migration options
  */
-async function performMigration(projectRoot: string, migrationPlan: any[], options: Required<MigrationOptions>) {
+async function performMigration(
+	projectRoot: string,
+	migrationPlan: any[],
+	options: Required<MigrationOptions>
+) {
 	// Create .taskmaster directory
 	const taskmasterDir = path.join(projectRoot, '.taskmaster');
 	if (!fs.existsSync(taskmasterDir)) {

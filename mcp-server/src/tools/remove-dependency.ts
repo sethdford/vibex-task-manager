@@ -20,8 +20,7 @@ import { createLogger } from '../core/logger.js';
  * @param {Object} server - FastMCP server instance
  */
 export function registerRemoveDependencyTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'remove_dependency',
 		description: 'Remove a dependency from a task',
 		parameters: z.object({
@@ -51,7 +50,9 @@ export function registerRemoveDependencyTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -80,7 +81,9 @@ export function registerRemoveDependencyTool(server: any): void {
 					'Error removing dependency'
 				);
 			} catch (error) {
-				wrappedLogger.error(`Error in remove-dependency tool: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Error in remove-dependency tool: ${(error as Error).message}`
+				);
 				return createErrorResponse((error as Error).message);
 			}
 		})

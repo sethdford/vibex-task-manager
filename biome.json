@@ -3,6 +3,7 @@
 		"ignore": [
 			"build",
 			"coverage",
+			"dist",
 			".changeset",
 			"tasks",
 			"package-lock.json",

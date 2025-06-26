@@ -182,7 +182,10 @@ export function resolveComplexityReportPath(
  * @param args - Arguments object containing projectRoot
  * @returns Resolved absolute path
  */
-export function resolveProjectPath(relativePath: string, args: PathArgs): string {
+export function resolveProjectPath(
+	relativePath: string,
+	args: PathArgs
+): string {
 	// Ensure we have a projectRoot from args
 	if (!args?.projectRoot) {
 		throw new Error('projectRoot is required in args to resolve project paths');

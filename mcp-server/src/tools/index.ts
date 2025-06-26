@@ -28,8 +28,8 @@ import { registerModelsTool } from './models.js';
 
 // Type for FastMCP server instance
 interface MCPServer {
-  addTool: (tool: any) => void;
-  // Add other methods as needed
+	addTool: (tool: any) => void;
+	// Add other methods as needed
 }
 
 /**
@@ -81,8 +81,12 @@ export function registerVibexTaskManagerTools(server: MCPServer): void {
 		registerGenerateTool(server);
 		registerUpdateTool(server);
 
-		logger.info(`✅ All ${getTotalToolCount()} Task Manager tools registered successfully`);
-		logger.info('📋 Available commands: list-tasks, show-task, add-task, update-task, parse-prd, etc.');
+		logger.info(
+			`✅ All ${getTotalToolCount()} Task Manager tools registered successfully`
+		);
+		logger.info(
+			'📋 Available commands: list-tasks, show-task, add-task, update-task, parse-prd, etc.'
+		);
 		logger.info('🔍 For specific help, use the tool with --help parameter');
 	} catch (error) {
 		logger.error('Failed to register Task Manager tools:', error);
@@ -123,7 +127,7 @@ export {
 	registerAddDependencyTool,
 	registerRemoveTaskTool,
 	// // registerInitializeProjectTool, // DELETED
-	registerModelsTool,
+	registerModelsTool
 	// // registerMoveTaskTool, // DELETED
 	// // registerCopyTagTool, // DELETED
 };

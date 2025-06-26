@@ -20,8 +20,7 @@ import { createLogger } from '../core/logger.js';
  * @param {Object} server - FastMCP server instance
  */
 export function registerUpdateTaskTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'update_task',
 		description:
 			'Updates a single task by ID with new information or context provided in the prompt.',
@@ -55,9 +54,13 @@ export function registerUpdateTaskTool(server: any): void {
 						{ projectRoot: args.projectRoot, file: args.file },
 						wrappedLogger
 					);
-					wrappedLogger.info(`${toolName}: Resolved tasks path: ${tasksJsonPath}`);
+					wrappedLogger.info(
+						`${toolName}: Resolved tasks path: ${tasksJsonPath}`
+					);
 				} catch (error) {
-					wrappedLogger.error(`${toolName}: Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`${toolName}: Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -77,9 +80,15 @@ export function registerUpdateTaskTool(server: any): void {
 				wrappedLogger.info(
 					`${toolName}: Direct function result: success=${result.success}`
 				);
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error updating task');
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Error updating task'
+				);
 			} catch (error) {
-				wrappedLogger.error(`Critical error in ${toolName} tool execute: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Critical error in ${toolName} tool execute: ${(error as Error).message}`
+				);
 				return createErrorResponse(
 					`Internal tool error (${toolName}): ${(error as Error).message}`
 				);

@@ -1,7 +1,13 @@
 /**
  * Task status type definition
  */
-export type TaskStatus = 'pending' | 'done' | 'in-progress' | 'review' | 'deferred' | 'cancelled';
+export type TaskStatus =
+	| 'pending'
+	| 'done'
+	| 'in-progress'
+	| 'review'
+	| 'deferred'
+	| 'cancelled';
 
 /**
  * Task status options list

@@ -120,7 +120,10 @@ const addComplexityToTask = (
 ): void => {
 	addComplexityToTaskUtil(task, {
 		...complexityReport,
-		complexityAnalysis: complexityReport.complexityAnalysis.map(a => ({ taskId: parseInt(a.taskId), complexityScore: a.complexity }))
+		complexityAnalysis: complexityReport.complexityAnalysis.map((a) => ({
+			taskId: parseInt(a.taskId),
+			complexityScore: a.complexity
+		}))
 	});
 };
 
@@ -207,11 +210,10 @@ function listTasks(
 				t.status !== 'done' &&
 				(!t.dependencies ||
 					t.dependencies.length === 0 ||
-					t.dependencies.every((depId) =>
-						completedTaskIds.has(Number(depId))
-					))
+					t.dependencies.every((depId) => completedTaskIds.has(Number(depId))))
 		).length;
-		const tasksWithUnsatisfiedDeps = totalTasks - completedTasks - tasksReadyToWork;
+		const tasksWithUnsatisfiedDeps =
+			totalTasks - completedTasks - tasksReadyToWork;
 
 		const dependencyCount: { [key: string]: number } = {};
 		let totalDependencies = 0;
@@ -382,4 +384,4 @@ function listTasks(
 	}
 }
 
-export default listTasks; 
+export default listTasks;

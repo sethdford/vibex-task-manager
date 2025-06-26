@@ -53,7 +53,8 @@ function generateMarkdown(data: SupportedModels): string {
 	markdown += `Last Updated: ${data.lastUpdated}\n\n`;
 	markdown +=
 		'| Provider | Model ID | SWE Score | Input Cost | Output Cost |\n';
-	markdown += '|----------|----------|-----------|------------|-------------|\n';
+	markdown +=
+		'|----------|----------|-----------|------------|-------------|\n';
 
 	data.models.forEach((model) => {
 		const sweScore = formatSweScore(model.sweScore);

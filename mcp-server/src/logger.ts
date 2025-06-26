@@ -22,7 +22,8 @@ const LOG_LEVELS: LogLevels = {
 type LogLevel = keyof LogLevels;
 
 // Get log level from config manager or default to info
-const LOG_LEVEL = LOG_LEVELS[getLogLevel().toLowerCase() as LogLevel] ?? LOG_LEVELS.info;
+const LOG_LEVEL =
+	LOG_LEVELS[getLogLevel().toLowerCase() as LogLevel] ?? LOG_LEVELS.info;
 
 /**
  * Logs a message with the specified level

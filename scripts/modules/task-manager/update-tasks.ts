@@ -94,8 +94,8 @@ function parseUpdatedTasksFromText(text, expectedCount, logFn, isMCP) {
 			lastBracketIndex + 1
 		);
 		// Basic check to ensure it's not just "[]" or malformed
-			if (potentialJsonFromArray && potentialJsonFromArray.length <= 2) {
-		potentialJsonFromArray = null; // Ignore empty array
+		if (potentialJsonFromArray && potentialJsonFromArray.length <= 2) {
+			potentialJsonFromArray = null; // Ignore empty array
 		}
 	}
 
@@ -164,7 +164,10 @@ function parseUpdatedTasksFromText(text, expectedCount, logFn, isMCP) {
 	try {
 		parsedTasks = JSON.parse(cleanedResponse);
 	} catch (parseError) {
-		report('error', `Failed to parse JSON array: ${(parseError as Error).message}`);
+		report(
+			'error',
+			`Failed to parse JSON array: ${(parseError as Error).message}`
+		);
 		report(
 			'error',
 			`Extraction method used: ${parseMethodUsed}` // Log which method failed
@@ -372,7 +375,8 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 		let aiServiceResponse = null;
 
 		if (!isMCP && outputFormat === 'text') {
-			let loadingIndicator: any = null; loadingIndicator = startLoadingIndicator('Updating tasks with AI...\n');
+			let loadingIndicator: any = null;
+			loadingIndicator = startLoadingIndicator('Updating tasks with AI...\n');
 		}
 
 		try {
@@ -380,7 +384,8 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 			const serviceRole = useResearch ? 'research' : 'main';
 
 			// Call the unified AI service
-			let aiServiceResponse: any = null; aiServiceResponse = await generateTextService({
+			let aiServiceResponse: any = null;
+			aiServiceResponse = await generateTextService({
 				role: serviceRole,
 				session: session,
 				projectRoot: projectRoot,
@@ -390,8 +395,7 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 				outputType: isMCP ? 'mcp' : 'cli'
 			});
 
-			if (loadingIndicator)
-				stopLoadingIndicator(loadingIndicator);
+			if (loadingIndicator) stopLoadingIndicator(loadingIndicator);
 
 			// Use the mainResult (text) for parsing
 			const parsedUpdatedTasks = parseUpdatedTasksFromText(
@@ -409,7 +413,8 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 				);
 			}
 			if (isMCP)
-				report('info',
+				report(
+					'info',
 					`Received ${parsedUpdatedTasks.length} updated tasks from AI.`
 				);
 			else
@@ -431,7 +436,8 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 				}
 			});
 			if (isMCP)
-				report('info',
+				report(
+					'info',
 					`Applied updates to ${actualUpdateCount} tasks in the dataset.`
 				);
 			else
@@ -442,7 +448,8 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 
 			writeJSON(tasksPath, data);
 			if (isMCP)
-				report('info',
+				report(
+					'info',
 					`Successfully updated ${actualUpdateCount} tasks in ${tasksPath}`
 				);
 			else
@@ -463,12 +470,15 @@ The changes described in the prompt should be applied to ALL tasks in the list.`
 			};
 		} catch (error) {
 			if (loadingIndicator) stopLoadingIndicator(loadingIndicator);
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			if (isMCP) report('error', `Error during AI service call: ${errorMessage}`);
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			if (isMCP)
+				report('error', `Error during AI service call: ${errorMessage}`);
 			else report('error', `Error during AI service call: ${errorMessage}`);
 			if (errorMessage.includes('API key')) {
 				if (isMCP)
-					report('error',
+					report(
+						'error',
 						'Please ensure API keys are configured correctly in .env or mcp.json.'
 					);
 				else

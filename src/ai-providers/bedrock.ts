@@ -3,7 +3,12 @@ import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { BaseAIProvider } from './base-provider.js';
 import { directGenerateObject, directBedrockCall } from './bedrock-direct.js';
 import { log } from '../../scripts/modules/index.js';
-import type { GenerateTextParams, GenerateObjectParams, AIResult, ObjectResult } from '../types/index.js';
+import type {
+	GenerateTextParams,
+	GenerateObjectParams,
+	AIResult,
+	ObjectResult
+} from '../types/index.js';
 
 export class BedrockAIProvider extends BaseAIProvider {
 	constructor() {
@@ -67,7 +72,10 @@ export class BedrockAIProvider extends BaseAIProvider {
 				schema: params.schema,
 				maxTokens: params.maxTokens,
 				temperature: params.temperature,
-				region: (params as any).region || process.env.AWS_DEFAULT_REGION || 'us-east-1'
+				region:
+					(params as any).region ||
+					process.env.AWS_DEFAULT_REGION ||
+					'us-east-1'
 			});
 
 			log(
@@ -99,7 +107,10 @@ export class BedrockAIProvider extends BaseAIProvider {
 				messages: params.messages,
 				maxTokens: params.maxTokens,
 				temperature: params.temperature,
-				region: (params as any).region || process.env.AWS_DEFAULT_REGION || 'us-east-1'
+				region:
+					(params as any).region ||
+					process.env.AWS_DEFAULT_REGION ||
+					'us-east-1'
 			});
 
 			log(

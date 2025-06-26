@@ -49,12 +49,9 @@ export type AnyLogger = {
  */
 export function createLogger(logger: AnyLogger): UnifiedLogger {
 	return {
-		info: (message: string, ...args: any[]) =>
-			logger.info(message, ...args),
-		warn: (message: string, ...args: any[]) =>
-			logger.warn(message, ...args),
-		error: (message: string, ...args: any[]) =>
-			logger.error(message, ...args),
+		info: (message: string, ...args: any[]) => logger.info(message, ...args),
+		warn: (message: string, ...args: any[]) => logger.warn(message, ...args),
+		error: (message: string, ...args: any[]) => logger.error(message, ...args),
 		debug: (message: string, ...args: any[]) => {
 			if (typeof logger.debug === 'function') {
 				logger.debug(message, ...args);
@@ -72,4 +69,4 @@ export function createLogger(logger: AnyLogger): UnifiedLogger {
 			}
 		}
 	};
-} 
+}

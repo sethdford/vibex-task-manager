@@ -9,8 +9,7 @@ import { MCPTool } from './utils.js';
  * @param {AsyncOperationManager} asyncManager - The async operation manager.
  */
 export function registerGetOperationStatusTool(server, asyncManager) {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'get_operation_status',
 		description:
 			'Retrieves the status and result/error of a background operation.',
@@ -36,9 +35,12 @@ export function registerGetOperationStatusTool(server, asyncManager) {
 				log.info(`Status for ${operationId}: ${status.status}`);
 				return createSuccessResponse(status);
 			} catch (error) {
-				log.error(`Error in get_operation_status tool: ${(error as Error).message}`, {
-					stack: (error as Error).stack
-				});
+				log.error(
+					`Error in get_operation_status tool: ${(error as Error).message}`,
+					{
+						stack: (error as Error).stack
+					}
+				);
 				return createErrorResponse(
 					`Failed to get operation status: ${(error as Error).message}`,
 					'GET_STATUS_ERROR'

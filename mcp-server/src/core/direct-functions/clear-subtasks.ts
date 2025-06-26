@@ -120,7 +120,9 @@ export async function clearSubtasksDirect(
 		// Make sure to restore normal logging even if there's an error
 		disableSilentMode();
 
-		wrappedLogger.error(`Error in clearSubtasksDirect: ${(error as Error).message}`);
+		wrappedLogger.error(
+			`Error in clearSubtasksDirect: ${(error as Error).message}`
+		);
 		return {
 			success: false,
 			error: {

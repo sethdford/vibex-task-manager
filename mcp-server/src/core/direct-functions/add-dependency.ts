@@ -12,7 +12,10 @@ interface AddDependencyArgs {
 	dependsOn: string;
 }
 
-export async function addDependencyDirect(args: AddDependencyArgs, log: AnyLogger) {
+export async function addDependencyDirect(
+	args: AddDependencyArgs,
+	log: AnyLogger
+) {
 	const { tasksJsonPath, id, dependsOn } = args;
 	const wrappedLogger = createLogger(log);
 
@@ -27,7 +30,9 @@ export async function addDependencyDirect(args: AddDependencyArgs, log: AnyLogge
 			}
 		};
 	} catch (error) {
-		wrappedLogger.error(`Error in addDependencyDirect: ${(error as Error).message}`);
+		wrappedLogger.error(
+			`Error in addDependencyDirect: ${(error as Error).message}`
+		);
 		return {
 			success: false,
 			error: {

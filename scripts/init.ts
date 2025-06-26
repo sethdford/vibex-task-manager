@@ -70,7 +70,9 @@ const LOG_LEVELS: LogLevels = {
 
 // Determine log level from environment variable or default to 'info'
 const LOG_LEVEL = process.env.TASKMANAGER_LOG_LEVEL
-	? LOG_LEVELS[process.env.TASKMANAGER_LOG_LEVEL.toLowerCase() as keyof LogLevels]
+	? LOG_LEVELS[
+			process.env.TASKMANAGER_LOG_LEVEL.toLowerCase() as keyof LogLevels
+		]
 	: LOG_LEVELS.info; // Default to info
 
 // Create a color gradient for the banner
@@ -91,9 +93,7 @@ function displayBanner(): void {
 	console.log(coolGradient(bannerText));
 
 	// Add creator credit line below the banner
-	console.log(
-		chalk.dim('Open Source Task Management')
-	);
+	console.log(chalk.dim('Open Source Task Management'));
 
 	console.log(
 		boxen(chalk.white(`${chalk.bold('Initializing')} your new project`), {
@@ -150,30 +150,18 @@ function ensureDirectoryExists(dirPath: string): void {
 }
 
 // Function to add shell aliases to the user's shell configuration
-async function addShellAliases(
-	shellConfigFile: string | null
-): Promise<void> {
-	if (!shellConfigFile) {
-		const homeDir = process.env.HOME;
-		if (!homeDir) {
-			log(
-				'warn',
-				'Could not determine home directory to add shell aliases.'
-			);
-			return;
-		}
-		const shell = process.env.SHELL;
-		if (shell?.includes('zsh')) {
-			shellConfigFile = path.join(homeDir, '.zshrc');
-		} else if (shell?.includes('bash')) {
-			shellConfigFile = path.join(homeDir, '.bashrc');
-		} else {
-			log(
-				'warn',
-				'Could not determine shell type to add aliases. Please add them manually.'
-			);
-			return;
-		}
+function addShellAliases(): boolean {
+	const homeDir = process.env.HOME || process.env.USERPROFILE;
+	let shellConfigFile;
+
+	// Determine which shell config file to use
+	if (process.env.SHELL?.includes('zsh')) {
+		shellConfigFile = path.join(homeDir, '.zshrc');
+	} else if (process.env.SHELL?.includes('bash')) {
+		shellConfigFile = path.join(homeDir, '.bashrc');
+	} else {
+		log('warn', 'Could not determine shell type. Aliases not added.');
+		return false;
 	}
 
 	try {
@@ -183,14 +171,14 @@ async function addShellAliases(
 				'warn',
 				`Shell config file ${shellConfigFile} not found. Aliases not added.`
 			);
-			return;
+			return false;
 		}
 
 		// Check if aliases already exist
 		const configContent = fs.readFileSync(shellConfigFile, 'utf8');
 		if (configContent.includes("alias tm='vibex-task-manager'")) {
 			log('info', 'Task Manager aliases already exist in shell config.');
-			return;
+			return true;
 		}
 
 		// Add aliases to the shell config file
@@ -206,13 +194,23 @@ alias taskmanager='vibex-task-manager'
 			'info',
 			`To use the aliases in your current terminal, run: source ${shellConfigFile}`
 		);
+
+		return true;
 	} catch (error) {
-		log('error', `Failed to add aliases: ${(error as Error).message}`);
+		log(
+			'error',
+			`Failed to add aliases: ${error instanceof Error ? error.message : String(error)}`
+		);
+		return false;
 	}
 }
 
 // Function to copy a file from the package to the target directory
-function copyTemplateFile(templateName: string, targetPath: string, replacements: Record<string, any> = {}): void {
+function copyTemplateFile(
+	templateName: string,
+	targetPath: string,
+	replacements: Record<string, any> = {}
+): void {
 	// Get the file content from the appropriate source directory
 	let sourcePath;
 
@@ -353,91 +351,10 @@ function copyTemplateFile(templateName: string, targetPath: string, replacements
 	log('info', `Created file: ${targetPath}`);
 }
 
-// Function to copy the complete .taskmanager template structure
-function copyTaskmanagerTemplate(targetDir: string, options: InitOptions): void {
-	// Try multiple possible paths for the template directory
-	const possiblePaths = [
-		path.join(__dirname, '..', 'assets', 'taskmanager-template'), // Development
-		path.join(__dirname, '..', '..', 'assets', 'taskmanager-template'), // Installed via npm
-		path.join(__dirname, '..', '..', '..', 'assets', 'taskmanager-template'), // Alternative npm structure
-	];
-	
-	let templateDir: string | null = null;
-	for (const possiblePath of possiblePaths) {
-		if (fs.existsSync(possiblePath)) {
-			templateDir = possiblePath;
-			break;
-		}
-	}
-	
-	if (!templateDir) {
-		log('warn', 'Template directory not found at any expected location, creating basic structure only');
-		log('debug', `Searched paths: ${possiblePaths.join(', ')}`);
-		return;
-	}
-	
-	log('info', `Using template directory: ${templateDir}`);
-
-	const replacements = {
-		projectName: options.name || 'Your Project Name',
-		projectDescription: options.description || 'A project managed with Vibex Task Manager',
-		year: new Date().getFullYear(),
-		created: new Date().toISOString()
-	};
-
-	// Recursively copy template files
-	copyDirectoryRecursive(templateDir, targetDir, replacements);
-}
-
-// Helper function to recursively copy directories
-function copyDirectoryRecursive(sourceDir: string, targetDir: string, replacements: Record<string, any> = {}): void {
-	const items = fs.readdirSync(sourceDir, { withFileTypes: true });
-
-	for (const item of items) {
-		const sourcePath = path.join(sourceDir, item.name);
-		const targetPath = path.join(targetDir, item.name);
-
-		if (item.isDirectory()) {
-			// Create directory if it doesn't exist
-			if (!fs.existsSync(targetPath)) {
-				fs.mkdirSync(targetPath, { recursive: true });
-				log('info', `Created directory: ${targetPath}`);
-			}
-			// Recursively copy contents
-			copyDirectoryRecursive(sourcePath, targetPath, replacements);
-		} else if (item.isFile()) {
-			// Copy file with replacements
-			copyTemplateFileWithReplacements(sourcePath, targetPath, replacements);
-		}
-	}
-}
-
-// Enhanced file copy function with replacements
-function copyTemplateFileWithReplacements(sourcePath: string, targetPath: string, replacements: Record<string, any> = {}): void {
-	if (fs.existsSync(targetPath)) {
-		log('info', `File already exists, skipping: ${targetPath}`);
-		return;
-	}
-
-	let content = fs.readFileSync(sourcePath, 'utf8');
-
-	// Replace placeholders with actual values
-	Object.entries(replacements).forEach(([key, value]) => {
-		const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-		content = content.replace(regex, String(value));
-	});
-
-	// Replace "Your Project Name" with actual project name in all files
-	if (replacements.projectName && replacements.projectName !== 'Your Project Name') {
-		content = content.replace(/Your Project Name/g, replacements.projectName);
-	}
-
-	fs.writeFileSync(targetPath, content);
-	log('info', `Created file: ${targetPath}`);
-}
-
 // Main function to initialize a new project (No longer needs isInteractive logic)
-async function initializeProject(options: InitOptions = {}): Promise<{ dryRun?: boolean } | void> {
+async function initializeProject(
+	options: InitOptions = {}
+): Promise<{ dryRun?: boolean } | void> {
 	// Receives options as argument
 	// Only display banner if not in silent mode
 	if (!isSilentMode()) {
@@ -543,14 +460,20 @@ async function initializeProject(options: InitOptions = {}): Promise<{ dryRun?: 
 			createProjectStructure(addAliasesPrompted, dryRun, options);
 		} catch (error) {
 			rl.close();
-			log('error', `Error during initialization process: ${(error as Error).message}`);
+			log(
+				'error',
+				`Error during initialization process: ${error instanceof Error ? error.message : String(error)}`
+			);
 			process.exit(1);
 		}
 	}
 }
 
 // Helper function to promisify readline question
-function promptQuestion(rl: readline.Interface, question: string): Promise<string> {
+function promptQuestion(
+	rl: readline.Interface,
+	question: string
+): Promise<string> {
 	return new Promise((resolve) => {
 		rl.question(question, (answer) => {
 			resolve(answer);
@@ -559,10 +482,13 @@ function promptQuestion(rl: readline.Interface, question: string): Promise<strin
 }
 
 // Function to create the project structure
-function createProjectStructure(addAliases: boolean, dryRun: boolean, options: InitOptions): void {
+function createProjectStructure(
+	addAliases: boolean,
+	dryRun: boolean,
+	options: InitOptions
+): void {
 	const targetDir = process.cwd();
 	log('info', `Initializing project in ${targetDir}`);
-
 
 	// Create directories
 	ensureDirectoryExists(path.join(targetDir, '.cursor/rules'));
@@ -573,9 +499,6 @@ function createProjectStructure(addAliases: boolean, dryRun: boolean, options: I
 	ensureDirectoryExists(path.join(targetDir, TASKMANAGER_DOCS_DIR));
 	ensureDirectoryExists(path.join(targetDir, TASKMANAGER_REPORTS_DIR));
 	ensureDirectoryExists(path.join(targetDir, TASKMANAGER_TEMPLATES_DIR));
-
-	// Copy the complete .taskmanager template structure
-	copyTaskmanagerTemplate(targetDir, options);
 
 	// Setup MCP configuration for integration with Cursor
 	setupMCPConfiguration(targetDir);
@@ -634,7 +557,6 @@ function createProjectStructure(addAliases: boolean, dryRun: boolean, options: I
 	// Copy .windsurfrules
 	copyTemplateFile('windsurfrules', path.join(targetDir, '.windsurfrules'));
 
-
 	// Copy example_prd.txt to NEW location
 	copyTemplateFile('example_prd.txt', path.join(targetDir, EXAMPLE_PRD_FILE));
 
@@ -682,17 +604,23 @@ function createProjectStructure(addAliases: boolean, dryRun: boolean, options: I
 				borderColor: 'blue'
 			})
 		);
-		
+
 		// Try auto-detection first
 		try {
 			execSync('vibex-task-manager config-detect --apply', {
 				stdio: 'inherit',
 				cwd: targetDir
 			});
-			log('success', 'AWS Bedrock models detected and configured automatically!');
+			log(
+				'success',
+				'AWS Bedrock models detected and configured automatically!'
+			);
 		} catch (error) {
-			log('warn', 'AWS Bedrock auto-detection failed. Falling back to manual setup...');
-			
+			log(
+				'warn',
+				'AWS Bedrock auto-detection failed. Falling back to manual setup...'
+			);
+
 			// Fall back to manual setup if auto-detection fails
 			if (!options?.yes) {
 				log(
@@ -706,7 +634,13 @@ function createProjectStructure(addAliases: boolean, dryRun: boolean, options: I
 					});
 					log('success', 'AI Models configured.');
 				} catch (setupError) {
-					log('error', 'Failed to configure AI models:', (setupError as Error).message);
+					log(
+						'error',
+						'Failed to configure AI models:',
+						setupError instanceof Error
+							? setupError.message
+							: String(setupError)
+					);
 					log(
 						'warn',
 						'You may need to run "vibex-task-manager models --setup" manually.'
@@ -852,17 +786,17 @@ function setupMCPConfiguration(targetDir: string): void {
 					'Added vibex-task-manager server to existing MCP configuration'
 				);
 			} else {
-				log(
-					'info',
-					'vibex-task-manager server already configured in mcp.json'
-				);
+				log('info', 'vibex-task-manager server already configured in mcp.json');
 			}
 
 			// Write the updated configuration
 			fs.writeFileSync(mcpJsonPath, JSON.stringify(mcpConfig, null, 4));
 			log('success', 'Updated MCP configuration file');
 		} catch (error) {
-			log('error', `Failed to update MCP configuration: ${(error as Error).message}`);
+			log(
+				'error',
+				`Failed to update MCP configuration: ${error instanceof Error ? error.message : String(error)}`
+			);
 			// Create a backup before potentially modifying
 			const backupPath = `${mcpJsonPath}.backup-${Date.now()}`;
 			if (fs.existsSync(mcpJsonPath)) {
@@ -892,10 +826,7 @@ function setupMCPConfiguration(targetDir: string): void {
 	}
 
 	// Add note to console about MCP integration
-	log(
-		'info',
-		'MCP server will use AWS Bedrock for AI operations'
-	);
+	log('info', 'MCP server will use AWS Bedrock for AI operations');
 }
 
 // Ensure necessary functions are exported

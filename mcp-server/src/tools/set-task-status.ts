@@ -27,8 +27,7 @@ import { createLogger } from '../core/logger.js';
  * @param {Object} server - FastMCP server instance
  */
 export function registerSetTaskStatusTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'set_task_status',
 		description: 'Set the status of one or more tasks or subtasks.',
 		parameters: z.object({
@@ -38,7 +37,14 @@ export function registerSetTaskStatusTool(server: any): void {
 					"Task ID or subtask ID (e.g., '15', '15.2'). Can be comma-separated to update multiple tasks/subtasks at once."
 				),
 			status: z
-				.enum(['pending', 'done', 'in-progress', 'review', 'deferred', 'cancelled'] as const)
+				.enum([
+					'pending',
+					'done',
+					'in-progress',
+					'review',
+					'deferred',
+					'cancelled'
+				] as const)
 				.describe(
 					"New status to set (e.g., 'pending', 'done', 'in-progress', 'review', 'deferred', 'cancelled'."
 				),
@@ -56,7 +62,9 @@ export function registerSetTaskStatusTool(server: any): void {
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
 			const wrappedLogger = createLogger(log);
 			try {
-				wrappedLogger.info(`Setting task status with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(
+					`Setting task status with args: ${JSON.stringify(args)}`
+				);
 
 				let tasksJsonPath;
 				try {
@@ -65,7 +73,9 @@ export function registerSetTaskStatusTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -81,7 +91,9 @@ export function registerSetTaskStatusTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding complexity report: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding complexity report: ${(error as Error).message}`
+					);
 				}
 
 				const result = await setTaskStatusDirect(
@@ -103,9 +115,15 @@ export function registerSetTaskStatusTool(server: any): void {
 					);
 				}
 
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error setting task status');
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Error setting task status'
+				);
 			} catch (error) {
-				wrappedLogger.error(`Error in set-task-status tool: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Error in set-task-status tool: ${(error as Error).message}`
+				);
 				return createErrorResponse((error as Error).message);
 			}
 		})

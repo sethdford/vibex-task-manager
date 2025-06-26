@@ -3,8 +3,7 @@
  * Tool to get all tasks from Task Manager
  */
 
-import {
-	z } from 'zod';
+import { z } from 'zod';
 import {
 	apiResultToCommandResult,
 	createErrorResponse,
@@ -35,9 +34,7 @@ const getTasksSchema = z.object({
 	file: z
 		.string()
 		.optional()
-		.describe(
-			'Path to the tasks file (relative to project root or absolute)'
-		),
+		.describe('Path to the tasks file (relative to project root or absolute)'),
 	complexityReport: z
 		.string()
 		.optional()
@@ -60,56 +57,69 @@ export function registerListTasksTool(server: any): void {
 		description:
 			'Get all tasks from Task Manager, optionally filtering by status and including subtasks.',
 		parameters: getTasksSchema,
-		execute: withNormalizedProjectRoot(async (args: GetTasksInput, { log, session }) => {
-			const wrappedLogger = createLogger(log);
-			try {
-				wrappedLogger.info(`Getting all tasks with args: ${JSON.stringify(args)}`);
-
-				let tasksJsonPath: string;
+		execute: withNormalizedProjectRoot(
+			async (args: GetTasksInput, { log, session }) => {
+				const wrappedLogger = createLogger(log);
 				try {
-					const resolvedPath = resolveTasksPath(args, wrappedLogger);
-					if (!resolvedPath) {
-						return createErrorResponse('Could not find tasks.json');
+					wrappedLogger.info(
+						`Getting all tasks with args: ${JSON.stringify(args)}`
+					);
+
+					let tasksJsonPath: string;
+					try {
+						const resolvedPath = resolveTasksPath(args, wrappedLogger);
+						if (!resolvedPath) {
+							return createErrorResponse('Could not find tasks.json');
+						}
+						tasksJsonPath = resolvedPath;
+					} catch (error) {
+						wrappedLogger.error(
+							`Error finding tasks.json: ${(error as Error).message}`
+						);
+						return createErrorResponse(
+							`Failed to find tasks.json: ${(error as Error).message}`
+						);
 					}
-					tasksJsonPath = resolvedPath;
+
+					// Resolve the path to complexity report
+					let complexityReportPath: string | null;
+					try {
+						complexityReportPath = resolveComplexityReportPath(args, session);
+					} catch (error) {
+						wrappedLogger.error(
+							`Error finding complexity report: ${(error as Error).message}`
+						);
+						// This is optional, so we don't fail the operation
+						complexityReportPath = null;
+					}
+
+					const result = await listTasksDirect(
+						{
+							...args,
+							tasksJsonPath,
+							reportPath: complexityReportPath || undefined
+						},
+						log
+					);
+
+					if (result.success) {
+						wrappedLogger.info(
+							`Retrieved ${result.data?.tasks?.length || 0} tasks`
+						);
+					}
+					return handleApiResult(
+						apiResultToCommandResult(result),
+						log,
+						'Error getting tasks'
+					);
 				} catch (error) {
 					wrappedLogger.error(
-						`Error finding tasks.json: ${(error as Error).message}`
+						`Error in get-tasks tool: ${(error as Error).message}`
 					);
-					return createErrorResponse(
-						`Failed to find tasks.json: ${(error as Error).message}`
-					);
+					return createErrorResponse((error as Error).message);
 				}
-
-				// Resolve the path to complexity report
-				let complexityReportPath: string | null;
-				try {
-					complexityReportPath = resolveComplexityReportPath(args, session);
-				} catch (error) {
-					wrappedLogger.error(`Error finding complexity report: ${(error as Error).message}`);
-					// This is optional, so we don't fail the operation
-					complexityReportPath = null;
-				}
-
-				const result = await listTasksDirect(
-					{
-						...args,
-						tasksJsonPath, reportPath: complexityReportPath || undefined
-					},
-					log
-				);
-
-				if (result.success) {
-					wrappedLogger.info (
-						`Retrieved ${result.data?.tasks?.length || 0} tasks`
-					);
-				}
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error getting tasks');
-			} catch (error) {
-				wrappedLogger.error(`Error in get-tasks tool: ${(error as Error).message}`);
-				return createErrorResponse((error as Error).message);
 			}
-		})
+		)
 	};
 
 	server.addTool(tool);

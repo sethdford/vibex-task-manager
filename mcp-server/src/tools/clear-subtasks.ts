@@ -2,21 +2,17 @@
  * tools/clear-subtasks.js
  * Tool for clearing subtasks from parent tasks
  */
-import {
-	MCPTool } from './utils.js';
+import { MCPTool } from './utils.js';
 
-import {
-	z } from 'zod';
+import { z } from 'zod';
 import {
 	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import {
-	clearSubtasksDirect } from '../core/vibex-task-manager-core.js';
-import {
-	findTasksPath } from '../core/utils/path-utils.js';
+import { clearSubtasksDirect } from '../core/vibex-task-manager-core.js';
+import { findTasksPath } from '../core/utils/path-utils.js';
 import { createLogger } from '../core/logger.js';
 
 /**
@@ -24,8 +20,7 @@ import { createLogger } from '../core/logger.js';
  * @param {Object} server - FastMCP server instance
  */
 export function registerClearSubtasksTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'clear_subtasks',
 		description: 'Clear subtasks from specified tasks',
 		parameters: z
@@ -52,7 +47,9 @@ export function registerClearSubtasksTool(server: any): void {
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
 			const wrappedLogger = createLogger(log);
 			try {
-				wrappedLogger.info(`Clearing subtasks with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(
+					`Clearing subtasks with args: ${JSON.stringify(args)}`
+				);
 
 				let tasksJsonPath;
 				try {
@@ -61,7 +58,9 @@ export function registerClearSubtasksTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -70,20 +69,28 @@ export function registerClearSubtasksTool(server: any): void {
 				const result = await clearSubtasksDirect(
 					{
 						...args,
-						tasksJsonPath,
+						tasksJsonPath
 					},
 					log
 				);
 
 				if (result.success) {
-					wrappedLogger.info(`Subtasks cleared successfully: ${result.data?.message}`);
+					wrappedLogger.info(
+						`Subtasks cleared successfully: ${result.data?.message}`
+					);
 				} else {
 					wrappedLogger.error(`Failed to clear subtasks: ${result.error}`);
 				}
 
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error clearing subtasks');
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Error clearing subtasks'
+				);
 			} catch (error) {
-				wrappedLogger.error(`Error in clear-subtasks tool: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Error in clear-subtasks tool: ${(error as Error).message}`
+				);
 				return createErrorResponse((error as Error).message);
 			}
 		})

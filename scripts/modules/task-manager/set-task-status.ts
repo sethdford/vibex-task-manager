@@ -26,7 +26,12 @@ interface SetTaskStatusOptions {
  * @param {SetTaskStatusOptions} options - Additional options (mcpLog for MCP mode)
  * @returns {Object|undefined} Result object in MCP mode, undefined in CLI mode
  */
-async function setTaskStatus(tasksPath: string, taskIdInput: string, newStatus: string, options: SetTaskStatusOptions = {}) {
+async function setTaskStatus(
+	tasksPath: string,
+	taskIdInput: string,
+	newStatus: string,
+	options: SetTaskStatusOptions = {}
+) {
 	try {
 		if (!isValidTaskStatus(newStatus)) {
 			throw new Error(

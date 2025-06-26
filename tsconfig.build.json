@@ -1,13 +1,13 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": [
-    "node_modules",
-    "dist",
-    "coverage",
-    "test-project",
-    "tests/**/*",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/__tests__/**/*"
-  ]
+	"extends": "./tsconfig.json",
+	"exclude": [
+		"node_modules",
+		"dist",
+		"coverage",
+		"test-project",
+		"tests/**/*",
+		"**/*.test.ts",
+		"**/*.spec.ts",
+		"**/__tests__/**/*"
+	]
 }

@@ -41,8 +41,8 @@ interface Provider {
 }
 
 interface Message {
-    role: 'user' | 'assistant' | 'system';
-    content: string;
+	role: 'user' | 'assistant' | 'system';
+	content: string;
 }
 
 // --- Provider Instances ---
@@ -67,7 +67,11 @@ function _getCostForModel(providerName: string, modelId: string | null) {
 		return { inputCost: 0, outputCost: 0, currency: 'USD' };
 	}
 
-	const { input = 0, output = 0, currency = 'USD' } = modelData.cost_per_1m_tokens;
+	const {
+		input = 0,
+		output = 0,
+		currency = 'USD'
+	} = modelData.cost_per_1m_tokens;
 	return { inputCost: input, outputCost: output, currency };
 }
 
@@ -103,7 +107,11 @@ function isRetryableError(error: unknown): boolean {
  * @throws {Error} If a required API key is missing.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function _resolveApiKey(providerName: string, session: any, projectRoot: string | null = null) {
+function _resolveApiKey(
+	providerName: string,
+	session: any,
+	projectRoot: string | null = null
+) {
 	const keyMap: { [key: string]: string } = {
 		bedrock: 'AWS_ACCESS_KEY_ID'
 		// Only Bedrock is supported
@@ -174,7 +182,8 @@ async function _attemptProviderCallWithRetries(
 			}
 			return result;
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'An unknown error occurred';
+			const message =
+				error instanceof Error ? error.message : 'An unknown error occurred';
 			log(
 				'warn',
 				`Attempt ${retries + 1} failed for role ${attemptRole} (${fnName} / ${providerName}): ${message}`
@@ -219,7 +228,10 @@ async function _attemptProviderCallWithRetries(
  * @returns {Promise<any>} Result from the underlying provider call.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function _unifiedServiceRunner(serviceType: keyof Provider, params: any): Promise<AIServiceResponse | null> {
+async function _unifiedServiceRunner(
+	serviceType: keyof Provider,
+	params: any
+): Promise<AIServiceResponse | null> {
 	const {
 		role: initialRole,
 		session,
@@ -240,7 +252,8 @@ async function _unifiedServiceRunner(serviceType: keyof Provider, params: any): 
 		});
 	}
 
-	const effectiveProjectRoot = projectRoot || findProjectRoot() || process.cwd();
+	const effectiveProjectRoot =
+		projectRoot || findProjectRoot() || process.cwd();
 	const userId = getUserId(effectiveProjectRoot);
 	const telemetryPayloads: (Record<string, unknown> | null)[] = [];
 
@@ -269,8 +282,10 @@ async function _unifiedServiceRunner(serviceType: keyof Provider, params: any): 
 	) {
 		attemptSequence.push({
 			role: 'fallback',
-				getProvider: (explicitRoot?: string | null) => getFallbackProvider(explicitRoot) || '',
-	getModelId: (explicitRoot?: string | null) => getFallbackModelId(explicitRoot) || '',
+			getProvider: (explicitRoot?: string | null) =>
+				getFallbackProvider(explicitRoot) || '',
+			getModelId: (explicitRoot?: string | null) =>
+				getFallbackModelId(explicitRoot) || '',
 			getBaseUrl: getBaseUrlForRole
 		});
 	}
@@ -299,13 +314,18 @@ async function _unifiedServiceRunner(serviceType: keyof Provider, params: any): 
 			}
 		} else {
 			// For Bedrock, log that we're using AWS credentials
-			log('debug', `Using AWS credentials for Bedrock provider (role: ${attempt.role})`);
+			log(
+				'debug',
+				`Using AWS credentials for Bedrock provider (role: ${attempt.role})`
+			);
 		}
 
 		try {
 			const provider = PROVIDERS[providerName];
 			if (!provider) {
-				throw new Error(`Provider implementation for '${providerName}' not found.`);
+				throw new Error(
+					`Provider implementation for '${providerName}' not found.`
+				);
 			}
 
 			const messages: Message[] = [];
@@ -350,15 +370,30 @@ async function _unifiedServiceRunner(serviceType: keyof Provider, params: any): 
 				});
 				telemetryPayloads.push(telemetryData);
 			} else {
-				log('debug', 'Skipping telemetry logging because no user ID was found.');
+				log(
+					'debug',
+					'Skipping telemetry logging because no user ID was found.'
+				);
 			}
-
 
 			if (getDebugFlag()) {
-				log('info', `Successfully executed ${serviceType} with role '${attempt.role}'`, { result, telemetryData: telemetryPayloads[telemetryPayloads.length - 1] });
+				log(
+					'info',
+					`Successfully executed ${serviceType} with role '${attempt.role}'`,
+					{
+						result,
+						telemetryData: telemetryPayloads[telemetryPayloads.length - 1]
+					}
+				);
 			}
 
-			return { mainResult, telemetryData: telemetryPayloads.length > 0 ? telemetryPayloads[telemetryPayloads.length -1] : null };
+			return {
+				mainResult,
+				telemetryData:
+					telemetryPayloads.length > 0
+						? telemetryPayloads[telemetryPayloads.length - 1]
+						: null
+			};
 		} catch (error) {
 			log(
 				'error',
@@ -390,7 +425,9 @@ async function _unifiedServiceRunner(serviceType: keyof Provider, params: any): 
  * @returns {Promise<AIServiceResponse|null>} An object containing the main result and telemetry data, or null if all services fail.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function generateTextService(params: any): Promise<AIServiceResponse | null> {
+export async function generateTextService(
+	params: any
+): Promise<AIServiceResponse | null> {
 	return _unifiedServiceRunner('generateText', params);
 }
 
@@ -409,7 +446,9 @@ export async function generateTextService(params: any): Promise<AIServiceRespons
  * @returns {Promise<AIServiceResponse|null>} An object containing telemetry data, or null if all services fail. The mainResult will be null for streams.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function streamTextService(params: any): Promise<AIServiceResponse | null> {
+export async function streamTextService(
+	params: any
+): Promise<AIServiceResponse | null> {
 	return _unifiedServiceRunner('streamText', params);
 }
 
@@ -429,7 +468,9 @@ export async function streamTextService(params: any): Promise<AIServiceResponse 
  * @returns {Promise<AIServiceResponse|null>} An object containing the generated object in mainResult and telemetry data, or null if all services fail.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function generateObjectService(params: any): Promise<AIServiceResponse | null> {
+export async function generateObjectService(
+	params: any
+): Promise<AIServiceResponse | null> {
 	return _unifiedServiceRunner('generateObject', params);
 }
 
@@ -481,7 +522,9 @@ async function logAiUsage({
 			inputTokens,
 			outputTokens,
 			totalTokens: inputTokens + outputTokens,
-			totalCost: (inputTokens / 1_000_000) * inputCost + (outputTokens / 1_000_000) * outputCost,
+			totalCost:
+				(inputTokens / 1_000_000) * inputCost +
+				(outputTokens / 1_000_000) * outputCost,
 			currency: currency
 		};
 
@@ -496,4 +539,4 @@ async function logAiUsage({
 		log('warn', `Failed to log AI usage: ${error}`);
 		return null;
 	}
-} 
+}

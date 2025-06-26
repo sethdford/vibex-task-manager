@@ -94,7 +94,10 @@ export async function listTasksDirect(
 					success: false,
 					error: {
 						code: 'INVALID_CORE_RESPONSE',
-						message: typeof resultData === 'string' ? resultData : 'Invalid or empty response from listTasks core function'
+						message:
+							typeof resultData === 'string'
+								? resultData
+								: 'Invalid or empty response from listTasks core function'
 					}
 				};
 			}
@@ -111,7 +114,8 @@ export async function listTasksDirect(
 			// Make sure to restore normal logging even if there's an error
 			disableSilentMode();
 
-			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage =
+				error instanceof Error ? error.message : 'Unknown error';
 			log.error(`Core listTasks function failed: ${errorMessage}`);
 			return {
 				success: false,
@@ -128,7 +132,8 @@ export async function listTasksDirect(
 		log.info('listTasksDirect completed');
 		return result;
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown error';
 		log.error(`Unexpected error during listTasks: ${errorMessage}`);
 		if (error instanceof Error && error.stack) {
 			console.error(error.stack);

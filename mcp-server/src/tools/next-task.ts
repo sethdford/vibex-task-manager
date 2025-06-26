@@ -2,11 +2,9 @@
  * tools/next-task.js
  * Tool to find the next task to work on based on dependencies and status
  */
-import {
-	MCPTool } from './utils.js';
+import { MCPTool } from './utils.js';
 
-import {
-	z } from 'zod';
+import { z } from 'zod';
 import {
 	apiResultToCommandResult,
 	createErrorResponse,
@@ -25,8 +23,7 @@ import { createLogger } from '../core/logger.js';
  * @param {Object} server - FastMCP server instance
  */
 export function registerNextTaskTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'next_task',
 		description:
 			'Find the next task to work on based on dependencies and status',
@@ -45,7 +42,9 @@ export function registerNextTaskTool(server: any): void {
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
 			const wrappedLogger = createLogger(log);
 			try {
-				wrappedLogger.info(`Finding next task with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(
+					`Finding next task with args: ${JSON.stringify(args)}`
+				);
 
 				let tasksJsonPath;
 				try {
@@ -54,7 +53,9 @@ export function registerNextTaskTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -64,7 +65,9 @@ export function registerNextTaskTool(server: any): void {
 				try {
 					complexityReportPath = resolveComplexityReportPath(args, session);
 				} catch (error) {
-					wrappedLogger.error(`Error finding complexity report: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding complexity report: ${(error as Error).message}`
+					);
 					// This is optional, so we don't fail the operation
 					complexityReportPath = null;
 				}
@@ -92,7 +95,9 @@ export function registerNextTaskTool(server: any): void {
 					'Error finding next task'
 				);
 			} catch (error) {
-				wrappedLogger.error(`Error in next-task tool: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Error in next-task tool: ${(error as Error).message}`
+				);
 				return createErrorResponse((error as Error).message);
 			}
 		})

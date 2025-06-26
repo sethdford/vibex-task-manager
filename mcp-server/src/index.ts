@@ -38,12 +38,12 @@ class VibexTaskManagerMCPServer {
 		const possiblePaths = [
 			path.join(__dirname, '../../package.json'), // Development
 			path.join(__dirname, '../../../package.json'), // Installed via npm
-			path.join(__dirname, '../../../../package.json'), // Alternative npm structure
+			path.join(__dirname, '../../../../package.json') // Alternative npm structure
 		];
-		
+
 		let packageJson: PackageJson;
 		let packagePath: string | null = null;
-		
+
 		for (const possiblePath of possiblePaths) {
 			try {
 				if (fs.existsSync(possiblePath)) {
@@ -55,7 +55,7 @@ class VibexTaskManagerMCPServer {
 				// Continue to next path
 			}
 		}
-		
+
 		if (!packagePath) {
 			// Fallback to a default version
 			packageJson = { version: '1.0.0' };

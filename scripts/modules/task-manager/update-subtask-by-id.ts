@@ -284,7 +284,11 @@ Output Requirements:
 		}
 		// In text mode, regenerate task files if config is set
 		const config = getConfig();
-		if (outputFormat === 'text' && config && (config as any).generateTaskFiles) {
+		if (
+			outputFormat === 'text' &&
+			config &&
+			(config as any).generateTaskFiles
+		) {
 			if (!projectRoot) {
 				report(
 					'warn',
@@ -295,9 +299,7 @@ Output Requirements:
 			}
 		}
 		if (outputFormat === 'text') {
-			console.log(
-				chalk.green.bold('\n✅ Subtask updated successfully.')
-			);
+			console.log(chalk.green.bold('\n✅ Subtask updated successfully.'));
 			if (newlyAddedSnippet) {
 				console.log(
 					boxen(chalk.gray(newlyAddedSnippet.trim()), {

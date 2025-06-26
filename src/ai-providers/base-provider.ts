@@ -1,6 +1,14 @@
 import { generateText, streamText, generateObject } from 'ai';
 import { log } from '../../scripts/modules/index.js';
-import type { Message, GenerateTextParams, StreamTextParams, GenerateObjectParams, AIResult, StreamResult, ObjectResult } from '../types/index.js';
+import type {
+	Message,
+	GenerateTextParams,
+	StreamTextParams,
+	GenerateObjectParams,
+	AIResult,
+	StreamResult,
+	ObjectResult
+} from '../types/index.js';
 
 /**
  * Base class for all AI providers
@@ -20,7 +28,9 @@ export abstract class BaseAIProvider {
 	/**
 	 * Validates authentication parameters - can be overridden by providers
 	 */
-	validateAuth(params: GenerateTextParams | StreamTextParams | GenerateObjectParams): void {
+	validateAuth(
+		params: GenerateTextParams | StreamTextParams | GenerateObjectParams
+	): void {
 		// Default: require API key (most providers need this)
 		if (!params.apiKey) {
 			throw new Error(`${this.name} API key is required`);
@@ -30,7 +40,9 @@ export abstract class BaseAIProvider {
 	/**
 	 * Validates common parameters across all methods
 	 */
-	validateParams(params: GenerateTextParams | StreamTextParams | GenerateObjectParams): void {
+	validateParams(
+		params: GenerateTextParams | StreamTextParams | GenerateObjectParams
+	): void {
 		// Validate authentication (can be overridden by providers)
 		this.validateAuth(params);
 
@@ -46,7 +58,9 @@ export abstract class BaseAIProvider {
 	/**
 	 * Validates optional parameters like temperature and maxTokens
 	 */
-	validateOptionalParams(params: GenerateTextParams | StreamTextParams | GenerateObjectParams): void {
+	validateOptionalParams(
+		params: GenerateTextParams | StreamTextParams | GenerateObjectParams
+	): void {
 		if (
 			params.temperature !== undefined &&
 			(params.temperature < 0 || params.temperature > 1)
@@ -91,7 +105,9 @@ export abstract class BaseAIProvider {
 	/**
 	 * Creates and returns a client instance for the provider
 	 */
-	abstract getClient(params: GenerateTextParams | StreamTextParams | GenerateObjectParams): any;
+	abstract getClient(
+		params: GenerateTextParams | StreamTextParams | GenerateObjectParams
+	): any;
 
 	/**
 	 * Generates text using the provider's model

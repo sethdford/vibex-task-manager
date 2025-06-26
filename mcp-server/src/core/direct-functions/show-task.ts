@@ -83,7 +83,8 @@ export async function showTaskDirect(
 		}
 		mcpLog.info(`Resolved tasks path: ${tasksJsonPath}`);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown error';
 		mcpLog.error(`Error finding tasks.json: ${errorMessage}`);
 		return {
 			success: false,
@@ -136,7 +137,8 @@ export async function showTaskDirect(
 
 		return { success: true, data: returnData };
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown error';
 		mcpLog.error(`Error showing task ${id}: ${errorMessage}`);
 		return {
 			success: false,

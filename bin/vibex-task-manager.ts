@@ -80,12 +80,15 @@ function runDevScript(args: string[]): void {
 }
 
 // Helper function to detect camelCase and convert to kebab-case
-const toKebabCase = (str: string): string => str.replace(/([A-Z])/g, '-$1').toLowerCase();
+const toKebabCase = (str: string): string =>
+	str.replace(/([A-Z])/g, '-$1').toLowerCase();
 
 /**
  * Create a wrapper action that passes the command to dev.js
  */
-function createDevScriptAction(commandName: string): (options: any, cmd: any) => void {
+function createDevScriptAction(
+	commandName: string
+): (options: any, cmd: any) => void {
 	return (options: any, cmd: any) => {
 		// Check for camelCase flags and error out with helpful message
 		const camelCaseFlags: CamelCaseFlag[] = detectCamelCaseFlags(process.argv);

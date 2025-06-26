@@ -37,7 +37,9 @@ export function registerAddDependencyTool(server: any): void {
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
 			const wrappedLogger = createLogger(log);
 			try {
-				wrappedLogger.info(`Adding dependency for task ${args.id} to depend on ${args.dependsOn}`);
+				wrappedLogger.info(
+					`Adding dependency for task ${args.id} to depend on ${args.dependsOn}`
+				);
 
 				let tasksJsonPath;
 				try {
@@ -46,7 +48,9 @@ export function registerAddDependencyTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -62,22 +66,33 @@ export function registerAddDependencyTool(server: any): void {
 				);
 
 				if (result.success) {
-					wrappedLogger.info(`Successfully added dependency: ${result.data?.message || 'Done'}`);
+					wrappedLogger.info(
+						`Successfully added dependency: ${result.data?.message || 'Done'}`
+					);
 				} else {
-					wrappedLogger.error(`Failed to add dependency: ${result.error?.message || 'Unknown error'}`);
+					wrappedLogger.error(
+						`Failed to add dependency: ${result.error?.message || 'Unknown error'}`
+					);
 				}
 
 				const commandResult = apiResultToCommandResult(result);
 				if (commandResult.success) {
-					return createSuccessResponse(commandResult.data || commandResult.stdout);
+					return createSuccessResponse(
+						commandResult.data || commandResult.stdout
+					);
 				} else {
-					const errorMessage = commandResult.error || commandResult.stderr || 'Unknown error occurred';
+					const errorMessage =
+						commandResult.error ||
+						commandResult.stderr ||
+						'Unknown error occurred';
 					const errorPrefix = 'Error adding dependency';
 					wrappedLogger.error(`${errorPrefix}: ${errorMessage}`);
 					return createErrorResponse(`${errorPrefix}: ${errorMessage}`);
 				}
 			} catch (error) {
-				wrappedLogger.error(`Error in addDependency tool: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Error in addDependency tool: ${(error as Error).message}`
+				);
 				return createErrorResponse((error as Error).message);
 			}
 		})

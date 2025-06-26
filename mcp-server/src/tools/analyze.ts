@@ -2,11 +2,9 @@
  * tools/analyze.js
  * Tool for analyzing task complexity and generating recommendations
  */
-import {
-	MCPTool } from './utils.js';
+import { MCPTool } from './utils.js';
 
-import {
-	z } from 'zod';
+import { z } from 'zod';
 import path from 'path';
 import fs from 'fs'; // Import fs for directory check/creation
 import {
@@ -25,8 +23,7 @@ import { createLogger } from '../core/logger.js';
  * @param {Object} server - FastMCP server instance
  */
 export function registerAnalyzeProjectComplexityTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'analyze_project_complexity',
 		description:
 			'Analyze task complexity and generate expansion recommendations.',
@@ -82,7 +79,9 @@ export function registerAnalyzeProjectComplexityTool(server: any): void {
 			const wrappedLogger = createLogger(log);
 			const toolName = 'analyze_project_complexity'; // Define tool name for logging
 			try {
-				wrappedLogger.info(`Analyzing task complexity with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(
+					`Analyzing task complexity with args: ${JSON.stringify(args)}`
+				);
 
 				let tasksJsonPath;
 				try {
@@ -90,9 +89,13 @@ export function registerAnalyzeProjectComplexityTool(server: any): void {
 						{ projectRoot: args.projectRoot, file: args.file },
 						wrappedLogger
 					);
-					wrappedLogger.info(`${toolName}: Resolved tasks path: ${tasksJsonPath}`);
+					wrappedLogger.info(
+						`${toolName}: Resolved tasks path: ${tasksJsonPath}`
+					);
 				} catch (error) {
-					wrappedLogger.error(`${toolName}: Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`${toolName}: Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json within project root '${args.projectRoot}': ${(error as Error).message}`
 					);
@@ -138,9 +141,15 @@ export function registerAnalyzeProjectComplexityTool(server: any): void {
 				wrappedLogger.info(
 					`${toolName}: Direct function result: success=${result.success}`
 				);
-				return handleApiResult(apiResultToCommandResult(result), wrappedLogger, 'Error analyzing task complexity');
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					wrappedLogger,
+					'Error analyzing task complexity'
+				);
 			} catch (error) {
-				wrappedLogger.error(`Critical error in ${toolName} tool execute: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Critical error in ${toolName} tool execute: ${(error as Error).message}`
+				);
 				return createErrorResponse(
 					`Internal tool error (${toolName}): ${(error as Error).message}`
 				);

@@ -28,8 +28,8 @@ import { AnyLogger, DirectFunctionContext, ApiResult } from './types.js';
  * @returns {Promise<ApiResult>}
  */
 export async function analyzeTaskComplexityDirect(
-	args: any, 
-	log: AnyLogger, 
+	args: any,
+	log: AnyLogger,
 	context: DirectFunctionContext = {}
 ): Promise<ApiResult> {
 	const { session = null } = context;
@@ -203,7 +203,9 @@ export async function analyzeTaskComplexityDirect(
 			};
 		} catch (parseError) {
 			// Should not happen if core function returns object, but good safety check
-			log.error(`Internal error processing report data: ${(parseError as Error).message}`);
+			log.error(
+				`Internal error processing report data: ${(parseError as Error).message}`
+			);
 			return {
 				success: false,
 				error: {
@@ -219,7 +221,9 @@ export async function analyzeTaskComplexityDirect(
 		if (isSilentMode()) {
 			disableSilentMode();
 		}
-		log.error(`Error in analyzeTaskComplexityDirect setup: ${(error as Error).message}`);
+		log.error(
+			`Error in analyzeTaskComplexityDirect setup: ${(error as Error).message}`
+		);
 		return {
 			success: false,
 			error: {

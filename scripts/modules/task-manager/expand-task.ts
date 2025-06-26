@@ -338,7 +338,9 @@ Original Length: ${originalTrimmedResponse.length}
 Trimmed Length: ${jsonToParse.length}
 Content (first 500 chars): ${jsonToParse.substring(0, 500)}...`
 			);
-			throw new Error('Failed to parse a valid JSON object from the AI response.');
+			throw new Error(
+				'Failed to parse a valid JSON object from the AI response.'
+			);
 		}
 	}
 
@@ -403,9 +405,7 @@ Content (first 500 chars): ${jsonToParse.substring(0, 500)}...`
 		existingIds.add(correctedSubtask.id);
 
 		// 3. Validate dependencies to ensure they exist within the *newly created* set of subtasks
-		const validDepIds = new Set(
-			subtasks.map((st, index) => startId + index)
-		);
+		const validDepIds = new Set(subtasks.map((st, index) => startId + index));
 		correctedSubtask.dependencies = correctedSubtask.dependencies.filter(
 			(depId) => {
 				if (depId === correctedSubtask.id) {
@@ -522,13 +522,13 @@ async function expandTask(
 					subtaskCount,
 					additionalContext,
 					nextSubtaskId
-			  )
+				)
 			: generateMainUserPrompt(
 					task,
 					subtaskCount,
 					additionalContext,
 					nextSubtaskId
-			  );
+				);
 
 		const serviceOptions = {
 			prompt: userPrompt,
@@ -537,9 +537,7 @@ async function expandTask(
 			maxRetries: 3,
 			schema: subtaskWrapperSchema,
 			service: useResearch ? 'perplexity' : 'anthropic',
-			model: useResearch
-				? 'perplexity-large'
-				: 'claude-3-5-sonnet-20240620',
+			model: useResearch ? 'perplexity-large' : 'claude-3-5-sonnet-20240620',
 			temperature: useResearch ? 0.4 : 0.2, // Lower temp for structured output
 			logger: mcpLog,
 			projectRoot: context.projectRoot || process.cwd()
@@ -631,9 +629,7 @@ async function expandTask(
 		// Regenerate individual task files
 		await generateTaskFiles(tasksPath, path.dirname(tasksPath));
 
-		stopLoadingIndicator(
-			loadingIndicator
-		);
+		stopLoadingIndicator(loadingIndicator);
 
 		if (aiServiceResponse && aiServiceResponse.telemetryData) {
 			displayAiUsageSummary(aiServiceResponse.telemetryData, 'cli');

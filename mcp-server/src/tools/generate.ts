@@ -2,21 +2,17 @@
  * tools/generate.js
  * Tool to generate individual task files from tasks.json
  */
-import {
-	MCPTool } from './utils.js';
+import { MCPTool } from './utils.js';
 
-import {
-	z } from 'zod';
+import { z } from 'zod';
 import {
 	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import {
-	generateTaskFilesDirect } from '../core/vibex-task-manager-core.js';
-import {
-	findTasksPath } from '../core/utils/path-utils.js';
+import { generateTaskFilesDirect } from '../core/vibex-task-manager-core.js';
+import { findTasksPath } from '../core/utils/path-utils.js';
 import path from 'path';
 import { createLogger } from '../core/logger.js';
 
@@ -25,8 +21,7 @@ import { createLogger } from '../core/logger.js';
  * @param {Object} server - FastMCP server instance
  */
 export function registerGenerateTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'generate',
 		description:
 			'Generates individual task files in tasks/ directory based on tasks.json',
@@ -43,7 +38,9 @@ export function registerGenerateTool(server: any): void {
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
 			const wrappedLogger = createLogger(log);
 			try {
-				wrappedLogger.info(`Generating task files with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(
+					`Generating task files with args: ${JSON.stringify(args)}`
+				);
 
 				let tasksJsonPath;
 				try {
@@ -52,7 +49,9 @@ export function registerGenerateTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -71,16 +70,24 @@ export function registerGenerateTool(server: any): void {
 				);
 
 				if (result.success) {
-					wrappedLogger.info(`Successfully generated task files: ${result.data?.message}`);
+					wrappedLogger.info(
+						`Successfully generated task files: ${result.data?.message}`
+					);
 				} else {
 					wrappedLogger.error(
 						`Failed to generate task files: ${result.error?.message || 'Unknown error'}`
 					);
 				}
 
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error generating task files');
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Error generating task files'
+				);
 			} catch (error) {
-				wrappedLogger.error(`Error in generate tool: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Error in generate tool: ${(error as Error).message}`
+				);
 				return createErrorResponse((error as Error).message);
 			}
 		})

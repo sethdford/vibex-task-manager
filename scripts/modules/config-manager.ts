@@ -6,7 +6,10 @@ import { log, findProjectRoot, resolveEnvVariable } from './utils.js';
 import { LEGACY_CONFIG_FILE } from '../../src/constants/paths.js';
 import { findConfigPath } from '../../src/utils/path-utils.js';
 import { BedrockAutoDetect } from '../../src/core/bedrock-auto-detect.js';
-import { getBedrockModel, BedrockModelId } from '../../src/core/bedrock-models.js';
+import {
+	getBedrockModel,
+	BedrockModelId
+} from '../../src/core/bedrock-models.js';
 
 // Calculate __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -39,7 +42,8 @@ interface ModelConfig {
 }
 
 // Fallback can have missing provider/modelId
-interface FallbackModelConfig extends Omit<ModelConfig, 'provider' | 'modelId'> {
+interface FallbackModelConfig
+	extends Omit<ModelConfig, 'provider' | 'modelId'> {
 	provider?: string;
 	modelId?: string;
 }
@@ -71,7 +75,7 @@ interface Config {
 type DeepPartial<T> = T extends object
 	? {
 			[P in keyof T]?: DeepPartial<T[P]>;
-	  }
+		}
 	: T;
 // --- End Type Definitions ---
 
@@ -185,9 +189,9 @@ function _loadAndValidateConfig(explicitRoot: string | null = null): Config {
 						parsedConfig?.models?.fallback?.provider &&
 						parsedConfig?.models?.fallback?.modelId
 							? { ...defaults.models.fallback, ...parsedConfig.models.fallback }
-							: { ...defaults.models.fallback },
+							: { ...defaults.models.fallback }
 				},
-				global: { ...defaults.global, ...parsedConfig?.global },
+				global: { ...defaults.global, ...parsedConfig?.global }
 			};
 			configSource = `file (${configPath})`; // Update source info
 
@@ -314,7 +318,10 @@ function validateProvider(providerName: string) {
  * @param {string} modelId The model ID.
  * @returns {boolean} True if the modelId is in the map for the provider, false otherwise.
  */
-function validateProviderModelCombination(providerName: string, modelId: string) {
+function validateProviderModelCombination(
+	providerName: string,
+	modelId: string
+) {
 	// Only allow bedrock providers since we only support AWS Bedrock
 	if (!validateProvider(providerName)) {
 		return false;
@@ -437,7 +444,9 @@ function getProjectName(explicitRoot: string | null = null): string {
 
 // Azure and Ollama support removed - only Bedrock is supported
 
-function getBedrockBaseURL(explicitRoot: string | null = null): string | undefined {
+function getBedrockBaseURL(
+	explicitRoot: string | null = null
+): string | undefined {
 	const config = getConfig(explicitRoot);
 	// Prioritize environment variable, then config file, then default
 	return (
@@ -450,7 +459,9 @@ function getBedrockBaseURL(explicitRoot: string | null = null): string | undefin
  * @param {string|null} explicitRoot - Optional explicit path to the project root.
  * @returns {string|null} The project ID or null if not configured
  */
-function getVertexProjectId(explicitRoot: string | null = null): string | undefined {
+function getVertexProjectId(
+	explicitRoot: string | null = null
+): string | undefined {
 	const config = getConfig(explicitRoot);
 	// This property is not part of the defined GlobalConfig, so we handle it as potentially undefined.
 	// To fix this long-term, 'vertexProjectId' should be added to the GlobalConfig interface.
@@ -466,7 +477,9 @@ function getVertexProjectId(explicitRoot: string | null = null): string | undefi
  * @param {string|null} explicitRoot - Optional explicit path to the project root.
  * @returns {string} The location or default value of "us-central1"
  */
-function getVertexLocation(explicitRoot: string | null = null): string | undefined {
+function getVertexLocation(
+	explicitRoot: string | null = null
+): string | undefined {
 	const config = getConfig(explicitRoot);
 	// This property is not part of the defined GlobalConfig, so we handle it as potentially undefined.
 	// To fix this long-term, 'vertexLocation' should be added to the GlobalConfig interface.
@@ -763,7 +776,7 @@ export async function discoverAvailableModels(region?: string): Promise<{
 	const detector = new BedrockAutoDetect({ region });
 	const result = await detector.detectModels();
 
-	const available = result.available.map(model => ({
+	const available = result.available.map((model) => ({
 		modelId: model.modelId,
 		name: model.modelInfo.name,
 		maxTokens: model.modelInfo.maxTokens,
@@ -778,7 +791,7 @@ export async function discoverAvailableModels(region?: string): Promise<{
 		}
 	}));
 
-	const unavailable = result.unavailable.map(model => ({
+	const unavailable = result.unavailable.map((model) => ({
 		modelId: model.modelId,
 		name: model.modelInfo.name,
 		reason: 'Not available in current AWS region/account'
@@ -803,24 +816,47 @@ export async function updateConfigWithDiscoveredModels(
 	const updatedConfig = { ...config };
 
 	// Update main model if current one is not available
-	if (discoveredModels.recommendations.main && 
-			!discoveredModels.available.find(m => m.modelId === config.models.main.modelId)) {
+	if (
+		discoveredModels.recommendations.main &&
+		!discoveredModels.available.find(
+			(m) => m.modelId === config.models.main.modelId
+		)
+	) {
 		updatedConfig.models.main.modelId = discoveredModels.recommendations.main;
-		log('info', `Updated main model to: ${discoveredModels.recommendations.main}`);
+		log(
+			'info',
+			`Updated main model to: ${discoveredModels.recommendations.main}`
+		);
 	}
 
 	// Update research model if current one is not available
-	if (discoveredModels.recommendations.research && 
-			!discoveredModels.available.find(m => m.modelId === config.models.research.modelId)) {
-		updatedConfig.models.research.modelId = discoveredModels.recommendations.research;
-		log('info', `Updated research model to: ${discoveredModels.recommendations.research}`);
+	if (
+		discoveredModels.recommendations.research &&
+		!discoveredModels.available.find(
+			(m) => m.modelId === config.models.research.modelId
+		)
+	) {
+		updatedConfig.models.research.modelId =
+			discoveredModels.recommendations.research;
+		log(
+			'info',
+			`Updated research model to: ${discoveredModels.recommendations.research}`
+		);
 	}
 
 	// Update fallback model if current one is not available
-	if (discoveredModels.recommendations.fallback && 
-			!discoveredModels.available.find(m => m.modelId === config.models.fallback.modelId)) {
-		updatedConfig.models.fallback.modelId = discoveredModels.recommendations.fallback;
-		log('info', `Updated fallback model to: ${discoveredModels.recommendations.fallback}`);
+	if (
+		discoveredModels.recommendations.fallback &&
+		!discoveredModels.available.find(
+			(m) => m.modelId === config.models.fallback.modelId
+		)
+	) {
+		updatedConfig.models.fallback.modelId =
+			discoveredModels.recommendations.fallback;
+		log(
+			'info',
+			`Updated fallback model to: ${discoveredModels.recommendations.fallback}`
+		);
 	}
 
 	return updatedConfig;

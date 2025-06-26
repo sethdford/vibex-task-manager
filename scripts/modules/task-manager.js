@@ -26,4 +26,28 @@ import moveTask from './task-manager/move-task.js';
 import { migrateProject } from './task-manager/migrate.js';
 import { readComplexityReport } from './utils.js';
 // Export task manager functions
-export { parsePRD, updateTasks, updateTaskById, updateSubtaskById, generateTaskFiles, setTaskStatus, updateSingleTaskStatus, listTasks, expandTask, expandAllTasks, clearSubtasks, addTask, addSubtask, removeSubtask, findNextTask, analyzeTaskComplexity, removeTask, findTaskById, taskExists, isTaskDependentOn, moveTask, readComplexityReport, migrateProject };
+export {
+	parsePRD,
+	updateTasks,
+	updateTaskById,
+	updateSubtaskById,
+	generateTaskFiles,
+	setTaskStatus,
+	updateSingleTaskStatus,
+	listTasks,
+	expandTask,
+	expandAllTasks,
+	clearSubtasks,
+	addTask,
+	addSubtask,
+	removeSubtask,
+	findNextTask,
+	analyzeTaskComplexity,
+	removeTask,
+	findTaskById,
+	taskExists,
+	isTaskDependentOn,
+	moveTask,
+	readComplexityReport,
+	migrateProject
+};

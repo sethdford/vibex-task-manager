@@ -11,8 +11,10 @@ export const TASKMANAGER_TEMPLATES_DIR = '.taskmanager/templates';
 export const TASKMANAGER_CONFIG_FILE = '.taskmanager/config.json';
 export const LEGACY_CONFIG_FILE = '.taskmanagerconfig';
 // Task Manager report files
-export const COMPLEXITY_REPORT_FILE = '.taskmanager/reports/task-complexity-report.json';
-export const LEGACY_COMPLEXITY_REPORT_FILE = 'scripts/task-complexity-report.json';
+export const COMPLEXITY_REPORT_FILE =
+	'.taskmanager/reports/task-complexity-report.json';
+export const LEGACY_COMPLEXITY_REPORT_FILE =
+	'scripts/task-complexity-report.json';
 // Task Manager PRD file paths
 export const PRD_FILE = '.taskmanager/docs/prd.txt';
 export const LEGACY_PRD_FILE = 'scripts/prd.txt';
@@ -33,11 +35,11 @@ export const TASK_FILE_EXTENSION = '.txt';
  * These files/directories indicate that a directory is a Task Manager project
  */
 export const PROJECT_MARKERS = [
-    '.taskmanager', // New taskmanager directory
-    LEGACY_CONFIG_FILE, // .taskmanagerconfig
-    'tasks.json', // Generic tasks file
-    LEGACY_TASKS_FILE, // tasks/tasks.json (legacy location)
-    TASKMANAGER_TASKS_FILE, // .taskmanager/tasks/tasks.json (new location)
-    '.git', // Git repository
-    '.svn' // SVN repository
+	'.taskmanager', // New taskmanager directory
+	LEGACY_CONFIG_FILE, // .taskmanagerconfig
+	'tasks.json', // Generic tasks file
+	LEGACY_TASKS_FILE, // tasks/tasks.json (legacy location)
+	TASKMANAGER_TASKS_FILE, // .taskmanager/tasks/tasks.json (new location)
+	'.git', // Git repository
+	'.svn' // SVN repository
 ];

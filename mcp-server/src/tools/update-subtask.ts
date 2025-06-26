@@ -2,21 +2,17 @@
  * tools/update-subtask.js
  * Tool to append additional information to a specific subtask
  */
-import {
-	MCPTool } from './utils.js';
+import { MCPTool } from './utils.js';
 
-import {
-	z } from 'zod';
+import { z } from 'zod';
 import {
 	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import {
-	updateSubtaskByIdDirect } from '../core/vibex-task-manager-core.js';
-import {
-	findTasksPath } from '../core/utils/path-utils.js';
+import { updateSubtaskByIdDirect } from '../core/vibex-task-manager-core.js';
+import { findTasksPath } from '../core/utils/path-utils.js';
 import { createLogger } from '../core/logger.js';
 
 /**
@@ -24,8 +20,7 @@ import { createLogger } from '../core/logger.js';
  * @param {Object} server - FastMCP server instance
  */
 export function registerUpdateSubtaskTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'update_subtask',
 		description:
 			'Appends timestamped information to a specific subtask without replacing existing content. If you just want to update the subtask status, use set_task_status instead.',
@@ -49,7 +44,9 @@ export function registerUpdateSubtaskTool(server: any): void {
 			const wrappedLogger = createLogger(log);
 			const toolName = 'update_subtask';
 			try {
-				wrappedLogger.info(`Updating subtask with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(
+					`Updating subtask with args: ${JSON.stringify(args)}`
+				);
 
 				let tasksJsonPath;
 				try {
@@ -58,7 +55,9 @@ export function registerUpdateSubtaskTool(server: any): void {
 						wrappedLogger
 					);
 				} catch (error) {
-					wrappedLogger.error(`${toolName}: Error finding tasks.json: ${(error as Error).message}`);
+					wrappedLogger.error(
+						`${toolName}: Error finding tasks.json: ${(error as Error).message}`
+					);
 					return createErrorResponse(
 						`Failed to find tasks.json: ${(error as Error).message}`
 					);
@@ -80,9 +79,15 @@ export function registerUpdateSubtaskTool(server: any): void {
 					);
 				}
 
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error updating subtask');
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Error updating subtask'
+				);
 			} catch (error) {
-				wrappedLogger.error(`Critical error in ${toolName} tool execute: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Critical error in ${toolName} tool execute: ${(error as Error).message}`
+				);
 				return createErrorResponse(
 					`Internal tool error (${toolName}): ${(error as Error).message}`
 				);

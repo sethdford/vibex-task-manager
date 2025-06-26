@@ -1,39 +1,39 @@
 {
-  "version": "1.0.0",
-  "models": {
-    "main": {
-      "modelId": "claude-instant-v1",
-      "maxTokens": 4096,
-      "temperature": 0.3,
-      "region": "us-east-1"
-    },
-    "research": {
-      "modelId": "claude-instant-v1",
-      "maxTokens": 4096,
-      "temperature": 0.1,
-      "region": "us-east-1"
-    },
-    "fallback": {
-      "modelId": "claude-instant-v1",
-      "maxTokens": 4096,
-      "temperature": 0.2,
-      "region": "us-east-1"
-    }
-  },
-  "global": {
-    "logLevel": "info",
-    "debug": false,
-    "defaultSubtasks": 5,
-    "defaultPriority": "medium",
-    "projectName": "Debug Test",
-    "dataDirectory": ".taskmanager",
-    "autoSave": true,
-    "autoBackup": true,
-    "maxBackups": 10
-  },
-  "lastUpdated": "2025-06-19T21:20:11.199Z",
-  "dataDirectory": ".vibex",
-  "autoSave": true,
-  "autoBackup": true,
-  "maxBackups": 10
+	"version": "1.0.0",
+	"models": {
+		"main": {
+			"modelId": "claude-instant-v1",
+			"maxTokens": 4096,
+			"temperature": 0.3,
+			"region": "us-east-1"
+		},
+		"research": {
+			"modelId": "claude-instant-v1",
+			"maxTokens": 4096,
+			"temperature": 0.1,
+			"region": "us-east-1"
+		},
+		"fallback": {
+			"modelId": "claude-instant-v1",
+			"maxTokens": 4096,
+			"temperature": 0.2,
+			"region": "us-east-1"
+		}
+	},
+	"global": {
+		"logLevel": "info",
+		"debug": false,
+		"defaultSubtasks": 5,
+		"defaultPriority": "medium",
+		"projectName": "Debug Test",
+		"dataDirectory": ".taskmanager",
+		"autoSave": true,
+		"autoBackup": true,
+		"maxBackups": 10
+	},
+	"lastUpdated": "2025-06-19T21:20:11.199Z",
+	"dataDirectory": ".vibex",
+	"autoSave": true,
+	"autoBackup": true,
+	"maxBackups": 10
 }

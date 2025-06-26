@@ -71,7 +71,9 @@ export async function removeDependencyDirect(
 
 		// Format IDs for the core function
 		const taskId =
-			typeof id === 'string' && id.includes('.') ? id : parseInt(String(id), 10);
+			typeof id === 'string' && id.includes('.')
+				? id
+				: parseInt(String(id), 10);
 		const dependencyId =
 			typeof dependsOn === 'string' && dependsOn.includes('.')
 				? dependsOn
@@ -102,7 +104,9 @@ export async function removeDependencyDirect(
 		// Make sure to restore normal logging even if there's an error
 		disableSilentMode();
 
-		logger.error(`Error in removeDependencyDirect: ${(error as Error).message}`);
+		logger.error(
+			`Error in removeDependencyDirect: ${(error as Error).message}`
+		);
 		return {
 			success: false,
 			error: {

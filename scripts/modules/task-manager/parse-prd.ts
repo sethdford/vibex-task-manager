@@ -68,7 +68,12 @@ interface ParsePRDOptions {
  * @param {ParsePRDOptions} options - Additional options
  * @param {string} [outputFormat='text'] - Output format ('text' or 'json').
  */
-async function parsePRD(prdPath: string, tasksPath: string, numTasks: number, options: ParsePRDOptions = {}) {
+async function parsePRD(
+	prdPath: string,
+	tasksPath: string,
+	numTasks: number,
+	options: ParsePRDOptions = {}
+) {
 	const {
 		reportProgress,
 		mcpLog,
@@ -93,7 +98,10 @@ async function parsePRD(prdPath: string, tasksPath: string, numTasks: number, op
 			};
 
 	// Create custom reporter using logFn
-	const report = (message: string, level: 'info' | 'warn' | 'error' | 'debug' | 'success' = 'info') => {
+	const report = (
+		message: string,
+		level: 'info' | 'warn' | 'error' | 'debug' | 'success' = 'info'
+	) => {
 		// Check logFn directly
 		if (logFn && typeof logFn[level] === 'function') {
 			logFn[level](message);
@@ -239,7 +247,8 @@ Guidelines:
 		);
 
 		// Call generateObjectService with the CORRECT schema and additional telemetry params
-		let aiServiceResponse: any = null; aiServiceResponse = await generateObjectService({
+		let aiServiceResponse: any = null;
+		aiServiceResponse = await generateObjectService({
 			role: research ? 'research' : 'main', // Use research role if flag is set
 			session: session,
 			projectRoot: projectRoot,
@@ -293,40 +302,47 @@ Guidelines:
 		);
 
 		// Process and validate new tasks, ensuring they have the correct nextId
-		const processedNewTasks: Task[] = generatedData.tasks.map((task: any, index) => {
-			const newId = nextId + index;
+		const processedNewTasks: Task[] = generatedData.tasks.map(
+			(task: any, index) => {
+				const newId = nextId + index;
 
-			// Validate dependencies: ensure they refer to existing or newly created tasks
-			const validDependencies = (task.dependencies || []).filter((depId) => {
-				// Check against existing tasks
-				const existsInOld = existingTasks.some((t) => t.id === depId);
-				// Check against other new tasks (must have a lower ID)
-				const existsInNew = depId >= nextId && depId < newId;
+				// Validate dependencies: ensure they refer to existing or newly created tasks
+				const validDependencies = (task.dependencies || []).filter((depId) => {
+					// Check against existing tasks
+					const existsInOld = existingTasks.some((t) => t.id === depId);
+					// Check against other new tasks (must have a lower ID)
+					const existsInNew = depId >= nextId && depId < newId;
 
-				if (!existsInOld && !existsInNew) {
-					report(
-						`Task "${task.title}" has an invalid dependency: ID ${depId} does not exist. Removing.`,
-						'warn'
-					);
-					return false;
-				}
-				return true;
-			});
+					if (!existsInOld && !existsInNew) {
+						report(
+							`Task "${task.title}" has an invalid dependency: ID ${depId} does not exist. Removing.`,
+							'warn'
+						);
+						return false;
+					}
+					return true;
+				});
 
-			return {
-				...task,
-				id: newId,
-				status: 'pending', // Explicitly set status
-				dependencies: validDependencies,
-				subtasks: [] // Initialize with empty subtasks array
-			};
-		});
+				return {
+					...task,
+					id: newId,
+					status: 'pending', // Explicitly set status
+					dependencies: validDependencies,
+					subtasks: [] // Initialize with empty subtasks array
+				};
+			}
+		);
 
-		const finalTasks = append ? [...existingTasks, ...processedNewTasks] : processedNewTasks;
+		const finalTasks = append
+			? [...existingTasks, ...processedNewTasks]
+			: processedNewTasks;
 		const finalData = { tasks: finalTasks };
 
 		writeJSON(tasksPath, finalData);
-		report(`Successfully saved ${processedNewTasks.length} new tasks to ${tasksPath}`, 'success');
+		report(
+			`Successfully saved ${processedNewTasks.length} new tasks to ${tasksPath}`,
+			'success'
+		);
 
 		await generateTaskFiles(tasksPath, path.dirname(tasksPath));
 

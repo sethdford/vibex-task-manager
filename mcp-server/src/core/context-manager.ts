@@ -76,7 +76,10 @@ export class ContextManager {
 	 * @param metadata - Additional metadata for the context
 	 * @returns Context object with metadata
 	 */
-	async getContext(contextId: string, metadata: ContextMetadata = {}): Promise<Context> {
+	async getContext(
+		contextId: string,
+		metadata: ContextMetadata = {}
+	): Promise<Context> {
 		const cacheKey = this._getCacheKey(contextId, metadata);
 
 		// Try to get from cache first
@@ -109,7 +112,10 @@ export class ContextManager {
 	 * @param updates - Updates to apply to the context
 	 * @returns Updated context
 	 */
-	async updateContext(contextId: string, updates: Partial<ContextMetadata>): Promise<Context> {
+	async updateContext(
+		contextId: string,
+		updates: Partial<ContextMetadata>
+	): Promise<Context> {
 		const context = await this.getContext(contextId);
 
 		// Apply updates to context

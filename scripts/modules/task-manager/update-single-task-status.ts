@@ -1,7 +1,10 @@
 import chalk from 'chalk';
 
 import { log } from '../utils.js';
-import { isValidTaskStatus, TASK_STATUS_OPTIONS } from '../../../src/constants/task-status.js';
+import {
+	isValidTaskStatus,
+	TASK_STATUS_OPTIONS
+} from '../../../src/constants/task-status.js';
 
 /**
  * Update the status of a single task

@@ -18,7 +18,11 @@ interface GenerateTaskFilesOptions {
  * @param {GenerateTaskFilesOptions} options - Additional options (mcpLog for MCP mode)
  * @returns {Object|undefined} Result object in MCP mode, undefined in CLI mode
  */
-function generateTaskFiles(tasksPath: string, outputDir: string, options: GenerateTaskFilesOptions = {}) {
+function generateTaskFiles(
+	tasksPath: string,
+	outputDir: string,
+	options: GenerateTaskFilesOptions = {}
+) {
 	try {
 		// Determine if we're in MCP mode by checking for mcpLog
 		const isMcpMode = !!options?.mcpLog;
@@ -82,7 +86,10 @@ function generateTaskFiles(tasksPath: string, outputDir: string, options: Genera
 				log('info', 'No orphaned task files found');
 			}
 		} catch (err) {
-			log('warn', `Error cleaning up orphaned task files: ${(err as Error).message}`);
+			log(
+				'warn',
+				`Error cleaning up orphaned task files: ${(err as Error).message}`
+			);
 			// Continue with file generation even if cleanup fails
 		}
 
@@ -187,7 +194,9 @@ function generateTaskFiles(tasksPath: string, outputDir: string, options: Genera
 
 		// Only show error UI in CLI mode
 		if (!options?.mcpLog) {
-			console.error(chalk.red(`Error generating task files: ${(error as Error).message}`));
+			console.error(
+				chalk.red(`Error generating task files: ${(error as Error).message}`)
+			);
 
 			if (getDebugFlag()) {
 				// Use getter

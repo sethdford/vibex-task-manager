@@ -54,7 +54,11 @@ type DependencyIssue = {
  * @param {number|string} taskId - ID of the task to add dependency to
  * @param {number|string} dependencyId - ID of the task to add as dependency
  */
-async function addDependency(tasksPath: string, taskId: number | string, dependencyId: number | string) {
+async function addDependency(
+	tasksPath: string,
+	taskId: number | string,
+	dependencyId: number | string
+) {
 	log('info', `Adding dependency ${dependencyId} to task ${taskId}...`);
 
 	const data = readJSON(tasksPath);
@@ -178,7 +182,11 @@ async function addDependency(tasksPath: string, taskId: number | string, depende
 	// Check for circular dependencies
 	let dependencyChain = [formattedTaskId];
 	if (
-		!isCircularDependency(data.tasks, formattedDependencyId, dependencyChain as (string | number)[])
+		!isCircularDependency(
+			data.tasks,
+			formattedDependencyId,
+			dependencyChain as (string | number)[]
+		)
 	) {
 		// Add the dependency
 		targetTask.dependencies.push(formattedDependencyId);
@@ -240,7 +248,11 @@ async function addDependency(tasksPath: string, taskId: number | string, depende
  * @param {number|string} taskId - ID of the task to remove dependency from
  * @param {number|string} dependencyId - ID of the task to remove as dependency
  */
-async function removeDependency(tasksPath: string, taskId: number | string, dependencyId: number | string) {
+async function removeDependency(
+	tasksPath: string,
+	taskId: number | string,
+	dependencyId: number | string
+) {
 	log('info', `Removing dependency ${dependencyId} from task ${taskId}...`);
 
 	// Read tasks file
@@ -333,7 +345,11 @@ async function removeDependency(tasksPath: string, taskId: number | string, depe
  * @param {Array} chain - The dependency chain being checked
  * @returns {boolean} - True if circular, false otherwise
  */
-function isCircularDependency(tasks: Task[], taskId: string | number, chain: (string | number)[] = []): boolean {
+function isCircularDependency(
+	tasks: Task[],
+	taskId: string | number,
+	chain: (string | number)[] = []
+): boolean {
 	const currentTaskId = formatTaskId(String(taskId));
 	const newChain = [...chain, currentTaskId];
 
@@ -383,7 +399,10 @@ function isCircularDependency(tasks: Task[], taskId: string | number, chain: (st
  * @param {Array} tasks - The list of all tasks
  * @returns {Array} - A list of dependency issues found.
  */
-function validateTaskDependencies(tasks: Task[]): { issues: DependencyIssue[]; valid: boolean } {
+function validateTaskDependencies(tasks: Task[]): {
+	issues: DependencyIssue[];
+	valid: boolean;
+} {
 	const issues: DependencyIssue[] = [];
 
 	tasks.forEach((task) => {
@@ -673,10 +692,7 @@ async function fixDependenciesCommand(tasksPath: string, options = {}) {
 						(depId) => String(depId) !== String(issue.dependencyId)
 					);
 					changesMade = true;
-					log(
-						'info',
-						`Removed self-dependency from task ${issue.taskId}`
-					);
+					log('info', `Removed self-dependency from task ${issue.taskId}`);
 				}
 				if (task.subtasks) {
 					task.subtasks.forEach((subtask) => {
@@ -751,7 +767,8 @@ function validateSubtaskDependencies(parentTask: Task): DependencyIssue[] {
 						type: 'missing',
 						taskId: subtask.id,
 						dependencyId: depId,
-						message: 'Subtask dependency must be another subtask of the same parent.'
+						message:
+							'Subtask dependency must be another subtask of the same parent.'
 					});
 				}
 			});
@@ -834,10 +851,7 @@ function validateAndFixDependencies(tasksData, tasksPath = null) {
 	if (finalIssues.length > 0) {
 		log('warn', 'Some dependency issues remain after automatic fixing:');
 		finalIssues.forEach((issue) => {
-			log(
-				'warn',
-				`- [${issue.type}] Task ${issue.taskId}: ${issue.message}`
-			);
+			log('warn', `- [${issue.type}] Task ${issue.taskId}: ${issue.message}`);
 		});
 	} else {
 		log('success', 'All dependency issues resolved.');

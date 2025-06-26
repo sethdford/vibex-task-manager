@@ -2,21 +2,17 @@
  * tools/fix-dependencies.js
  * Tool for automatically fixing invalid task dependencies
  */
-import {
-	MCPTool } from './utils.js';
+import { MCPTool } from './utils.js';
 
-import {
-	z } from 'zod';
+import { z } from 'zod';
 import {
 	apiResultToCommandResult,
 	handleApiResult,
 	createErrorResponse,
 	withNormalizedProjectRoot
 } from './utils.js';
-import {
-	fixDependenciesDirect } from '../core/vibex-task-manager-core.js';
-import {
-	findTasksPath } from '../core/utils/path-utils.js';
+import { fixDependenciesDirect } from '../core/vibex-task-manager-core.js';
+import { findTasksPath } from '../core/utils/path-utils.js';
 import { createLogger } from '../core/logger.js';
 
 /**

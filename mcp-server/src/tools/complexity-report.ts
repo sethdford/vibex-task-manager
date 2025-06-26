@@ -21,8 +21,7 @@ import { createLogger } from '../core/logger.js';
  * @param {Object} server - FastMCP server instance
  */
 export function registerComplexityReportTool(server: any): void {
-		const tool: MCPTool = {
-		
+	const tool: MCPTool = {
 		name: 'complexity_report',
 		description: 'Display the complexity analysis report in a readable format',
 		parameters: z.object({
@@ -39,7 +38,9 @@ export function registerComplexityReportTool(server: any): void {
 		execute: withNormalizedProjectRoot(async (args, { log, session }) => {
 			const wrappedLogger = createLogger(log);
 			try {
-				wrappedLogger.info(`Getting complexity report with args: ${JSON.stringify(args)}`);
+				wrappedLogger.info(
+					`Getting complexity report with args: ${JSON.stringify(args)}`
+				);
 
 				const reportPath = findComplexityReportPath(args, wrappedLogger);
 
@@ -48,9 +49,15 @@ export function registerComplexityReportTool(server: any): void {
 					log // Pass original logger
 				);
 
-				return handleApiResult(apiResultToCommandResult(result), log, 'Error getting complexity report');
+				return handleApiResult(
+					apiResultToCommandResult(result),
+					log,
+					'Error getting complexity report'
+				);
 			} catch (error) {
-				wrappedLogger.error(`Error in complexity-report tool: ${(error as Error).message}`);
+				wrappedLogger.error(
+					`Error in complexity-report tool: ${(error as Error).message}`
+				);
 				return createErrorResponse((error as Error).message);
 			}
 		})

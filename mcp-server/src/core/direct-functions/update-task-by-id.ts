@@ -94,7 +94,8 @@ export async function updateTaskByIdDirect(
 
 		// Check required parameters (id and prompt)
 		if (!id) {
-			const errorMessage = 'No task ID specified. Please provide a task ID to update.';
+			const errorMessage =
+				'No task ID specified. Please provide a task ID to update.';
 			logger.error(errorMessage);
 			return {
 				success: false,
@@ -103,7 +104,8 @@ export async function updateTaskByIdDirect(
 		}
 
 		if (!prompt) {
-			const errorMessage = 'No prompt specified. Please provide a prompt with new information for the task update.';
+			const errorMessage =
+				'No prompt specified. Please provide a prompt with new information for the task update.';
 			logger.error(errorMessage);
 			return {
 				success: false,
@@ -196,7 +198,8 @@ export async function updateTaskByIdDirect(
 				}
 			};
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+			const errorMessage =
+				error instanceof Error ? error.message : 'Unknown error';
 			logger.error(`Error updating task by ID: ${errorMessage}`);
 			return {
 				success: false,
@@ -211,7 +214,8 @@ export async function updateTaskByIdDirect(
 			}
 		}
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown setup error';
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown setup error';
 		logger.error(`Setup error in updateTaskByIdDirect: ${errorMessage}`);
 		if (isSilentMode()) disableSilentMode();
 		return {

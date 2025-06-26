@@ -3,7 +3,11 @@
 		{
 			"id": "anthropic.claude-opus-4-20250514-v1:0",
 			"swe_score": 0.7,
-			"cost_per_1m_tokens": { "input": 75.0, "output": 375.0, "currency": "USD" },
+			"cost_per_1m_tokens": {
+				"input": 75.0,
+				"output": 375.0,
+				"currency": "USD"
+			},
 			"allowed_roles": ["main", "fallback", "research"],
 			"max_tokens": 8192,
 			"supports_tools": true
@@ -11,7 +15,11 @@
 		{
 			"id": "anthropic.claude-sonnet-4-20250514-v1:0",
 			"swe_score": 0.6,
-			"cost_per_1m_tokens": { "input": 15.0, "output": 75.0, "currency": "USD" },
+			"cost_per_1m_tokens": {
+				"input": 15.0,
+				"output": 75.0,
+				"currency": "USD"
+			},
 			"allowed_roles": ["main", "fallback", "research"],
 			"max_tokens": 8192,
 			"supports_tools": true
