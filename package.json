@@ -1,6 +1,6 @@
 {
 	"name": "vibex-task-manager",
-	"version": "0.17.41",
+	"version": "0.18.0",
 	"description": "A task management system for ambitious AI-driven development using AWS Bedrock exclusively.",
 	"main": "index.ts",
 	"type": "module",
@@ -91,7 +91,6 @@
 		"!**/*.ts",
 		"!**/tsconfig*.json"
 	],
-
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@changesets/changelog-github": "^0.5.1",
