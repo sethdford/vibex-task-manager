@@ -1,7 +1,28 @@
 {
-	"name": "uri-templates",
-	"version": "0.2.0",
-	"description": "Stub replacement for uri-templates",
+	"name": "@sethdouglasford/uri-templates-stub",
+	"version": "1.0.0",
+	"description": "A lightweight stub implementation of uri-templates for corporate environments",
 	"main": "index.js",
-	"license": "MIT"
+	"type": "commonjs",
+	"keywords": [
+		"uri-templates",
+		"stub",
+		"corporate",
+		"proxy",
+		"lightweight"
+	],
+	"author": "Vibex Task Manager Contributors",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/sethdford/vibex-task-manager.git",
+		"directory": "overrides/uri-templates-stub"
+	},
+	"homepage": "https://github.com/sethdford/vibex-task-manager#readme",
+	"bugs": {
+		"url": "https://github.com/sethdford/vibex-task-manager/issues"
+	},
+	"engines": {
+		"node": ">=14.0.0"
+	}
 }
