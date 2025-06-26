@@ -57,7 +57,7 @@
 		"cli-table3": "^0.6.5",
 		"commander": "^12.0.0",
 		"dotenv": "^16.3.1",
-		"fastmcp": "^2.2.2",
+		"@modelcontextprotocol/sdk": "^1.10.1",
 		"figlet": "^1.7.0",
 		"fuse.js": "^7.1.0",
 		"gradient-string": "^3.0.0",
@@ -91,11 +91,7 @@
 		"!**/*.ts",
 		"!**/tsconfig*.json"
 	],
-	"overrides": {
-		"node-fetch": "^2.6.12",
-		"whatwg-url": "^11.0.0",
-		"uri-templates": "@sethdouglasford/uri-templates-stub"
-	},
+
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@changesets/changelog-github": "^0.5.1",

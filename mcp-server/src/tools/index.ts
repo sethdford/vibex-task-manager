@@ -26,7 +26,7 @@ import { registerModelsTool } from './models.js';
 // // import { registerMoveTaskTool } from './move-task.js';
 // // // import { registerCopyTagTool } from './copy-tag.js';
 
-// Type for FastMCP server instance
+// Type for MCP server instance with tool registration
 interface MCPServer {
 	addTool: (tool: any) => void;
 	// Add other methods as needed
