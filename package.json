@@ -64,7 +64,8 @@
 		"inquirer": "^9.2.20",
 		"lru-cache": "^10.2.0",
 		"ora": "^8.0.1",
-		"zod": "^3.22.4"
+		"zod": "^3.22.4",
+		"uri-templates-stub": "file:./overrides/uri-templates-stub"
 	},
 	"engines": {
 		"node": ">=18.0.0"
@@ -82,6 +83,7 @@
 		"scripts/**",
 		"assets/**",
 		".cursor/**",
+		"overrides/**",
 		"README.md",
 		"index.js",
 		"bin/**",
@@ -93,7 +95,7 @@
 	"overrides": {
 		"node-fetch": "^2.6.12",
 		"whatwg-url": "^11.0.0",
-		"uri-templates": "npm:uri-templates-lite@^1.0.0"
+		"uri-templates": "file:./overrides/uri-templates-stub"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
