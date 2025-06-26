@@ -5,7 +5,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
 	CallToolRequestSchema,
 	ListToolsRequestSchema,
-	Tool,
+	Tool
 } from '@modelcontextprotocol/sdk/types.js';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -70,12 +70,12 @@ class VibexTaskManagerMCPServer {
 		this.server = new Server(
 			{
 				name: 'Vibex Task Manager MCP Server',
-				version: this.version,
+				version: this.version
 			},
 			{
 				capabilities: {
-					tools: {},
-				},
+					tools: {}
+				}
 			}
 		);
 
@@ -126,7 +126,10 @@ class VibexTaskManagerMCPServer {
 	/**
 	 * Call a specific tool
 	 */
-	private async callTool(name: string, args: Record<string, any>): Promise<any> {
+	private async callTool(
+		name: string,
+		args: Record<string, any>
+	): Promise<any> {
 		const tool = this.toolHandlers.get(name);
 		if (!tool) {
 			throw new Error(`Unknown tool: ${name}`);
@@ -135,7 +138,8 @@ class VibexTaskManagerMCPServer {
 		try {
 			return await tool(args);
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error);
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
 			this.logger.error(`Tool ${name} failed: ${errorMessage}`);
 			throw error;
 		}
@@ -143,12 +147,18 @@ class VibexTaskManagerMCPServer {
 
 	// Tool registration system
 	private tools: Tool[] = [];
-	private toolHandlers = new Map<string, (args: Record<string, any>) => Promise<any>>();
+	private toolHandlers = new Map<
+		string,
+		(args: Record<string, any>) => Promise<any>
+	>();
 
 	/**
 	 * Register a tool with the server
 	 */
-	registerTool(tool: Tool, handler: (args: Record<string, any>) => Promise<any>): void {
+	registerTool(
+		tool: Tool,
+		handler: (args: Record<string, any>) => Promise<any>
+	): void {
 		this.tools.push(tool);
 		this.toolHandlers.set(tool.name, handler);
 	}
@@ -161,28 +171,36 @@ class VibexTaskManagerMCPServer {
 		const mcpTool: Tool = {
 			name: tool.name,
 			description: tool.description,
-			inputSchema: tool.parameters ? {
-				type: 'object',
-				properties: tool.parameters._def?.shape ? 
-					Object.fromEntries(
-						Object.entries(tool.parameters._def.shape).map(([key, value]: [string, any]) => [
-							key,
-							{
-								type: this.getZodType(value),
-								description: value._def?.description || '',
-								...(value._def?.defaultValue !== undefined && { default: value._def.defaultValue })
-							}
-						])
-					) : {},
-				required: tool.parameters._def?.shape ? 
-					Object.entries(tool.parameters._def.shape)
-						.filter(([_, value]: [string, any]) => !value.isOptional())
-						.map(([key]) => key) : []
-			} : {
-				type: 'object',
-				properties: {},
-				required: []
-			}
+			inputSchema: tool.parameters
+				? {
+						type: 'object',
+						properties: tool.parameters._def?.shape
+							? Object.fromEntries(
+									Object.entries(tool.parameters._def.shape).map(
+										([key, value]: [string, any]) => [
+											key,
+											{
+												type: this.getZodType(value),
+												description: value._def?.description || '',
+												...(value._def?.defaultValue !== undefined && {
+													default: value._def.defaultValue
+												})
+											}
+										]
+									)
+								)
+							: {},
+						required: tool.parameters._def?.shape
+							? Object.entries(tool.parameters._def.shape)
+									.filter(([_, value]: [string, any]) => !value.isOptional())
+									.map(([key]) => key)
+							: []
+					}
+				: {
+						type: 'object',
+						properties: {},
+						required: []
+					}
 		};
 
 		// Create handler that wraps the tool's execute function
@@ -193,12 +211,16 @@ class VibexTaskManagerMCPServer {
 					content: [
 						{
 							type: 'text',
-							text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
+							text:
+								typeof result === 'string'
+									? result
+									: JSON.stringify(result, null, 2)
 						}
 					]
 				};
 			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : String(error);
+				const errorMessage =
+					error instanceof Error ? error.message : String(error);
 				return {
 					content: [
 						{
@@ -219,7 +241,7 @@ class VibexTaskManagerMCPServer {
 	 */
 	private getZodType(zodType: any): string {
 		if (!zodType._def) return 'string';
-		
+
 		switch (zodType._def.typeName) {
 			case 'ZodString':
 				return 'string';
@@ -246,7 +268,7 @@ class VibexTaskManagerMCPServer {
 
 		// Create stdio transport
 		const transport = new StdioServerTransport();
-		
+
 		// Connect the server to the transport
 		await this.server.connect(transport);
 
