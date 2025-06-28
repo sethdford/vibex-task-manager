@@ -37,9 +37,80 @@ async function runInteractive() {
     await processInstruction(instruction, options);
   } else {
     console.log('💬 Ready for instructions. Type your request and press Enter.');
-    // For now, just exit since we don't have interactive input handling
-    console.log('💡 Tip: Use --instruction="your request" to provide instructions');
+    console.log('💡 Type "exit" or "quit" to end the session.');
+    console.log('');
+    
+    // Start interactive input loop
+    await startInteractiveLoop(options);
   }
+}
+
+async function startInteractiveLoop(options) {
+  const readline = require('readline');
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    prompt: '🤖 vibex> '
+  });
+
+  rl.prompt();
+
+  rl.on('line', async (line) => {
+    const input = line.trim();
+    
+    if (input === 'exit' || input === 'quit' || input === 'q') {
+      console.log('👋 Goodbye! Happy coding!');
+      rl.close();
+      return;
+    }
+    
+    if (input === 'help' || input === '?') {
+      console.log('');
+      console.log('🆘 Available commands:');
+      console.log('  • Type any natural language request to create tasks and files');
+      console.log('  • "help" or "?" - Show this help');
+      console.log('  • "exit", "quit", or "q" - End the session');
+      console.log('');
+      console.log('💡 Examples:');
+      console.log('  • "Create a hello world Python script"');
+      console.log('  • "Build a REST API with authentication"');
+      console.log('  • "Fix the login bug and add error handling"');
+      console.log('');
+      rl.prompt();
+      return;
+    }
+    
+    if (input === 'clear' || input === 'cls') {
+      console.clear();
+      console.log('🚀 Vibex Interactive Development Assistant');
+      console.log('=========================================');
+      console.log(`📍 Working directory: ${process.cwd()}`);
+      console.log('');
+      rl.prompt();
+      return;
+    }
+    
+    if (input.length === 0) {
+      rl.prompt();
+      return;
+    }
+    
+    try {
+      console.log(''); // Add some spacing
+      await processInstruction(input, options);
+      console.log(''); // Add some spacing after completion
+    } catch (error) {
+      console.error('❌ Error:', error.message);
+      console.log('');
+    }
+    
+    rl.prompt();
+  });
+
+  rl.on('close', () => {
+    console.log('👋 Session ended. Goodbye!');
+    process.exit(0);
+  });
 }
 
 async function processInstruction(userInput, options) {

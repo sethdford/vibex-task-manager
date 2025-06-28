@@ -7,8 +7,6 @@ const args = process.argv.slice(2);
 
 // Check if we should start MCP server
 const shouldStartMCPServer = 
-  // No arguments - start MCP server (for MCP clients)
-  args.length === 0 ||
   // Explicit mcp command
   args.includes('mcp') ||
   // MCP environment variables present
@@ -24,11 +22,11 @@ const isNaturalLanguage = firstArg &&
   !firstArg.startsWith('-') &&
   args.join(' ').length > 10; // Reasonable length for natural language
 
-if (shouldStartMCPServer && args.length === 0) {
-  // Start MCP server
-  import('../dist/mcp-server/server.js');
-} else if (args.includes('mcp')) {
-  // Handle 'vibex mcp' command - remove 'mcp' and start server  
+if (args.length === 0) {
+  // No arguments - start interactive mode
+  import('../dist/src/cli/vibex-dev.js');
+} else if (shouldStartMCPServer) {
+  // Handle 'vibex mcp' command or MCP environment
   process.argv = process.argv.filter(arg => arg !== 'mcp');
   import('../dist/mcp-server/server.js');
 } else if (isNaturalLanguage) {

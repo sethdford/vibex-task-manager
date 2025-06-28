@@ -12,7 +12,7 @@ const args = process.argv.slice(2);
 
 execa('node', [interactiveUIPath, ...args], {
   stdio: 'inherit',
-  cwd: __dirname
+  cwd: process.cwd()
 }).catch(error => {
   if (error.exitCode !== 0 && !error.isCanceled) {
     console.error('The interactive session exited unexpectedly.');
