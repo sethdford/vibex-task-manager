@@ -859,6 +859,52 @@ Schema requirements:
 		// Rough approximation: ~4 characters per token for English text
 		return Math.ceil(text.length / 4);
 	}
+
+	/**
+	 * Get default model configuration based on Claude Code documentation
+	 */
+	static getDefaultModels() {
+		return {
+			// Use environment variables if set, otherwise fall back to defaults
+			// For Bedrock, we need to convert from Claude Code model names to Bedrock model IDs
+			primary: process.env.ANTHROPIC_MODEL ? 
+				BedrockClient.convertModelNameToBedrockId(process.env.ANTHROPIC_MODEL) : 
+				'claude-3-5-sonnet-20241022',
+			smallFast: process.env.ANTHROPIC_SMALL_FAST_MODEL ? 
+				BedrockClient.convertModelNameToBedrockId(process.env.ANTHROPIC_SMALL_FAST_MODEL) : 
+				'claude-3-5-haiku-20241022'
+		};
+	}
+
+	/**
+	 * Convert Claude Code model names to Bedrock model IDs
+	 */
+	static convertModelNameToBedrockId(modelName: string): ClaudeModelId {
+		// Handle both quoted and unquoted model names
+		const cleanModelName = modelName.replace(/['"]/g, '');
+		
+		// If it's already a Bedrock model ID or our internal key, return as-is
+		if (cleanModelName in CLAUDE_MODELS) {
+			return cleanModelName as ClaudeModelId;
+		}
+		
+		// Handle Bedrock inference profile format (e.g., us.anthropic.claude-opus-4-20250514-v1:0)
+		if (cleanModelName.includes('anthropic.claude') || cleanModelName.includes('us.anthropic.claude')) {
+			// Extract the model part from the Bedrock ARN/ID
+			const modelMatch = cleanModelName.match(/claude-([^-]+)-([^-]+)-([^-:]+)/);
+			if (modelMatch) {
+				const [, tier, version, date] = modelMatch;
+				const modelKey = `claude-${tier}-${version}-${date}`;
+				if (modelKey in CLAUDE_MODELS) {
+					return modelKey as ClaudeModelId;
+				}
+			}
+		}
+		
+		// Default fallback
+		console.warn(`Unknown model name: ${cleanModelName}, falling back to claude-3-5-sonnet-20241022`);
+		return 'claude-3-5-sonnet-20241022';
+	}
 }
 
 // Export for convenience

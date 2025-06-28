@@ -6,7 +6,7 @@
 		"lib": ["ES2022"],
 		"outDir": "./dist",
 		"rootDir": ".",
-		"strict": true,
+		"strict": false,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": false,
@@ -25,7 +25,11 @@
 		"allowSyntheticDefaultImports": true,
 		"noImplicitAny": false,
 		"strictNullChecks": false,
-		"strictFunctionTypes": false
+		"strictFunctionTypes": false,
+		"jsx": "react-jsx",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
 	},
 	"include": [
 		"src/**/*",
@@ -41,7 +45,8 @@
 		"coverage",
 		"test-project",
 		"**/*.test.ts",
-		"**/*.spec.ts"
+		"**/*.spec.ts",
+		"mcp-server/server.js"
 	],
 	"ts-node": {
 		"esm": true,

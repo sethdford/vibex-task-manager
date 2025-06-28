@@ -533,6 +533,42 @@ Schema requirements:
 		// Rough approximation: ~4 characters per token for English text
 		return Math.ceil(text.length / 4);
 	}
+	/**
+	 * Get default model configuration based on Claude Code documentation
+	 */
+	static getDefaultModels() {
+		return {
+			// Use environment variables if set, otherwise fall back to defaults
+			// For Bedrock, we need to convert from Claude Code model names to Bedrock model IDs
+			primary: process.env.ANTHROPIC_MODEL ? 
+				BedrockClient.convertModelNameToBedrockId(process.env.ANTHROPIC_MODEL) : 
+				'claude-3-5-sonnet-20241022',
+			smallFast: process.env.ANTHROPIC_SMALL_FAST_MODEL ? 
+				BedrockClient.convertModelNameToBedrockId(process.env.ANTHROPIC_SMALL_FAST_MODEL) : 
+				'claude-3-5-haiku-20241022'
+		};
+	}
+	/**
+	 * Convert Claude Code model names to Bedrock model IDs
+	 */
+	static convertModelNameToBedrockId(modelName) {
+		// Handle inference profile ARNs (pass through as-is)
+		if (modelName.startsWith('arn:aws:bedrock:') || modelName.startsWith('us.anthropic.')) {
+			return modelName;
+		}
+		
+		// Convert common Claude Code model names to our internal keys
+		const modelMapping = {
+			'claude-3-5-sonnet-20241022': 'claude-3-5-sonnet-20241022',
+			'claude-3-5-haiku-20241022': 'claude-3-5-haiku-20241022',
+			'claude-3-opus-20240229': 'claude-3-opus-20240229',
+			'claude-3-sonnet-20240229': 'claude-3-sonnet-20240229',
+			'claude-3-haiku-20240307': 'claude-3-haiku-20240307',
+			'claude-instant-v1': 'claude-instant-v1'
+		};
+		
+		return modelMapping[modelName] || modelName;
+	}
 }
 // Export for convenience
 export { z };

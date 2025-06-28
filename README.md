@@ -27,7 +27,7 @@ Add to your `.cursor/mcp.json` or equivalent:
   "mcpServers": {
     "vibex-task-manager": {
       "command": "npx",
-      "args": ["-y", "--package=vibex-task-manager", "vibex-task-manager"],
+      "args": ["-y", "--package=vibex-task-manager", "vibex"],
       "env": {
         "AWS_PROFILE": "your-aws-profile",
         "AWS_DEFAULT_REGION": "us-east-1"
@@ -56,7 +56,7 @@ Ensure you have AWS credentials configured and Bedrock access enabled:
 aws configure
 
 # Test AWS Bedrock connection and auto-detect models
-vibex-task-manager config detect
+vibex config detect
 ```
 
 ### 3. Initialize Your Project
@@ -66,30 +66,147 @@ vibex-task-manager config detect
 cd your-project
 
 # Initialize Vibex Task Manager with auto-detection
-vibex-task-manager init
+vibex init
 
 # Or initialize with custom settings
-vibex-task-manager init --name "My Project" --description "Project description"
+vibex init --name "My Project" --description "Project description"
 ```
 
-### 4. Start Managing Tasks
+### 4. Unified Command Interface
+
+**NEW**: Use the simplified `vibex` command for all operations!
 
 ```bash
-# Parse a PRD document into tasks
-vibex-task-manager parse-prd requirements.md
+# 🎯 Natural Language Task Creation (NEW!)
+vibex "Create a simple hello world Python script called hello.py"
+vibex "Build a REST API for user management with authentication"
+vibex "Fix the login bug and add error handling"
 
-# List all tasks
-vibex-task-manager list
+# 📋 Traditional Task Management
+vibex list                              # List all tasks
+vibex show 5                           # Show task details
+vibex next                             # Get next recommended task
+vibex expand 5                         # Expand task into subtasks
+vibex status 5 done                    # Set task status
 
-# Get the next recommended task
-vibex-task-manager next
+# 🛠️ Project Management
+vibex parse-prd requirements.md        # Parse PRD into tasks
+vibex config setup                     # Configure AWS Bedrock
+vibex init                             # Initialize project
 
-# Update a task with AI assistance
-vibex-task-manager update-task --id 5 --prompt "Add authentication features"
-
-# Set task status
-vibex-task-manager set-status --id 5 --status done
+# 🔌 MCP Server Mode
+vibex mcp                              # Start MCP server for AI editors
+vibex                                  # Auto-start MCP server (no args)
 ```
+
+**Legacy Commands**: All `vibex-task-manager` commands still work for backward compatibility.
+
+## 🤖 NEW: Agentic Development Assistant + Claude Code Integration
+
+**Transform your development workflow with natural language commands and Claude Code integration!**
+
+### Quick Start with Vibex Dev
+
+```bash
+# Natural language development with Claude Code backend
+vibex-dev --claude-code "Create a REST API for user management with CRUD operations"
+vibex-dev --claude-code "Refactor the authentication service to use TypeScript interfaces"
+vibex-dev --claude-code "Add comprehensive error handling to all API endpoints"
+
+# Hybrid: Claude Code + Task Management
+vibex-dev --claude-code --with-tasks "Build user authentication and track progress"
+vibex-dev --claude-code --with-tasks "Fix the login bug and update task status"
+
+# Smart model routing
+vibex-dev --model-strategy smart "Optimize database performance"
+
+# Traditional Bedrock mode (enterprise-optimized)
+vibex-dev "Analyze codebase and suggest architectural improvements"
+
+# See all examples including Claude Code integration
+vibex-dev examples
+```
+
+### 🚀 Integration Options
+
+| Mode | Backend | Best For | Cost |
+|------|---------|----------|------|
+| `--claude-code` | Claude Code | Complex coding tasks | Variable |
+| `--model-strategy smart` | Auto-routing | Balanced performance | Optimized |
+| Default | AWS Bedrock | Enterprise/cost control | Predictable |
+
+### Key Features
+
+- 🗣️ **Natural Language Interface**: Describe what you want in plain English
+- 🔌 **Claude Code Integration**: Best-in-class conversational development
+- 🔧 **Direct File Manipulation**: AI reads, writes, and modifies your code
+- 🧠 **Multi-Backend Support**: Claude Code, AWS Bedrock, or smart routing
+- ⚡ **Enterprise Optimized**: Cost controls, audit trails, compliance
+- 📋 **Task Integration**: Combines development with project management
+- 🔄 **MCP Compatible**: Works with Claude Desktop and other MCP clients
+- 🏢 **Corporate Friendly**: No external data sharing when using Bedrock mode
+
+### Quick Claude Code Integration
+
+```bash
+# Install both tools
+npm install -g @anthropic-ai/claude-code vibex-task-manager
+
+# Start developing with Claude Code backend
+vibex-dev --claude-code "Help me build a user authentication system"
+
+# Run integration examples
+./examples/claude-code-integration.sh
+```
+
+### Evolution Roadmap
+
+**✅ Phase 1 Complete**: Claude Code integration and MCP compatibility
+**🔄 Phase 2 (Current)**: Enhanced UI and workflow automation
+**📋 Phase 3 (Next)**: Advanced Git workflows and testing automation
+**🚀 Phase 4 (Future)**: Multi-model orchestration and collaborative development
+
+📖 **[Complete Integration Guide](docs/integration/claude-code-integration.md)** - Detailed setup and usage patterns
+📖 **[Evolution Roadmap](docs/roadmap/claude-code-evolution.md)** - Technical implementation timeline
+
+## 🤖 Claude Integration
+
+**NEW**: Seamlessly integrate with Claude Desktop and VS Code for AI-powered task management!
+
+### Quick Claude Desktop Setup
+
+1. **Install globally**:
+   ```bash
+   npm install -g vibex-task-manager@latest
+   ```
+
+2. **Add to Claude Desktop config** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+   ```json
+   {
+     "mcpServers": {
+       "vibex-task-manager": {
+         "command": "npx",
+         "args": ["vibex-task-manager@latest", "vibex", "mcp"],
+         "env": {
+           "AWS_REGION": "us-east-1",
+           "AWS_PROFILE": "default"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Restart Claude Desktop** and start managing tasks with natural language!
+
+### Example Claude Conversations
+
+- **"Show me all my current tasks"** - Lists your tasks
+- **"Add a new task to implement user authentication"** - Creates structured tasks  
+- **"What should I work on next?"** - Gets AI recommendations
+- **"Generate the implementation files for task T-001"** - Creates code files
+- **"Analyze the complexity of my current tasks"** - Provides detailed analysis
+
+📖 **[Complete Claude Integration Guide](docs/integration/claude-integration.md)** - Detailed setup for Claude Desktop, VS Code, and command line workflows.
 
 ## 📚 Documentation
 

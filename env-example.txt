@@ -1,0 +1,31 @@
+# Claude Code Configuration Example
+# Copy this to .env and configure your settings
+
+# Choose between Anthropic API or AWS Bedrock
+
+# For Anthropic API (default)
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+
+# Model Configuration (following Claude Code documentation)
+# Primary model for complex tasks
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+# Fast model for simple tasks
+ANTHROPIC_SMALL_FAST_MODEL=claude-3-5-haiku-20241022
+
+# For AWS Bedrock (set to 1 to enable)
+# CLAUDE_CODE_USE_BEDROCK=1
+# AWS_REGION=us-east-1
+
+# AWS Credentials (if using Bedrock)
+# AWS_ACCESS_KEY_ID=your-access-key
+# AWS_SECRET_ACCESS_KEY=your-secret-key
+# AWS_SESSION_TOKEN=your-session-token (if using temporary credentials)
+# AWS_PROFILE=your-profile-name (alternative to access keys)
+
+# Advanced Model Configuration for Bedrock
+# You can use inference profile IDs or ARNs
+# ANTHROPIC_MODEL=us.anthropic.claude-3-5-sonnet-20241022-v1:0
+# ANTHROPIC_SMALL_FAST_MODEL=us.anthropic.claude-3-5-haiku-20241022-v1:0
+# 
+# Or application inference profile ARNs
+# ANTHROPIC_MODEL=arn:aws:bedrock:us-east-2:123456789012:application-inference-profile/your-model-id 

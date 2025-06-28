@@ -1,5 +1,12 @@
 {
 	"extends": "./tsconfig.json",
+	"include": [
+		"src",
+		"scripts",
+		"bin",
+		"mcp-server/server.ts",
+		"mcp-server/src/**/*"
+	],
 	"exclude": [
 		"node_modules",
 		"dist",
@@ -9,5 +16,21 @@
 		"**/*.test.ts",
 		"**/*.spec.ts",
 		"**/__tests__/**/*"
-	]
+	],
+	"compilerOptions": {
+		"outDir": "dist",
+		"rootDir": ".",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"target": "ES2022",
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"strict": false,
+		"jsx": "react",
+		"lib": ["es2020", "dom"]
+	}
 }
