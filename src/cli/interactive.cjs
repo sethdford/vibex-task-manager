@@ -1,5 +1,17 @@
-// Load environment variables from .env file first
-require('dotenv').config();
+// Load environment variables with enhanced priority (project .env, then ~/.env)
+async function loadEnhancedEnvironment() {
+  try {
+    const utilsModule = await import('../utils/utils.js');
+    const projectRoot = utilsModule.findProjectRoot();
+    utilsModule.loadEnvironmentConfig(projectRoot);
+  } catch (error) {
+    // Fallback to basic dotenv if utils module isn't available
+    require('dotenv').config();
+  }
+}
+
+// Initialize environment loading
+loadEnhancedEnvironment();
 
 const React = require('react');
 const fs = require('fs/promises');

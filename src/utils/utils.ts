@@ -5,6 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import {
@@ -77,8 +78,9 @@ let silentMode = false;
  * Resolves an environment variable's value.
  * Precedence:
  * 1. session.env (if session provided)
- * 2. process.env
- * 3. .env file at projectRoot (if projectRoot provided)
+ * 2. project .env file (if projectRoot provided)
+ * 3. ~/.env file (global user config)
+ * 4. process.env (system environment)
  */
 export function resolveEnvVariable(
 	key: string,
@@ -90,12 +92,12 @@ export function resolveEnvVariable(
 		return session.env[key];
 	}
 
-	// 2. Read .env file at projectRoot
+	// 2. Check project .env file first
 	if (projectRoot) {
-		const envPath = path.join(projectRoot, '.env');
-		if (fs.existsSync(envPath)) {
+		const projectEnvPath = path.join(projectRoot, '.env');
+		if (fs.existsSync(projectEnvPath)) {
 			try {
-				const envFileContent = fs.readFileSync(envPath, 'utf-8');
+				const envFileContent = fs.readFileSync(projectEnvPath, 'utf-8');
 				const parsedEnv = dotenv.parse(envFileContent);
 				if (parsedEnv && parsedEnv[key]) {
 					return parsedEnv[key];
@@ -103,13 +105,30 @@ export function resolveEnvVariable(
 			} catch (error) {
 				log(
 					'warn',
-					`Could not read or parse ${envPath}: ${(error as Error).message}`
+					`Could not read or parse ${projectEnvPath}: ${(error as Error).message}`
 				);
 			}
 		}
 	}
 
-	// 3. Fallback: Check process.env
+	// 3. Check global ~/.env file second
+	const homeEnvPath = path.join(os.homedir(), '.env');
+	if (fs.existsSync(homeEnvPath)) {
+		try {
+			const envFileContent = fs.readFileSync(homeEnvPath, 'utf-8');
+			const parsedEnv = dotenv.parse(envFileContent);
+			if (parsedEnv && parsedEnv[key]) {
+				return parsedEnv[key];
+			}
+		} catch (error) {
+			log(
+				'warn',
+				`Could not read or parse ${homeEnvPath}: ${(error as Error).message}`
+			);
+		}
+	}
+
+	// 4. Fallback: Check process.env
 	if (process.env[key]) {
 		return process.env[key];
 	}
@@ -151,6 +170,77 @@ export function findProjectRoot(
 	});
 
 	return hasMarkerInRoot ? rootPath : null;
+}
+
+// --- Environment Setup Utility ---
+/**
+ * Ensures global ~/.env file exists by copying from project .env if needed
+ */
+export function ensureGlobalEnvFile(projectRoot: string | null = null): void {
+	const homeEnvPath = path.join(os.homedir(), '.env');
+	
+	// If ~/.env already exists, don't overwrite it
+	if (fs.existsSync(homeEnvPath)) {
+		return;
+	}
+	
+	// Try to copy from project .env
+	if (projectRoot) {
+		const projectEnvPath = path.join(projectRoot, '.env');
+		if (fs.existsSync(projectEnvPath)) {
+			try {
+				fs.copyFileSync(projectEnvPath, homeEnvPath);
+				log('info', `Created global ~/.env file from project configuration`);
+				return;
+			} catch (error) {
+				log('warn', `Could not copy project .env to ~/.env: ${(error as Error).message}`);
+			}
+		}
+	}
+	
+	// Fallback: create from env-example.txt if it exists
+	if (projectRoot) {
+		const examplePath = path.join(projectRoot, 'env-example.txt');
+		if (fs.existsSync(examplePath)) {
+			try {
+				fs.copyFileSync(examplePath, homeEnvPath);
+				log('info', `Created global ~/.env file from env-example.txt`);
+				return;
+			} catch (error) {
+				log('warn', `Could not copy env-example.txt to ~/.env: ${(error as Error).message}`);
+			}
+		}
+	}
+}
+
+/**
+ * Loads environment variables from multiple sources in priority order
+ */
+export function loadEnvironmentConfig(projectRoot: string | null = null): void {
+	// Ensure global ~/.env exists
+	ensureGlobalEnvFile(projectRoot);
+	
+	// Load global ~/.env first (lowest priority)
+	const homeEnvPath = path.join(os.homedir(), '.env');
+	if (fs.existsSync(homeEnvPath)) {
+		try {
+			dotenv.config({ path: homeEnvPath });
+		} catch (error) {
+			log('warn', `Could not load global ~/.env: ${(error as Error).message}`);
+		}
+	}
+	
+	// Load project .env second (higher priority - will override global values)
+	if (projectRoot) {
+		const projectEnvPath = path.join(projectRoot, '.env');
+		if (fs.existsSync(projectEnvPath)) {
+			try {
+				dotenv.config({ path: projectEnvPath, override: true });
+			} catch (error) {
+				log('warn', `Could not load project .env: ${(error as Error).message}`);
+			}
+		}
+	}
 }
 
 // --- Logging and Utility Functions ---

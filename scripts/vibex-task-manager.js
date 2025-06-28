@@ -30,3 +30,6 @@ program.parse(process.argv);
 //# sourceMappingURL=vibex-task-manager.js.map
 //# sourceMappingURL=vibex-task-manager.js.map
 //# sourceMappingURL=vibex-task-manager.js.map
+//# sourceMappingURL=vibex-task-manager.js.map
+//# sourceMappingURL=vibex-task-manager.js.map
+//# sourceMappingURL=vibex-task-manager.js.map

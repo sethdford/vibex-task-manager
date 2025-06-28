@@ -13,9 +13,10 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import logger from './logger.js';
 import { registerVibexTaskManagerTools } from './tools/index.js';
+import { loadEnvironmentConfig, findProjectRoot } from '../../src/utils/utils.js';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables with enhanced priority
+loadEnvironmentConfig(findProjectRoot());
 
 // Constants
 const __filename = fileURLToPath(import.meta.url);

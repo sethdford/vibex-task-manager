@@ -24,6 +24,7 @@ import {
 } from '../types/core.js';
 import inquirer from 'inquirer';
 import { z } from 'zod';
+import { loadEnvironmentConfig, findProjectRoot } from '../utils/utils.js';
 
 // Version from package.json
 import { readFileSync } from 'fs';
@@ -63,6 +64,10 @@ class VibexCLI {
 
 	constructor() {
 		this.projectRoot = process.cwd();
+		
+		// Load environment configuration from project .env and ~/.env
+		loadEnvironmentConfig(findProjectRoot(this.projectRoot));
+		
 		this.program = new Command();
 		this.setupCommands();
 	}
